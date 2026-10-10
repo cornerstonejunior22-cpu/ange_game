@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>ANGE JUNIORCORNERSTONE</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00ff00">
+    <style>
+        body { background: #0b0b0b; color: #fff; font-family: sans-serif; padding: 20px; }
+        h1 { color: #e67e22; font-size: 22px; }
+        .card { background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        input { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+        button { background: #2980b9; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; font-size: 16px; font-weight: bold; }
+        #res { background: #145a32; padding: 15px; border-radius: 5px; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+    <h1>ANGE JUNIORCORNERSTONE</h1>
+    <div class="card">
+        <p><b>Jwèt:</b> 220 | <b>Frè:</b> 1,250 Gdes</p>
+        <p><b>Revni w:</b> 165,000 Gdes | <b>Jackpot:</b> 5,000 Gdes</p>
+    </div>
+    <div class="card">
+        <label>Chwazi Gayan (1-220):</label><br><br>
+        <input type="number" id="g" min="1" max="220" placeholder="Antre nimewo a...">
+    </div>
+    <button onclick="T()">Valide Tiraj la</button>
+    <div id="res"></div>
+<script>
+function T() {
+    let v = document.getElementById("g").value;
+    let n = (v !== "" && !isNaN(v)) ? parseInt(v) : Math.floor(Math.random() * 220) + 1;
+    let r = document.getElementById("res");
+    r.style.display = "block";
+    r.innerHTML = "<b>REZILTA TIRAJ:</b><br><br>🏆 Gayan: #" + n;
+}
+</script>
+</body>
+</html>

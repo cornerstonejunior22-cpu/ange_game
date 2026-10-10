@@ -1,0 +1,13 @@
+=== HISTORIQUE COMPLET - BLOCS ANGE JUNIORCORNERSTONE ===
+
+Bloc #1 | Date: 2026-10-07 02:52 | Gagnant: Position #11 | Propriétaire: 165,000 Gdes | Jackpot Versé: 100,000 Gdes
+Bloc #2 | Date: 2026-10-07 02:52 | Gagnant: Position #215 | Propriétaire: 165,000 Gdes | Jackpot Versé: 100,000 Gdes
+Bloc #3 | Date: 2026-10-07 02:52 | Gagnant: Position #207 | Propriétaire: 165,000 Gdes | Jackpot Versé: 100,000 Gdes
+Bloc #4 | Date: 2026-10-07 02:52 | Gagnant: Position #79 | Propriétaire: 165,000 Gdes | Jackpot Versé: 100,000 Gdes
+Bloc #5 | Date: 2026-10-07 02:52 | Gagnant: Position #92 | Propriétaire: 165,000 Gdes | Jackpot Versé: 100,000 Gdes
+
+--- RÉSUMÉ FINANCIER GLOBAL ---
+Total Blocs : 5
+Revenu Total Propriétaire : 825,000 Gdes
+Cagnotte Totale Générée (Pool) : 550,000 Gdes
+Total Jackpots Versés : 500,000 Gdes
