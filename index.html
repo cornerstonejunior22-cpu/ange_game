@@ -51,7 +51,7 @@
       padding: 12px;
       margin-bottom: 15px;
     }
-    .input-field {
+    .input-field, .select-field {
       width: 90%;
       padding: 10px;
       border-radius: 6px;
@@ -59,7 +59,7 @@
       background: #222;
       color: #fff;
       text-align: center;
-      font-size: 15px;
+      font-size: 14px;
       margin-top: 6px;
       margin-bottom: 8px;
     }
@@ -67,25 +67,25 @@
       background: #28a745;
       color: #fff;
       font-weight: bold;
-      padding: 10px 15px;
+      padding: 8px 12px;
       border: none;
-      border-radius: 20px;
-      font-size: 14px;
+      border-radius: 18px;
+      font-size: 13px;
       cursor: pointer;
-      margin: 5px 2px;
+      margin: 4px 2px;
     }
     .btn-ussd {
       background: #007bff;
       color: #fff;
       font-weight: bold;
-      padding: 10px 15px;
+      padding: 8px 12px;
       border: none;
-      border-radius: 20px;
-      font-size: 14px;
+      border-radius: 18px;
+      font-size: 13px;
       cursor: pointer;
       text-decoration: none;
       display: inline-block;
-      margin: 5px 2px;
+      margin: 4px 2px;
     }
 
     .court {
@@ -177,24 +177,40 @@
     <div class="stat-title">Tan ki rete (1h Max):</div>
     <div class="stat-val" id="timer">59:59</div>
     
-    <div class="stat-title">Jwè nan blòk la:</div>
+    <div class="stat-title">Jwè nan blòk sa a:</div>
     <div class="stat-val"><span id="player-count">0</span> / 220</div>
 
     <div class="stat-title">Cagnotte Ganyan (90%):</div>
     <div class="stat-val" id="jackpot-val">0 Gdes</div>
   </div>
 
-  <!-- Seksyon Peman ak Demann Kòd -->
+  <!-- Section de Paiement Mise à Jour -->
   <div class="pay-section" id="pay-box">
-    <p style="font-size: 13px; color: #ffd700; margin-bottom: 5px;">Voye 1,250 Gdes sou MonCash/Natcash pwopriyetè a:</p>
-    <div style="font-size: 15px; font-weight: bold; color: #fff; background: #222; padding: 6px; border-radius: 5px; margin-bottom: 8px;">
-      Numéro: <span id="owner-num">+509 3436-3143</span>
+    <p style="font-size: 13px; color: #ffd700; margin-bottom: 8px;">
+      Achte kòd inik ou (1,250 Gdes MonCash/Natcash) oubyen (250 Gdes MonCash/Natcash) oubyen (100 Gdes MonCash/Natcash)
+    </p>
+
+    <!-- Numéros du Propriétaire -->
+    <div style="font-size: 13px; background: #222; padding: 8px; border-radius: 6px; margin-bottom: 8px; text-align: left;">
+      <p><b>MonCash :</b> +509 3436-3143 
+        <button class="btn-pay" onclick="copyNum('34363143')">Kopye</button>
+      </p>
+      <p style="margin-top: 4px;"><b>Natcash :</b> +509 4212-5630 
+        <button class="btn-pay" onclick="copyNum('42125630')">Kopye</button>
+      </p>
     </div>
     
-    <button class="btn-pay" onclick="copyNum()">Kopye Nimewo</button>
-    <a href="tel:*202%23" class="btn-ussd">*202# (Rele)</a>
+    <a href="tel:*202%23" class="btn-ussd">*202# MonCash</a>
+    <a href="tel:*202%23" class="btn-ussd" style="background:#dc3545;">*202# Natcash</a>
 
-    <p style="font-size: 12px; color: #bbb; margin-top: 10px;">Apre peman an, antre enfòmasyon ou yo:</p>
+    <p style="font-size: 12px; color: #bbb; margin-top: 10px;">Chwazi gwoup ou peye a epi antre enfòmasyon ou yo:</p>
+    
+    <select id="group-select" class="select-field" onchange="switchGroup()">
+      <option value="1250">Gwoup 1 - Code 1,250 Gdes</option>
+      <option value="250">Gwoup 2 - Code 250 Gdes</option>
+      <option value="100">Gwoup 3 - Code 100 Gdes</option>
+    </select>
+
     <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou">
     <input type="text" id="player-phone" class="input-field" placeholder="Nimewo MonCash/Natcash ou voye kòb la">
     
@@ -242,39 +258,55 @@
     let chances = 0;
     let currentPlayers = 0;
 
-    function copyNum() {
-      navigator.clipboard.writeText("+50934363143");
-      alert("Nimewo a kopye avèk siksè!");
+    function copyNum(num) {
+      navigator.clipboard.writeText(num);
+      alert("Nimewo " + num + " kopye avèk siksè!");
     }
 
-    db.collection("game_blocks").doc("active_block").onSnapshot((doc) => {
-      if (doc.exists) {
-        const data = doc.data();
-        currentPlayers = parseInt(data.playersCount) || 0;
-        document.getElementById('player-count').innerText = currentPlayers;
-        let jackpot = currentPlayers * 500 * 0.90;
-        document.getElementById('jackpot-val').innerText = jackpot + " Gdes";
-      }
-    });
+    function switchGroup() {
+      const selectedGroup = document.getElementById('group-select').value;
+      listenToBlock(selectedGroup);
+    }
+
+    function listenToBlock(groupVal) {
+      db.collection("game_blocks").doc("block_" + groupVal).onSnapshot((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          currentPlayers = parseInt(data.playersCount) || 0;
+          document.getElementById('player-count').innerText = currentPlayers;
+          
+          let poolShare = groupVal === "1250" ? 500 : (groupVal === "250" ? 100 : 40);
+          let jackpot = currentPlayers * poolShare * 0.90;
+          document.getElementById('jackpot-val').innerText = jackpot.toLocaleString() + " Gdes";
+        } else {
+          document.getElementById('player-count').innerText = "0";
+          document.getElementById('jackpot-val').innerText = "0 Gdes";
+        }
+      });
+    }
+
+    // Écouter le groupe 1250 par défaut
+    listenToBlock("1250");
 
     async function submitPaymentRequest() {
       const name = document.getElementById('player-name').value.trim();
       const phone = document.getElementById('player-phone').value.trim();
+      const group = document.getElementById('group-select').value;
 
       if(name === "" || phone === "") {
         alert("Tanpri antre non ou ak nimewo telefòn ou!");
         return;
       }
 
-      // Anrejistre demann lan nan Firestore pou admin an ka wè l
       await db.collection("payment_requests").add({
         playerName: name,
         playerPhone: phone,
+        groupPrice: group,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         status: "pending"
       });
 
-      alert("Demann ou an voye bay pwopriyetè a! Lè l fin konfime peman an, w ap resevwa kòd inik ou a.");
+      alert("Demann ou voye pou gwoup " + group + " Gdes! Lè pwopriyetè a fin konfime peman an, w ap resevwa kòd inik ou a.");
     }
 
     function selectPos(p) {
@@ -285,16 +317,16 @@
 
     async function validateCode() {
       const codeInput = document.getElementById('game-code').value.trim();
+      const group = document.getElementById('group-select').value;
+
       if (codeInput === "") {
         alert("Tanpri antre kòd inik ou a!");
         return;
       }
 
-      // Tès validite kòd (nou kaajouste verifikasyon baz done pita)
       currentPlayers++;
-      await db.collection("game_blocks").doc("active_block").set({
+      await db.collection("game_blocks").doc("block_" + group).set({
         playersCount: currentPlayers.toString(),
-        blockNumber: "1",
         status: "active"
       }, { merge: true });
 
@@ -351,4 +383,5 @@
   </script>
 
 </body>
-</html>
+  </html>
+  
