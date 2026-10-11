@@ -10,48 +10,80 @@
     body {
       background: #0d0d0d;
       color: #fff;
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       text-align: center;
       padding: 15px;
     }
     .header-logo {
-      width: 120px;
-      height: 120px;
-      border-radius: 15px;
+      width: 110px;
+      height: 110px;
+      border-radius: 18px;
       border: 2px solid #ffd700;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    }
+    h2 {
+      font-size: 20px;
+      color: #ffd700;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     .dashboard {
-      background: #1a1a1a;
+      background: rgba(26, 26, 26, 0.9);
       border: 1px solid #ffd700;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    .stat-title { color: #bbb; font-size: 12px; margin-top: 4px; }
+    .stat-val { font-size: 18px; font-weight: bold; color: #ffd700; }
+    
+    /* Zone Achat de Code */
+    .pay-section {
+      background: #181818;
+      border: 1px dashed #ffd700;
       border-radius: 10px;
       padding: 12px;
       margin-bottom: 15px;
     }
-    .stat-title { color: #aaa; font-size: 13px; }
-    .stat-val { font-size: 18px; font-weight: bold; color: #ffd700; margin-bottom: 5px; }
-    
+    .code-input {
+      width: 80%;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #444;
+      background: #222;
+      color: #fff;
+      text-align: center;
+      font-size: 16px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+
     /* Terren Basket */
     .court {
       position: relative;
       width: 100%;
-      max-width: 350px;
-      height: 250px;
-      background: #8b4513;
+      max-width: 340px;
+      height: 240px;
+      background: linear-gradient(to bottom, #8b4513, #a0522d);
       border: 3px solid #fff;
-      border-radius: 10px;
+      border-radius: 12px;
       margin: 0 auto 15px auto;
       overflow: hidden;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
     }
     .hoop {
       position: absolute;
-      top: 20px;
+      top: 15px;
       left: 50%;
       transform: translateX(-50%);
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border: 4px solid #ff4500;
       border-radius: 50%;
+      box-shadow: 0 0 8px #ff4500;
     }
     .pos-btn {
       position: absolute;
@@ -61,39 +93,54 @@
       background: #ffd700;
       color: #000;
       font-weight: bold;
-      border: none;
+      border: 2px solid #000;
       cursor: pointer;
+      z-index: 2;
     }
-    /* 7 Pozisyon yo */
-    #p1 { bottom: 20px; left: 15%; }
-    #p2 { bottom: 60px; left: 25%; }
-    #p3 { bottom: 90px; left: 40%; }
-    #p4 { bottom: 100px; left: 50%; transform: translateX(-50%); }
-    #p5 { bottom: 90px; right: 40%; }
-    #p6 { bottom: 60px; right: 25%; }
-    #p7 { bottom: 20px; right: 15%; }
+    .pos-btn.active {
+      background: #ff4500;
+      color: #fff;
+      transform: scale(1.15);
+    }
 
+    /* 7 Pozisyon yo */
+    #p1 { bottom: 20px; left: 12%; }
+    #p2 { bottom: 65px; left: 22%; }
+    #p3 { bottom: 95px; left: 38%; }
+    #p4 { bottom: 105px; left: 50%; transform: translateX(-50%); }
+    #p5 { bottom: 95px; right: 38%; }
+    #p6 { bottom: 65px; right: 22%; }
+    #p7 { bottom: 20px; right: 12%; }
+
+    /* Ballon basket */
     .ball {
       position: absolute;
-      width: 24px;
-      height: 24px;
-      background: #ff6600;
+      width: 22px;
+      height: 22px;
+      background: radial-gradient(circle at 7px 7px, #ff8c00, #d2691e);
       border-radius: 50%;
+      border: 1px solid #000;
+      z-index: 3;
       display: none;
-      transition: all 0.8s ease-in-out;
     }
 
     .btn-action {
       background: linear-gradient(135deg, #ffd700, #ff8c00);
       color: #000;
       font-weight: bold;
-      padding: 12px 25px;
+      padding: 12px 20px;
       border: none;
       border-radius: 25px;
       font-size: 16px;
       cursor: pointer;
       width: 100%;
-      max-width: 350px;
+      max-width: 340px;
+      box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
+    }
+    .btn-action:disabled {
+      background: #555;
+      color: #888;
+      box-shadow: none;
     }
   </style>
 </head>
@@ -113,7 +160,14 @@
     <div class="stat-val" id="jackpot-val">450 Gdes</div>
   </div>
 
-  <p style="margin-bottom: 10px;">Chwazi yon pozisyon (1 rive 7) pou w tire :</p>
+  <!-- Achat / Validation Code -->
+  <div class="pay-section" id="pay-box">
+    <p style="font-size: 14px; color: #ffd700;">Antre kòd 1,250 Gdes ou an pou debloke 3 tir :</p>
+    <input type="text" id="game-code" class="code-input" placeholder="Eg: ANG-1250-99">
+    <button class="btn-action" style="font-size: 14px; padding: 8px;" onclick="validateCode()">Valide Kòd la</button>
+  </div>
+
+  <p style="margin-bottom: 10px; font-size: 14px;">Chwazi yon pozisyon (1 rive 7) :</p>
   
   <div class="court">
     <div class="hoop" id="hoop"></div>
@@ -122,39 +176,80 @@
     <button class="pos-btn" id="p1" onclick="selectPos(1)">1</button>
     <button class="pos-btn" id="p2" onclick="selectPos(2)">2</button>
     <button class="pos-btn" id="p3" onclick="selectPos(3)">3</button>
-    <button class="pos-btn" id="p4" onclick="selectPos(4)">4</button>
+    <button class="pos-btn active" id="p4" onclick="selectPos(4)">4</button>
     <button class="pos-btn" id="p5" onclick="selectPos(5)">5</button>
     <button class="pos-btn" id="p6" onclick="selectPos(6)">6</button>
     <button class="pos-btn" id="p7" onclick="selectPos(7)">7</button>
   </div>
 
-  <p style="margin-bottom: 10px;">Chans ki rete: <b id="chances-left" style="color: #ffd700;">3</b> / 3</p>
-  <button class="btn-action" onclick="shootBall()">Tire Boul la!</button>
+  <p style="margin-bottom: 10px;">Chans ki rete: <b id="chances-left" style="color: #ffd700;">0</b> / 3</p>
+  <button class="btn-action" id="shoot-btn" onclick="shootBall()" disabled>Tire Boul la!</button>
 
   <script>
     let currentPos = 4;
-    let chances = 3;
+    let chances = 0;
     let playerCount = 1;
 
     function selectPos(p) {
+      document.querySelectorAll('.pos-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('p' + p).classList.add('active');
       currentPos = p;
-      alert("Ou chwazi pozisyon " + p);
+    }
+
+    function validateCode() {
+      const codeInput = document.getElementById('game-code').value.trim();
+      if (codeInput === "") {
+        alert("Tanpri antre yon kòd valid ki peye 1,250 Gdes !");
+        return;
+      }
+      chances = 3;
+      playerCount++;
+      document.getElementById('chances-left').innerText = chances;
+      document.getElementById('player-count').innerText = playerCount;
+      document.getElementById('jackpot-val').innerText = (playerCount * 500 * 0.90) + " Gdes";
+      document.getElementById('shoot-btn').disabled = false;
+      document.getElementById('pay-box').style.display = "none";
+      alert("Kòd valide ak siksè ! Ou gen 3 chans pou w tire kounye a.");
     }
 
     function shootBall() {
       if (chances <= 0) {
-        alert("Ou fin itilize 3 chans ou yo!");
+        alert("Ou pa gen chans ankò! Achete yon lòt kòd.");
         return;
       }
 
-      chances--;
-      document.getElementById('chances-left').innerText = chances;
+      const ball = document.getElementById('ball');
+      const startBtn = document.getElementById('p' + currentPos);
+      const hoop = document.getElementById('hoop');
 
-      // Similasyon pou kounye a : tout 3 chans pèdi jiskaske lojik backend ranpli
-      alert("Tir nan pozisyon " + currentPos + " soti deyò! (Chans ki rete: " + chances + ")");
+      // Positionner le ballon sur le bouton choisi
+      ball.style.left = (startBtn.offsetLeft + 4) + 'px';
+      ball.style.top = (startBtn.offsetTop + 4) + 'px';
+      ball.style.display = 'block';
+
+      // Animation vers le panier
+      setTimeout(() => {
+        ball.style.transition = "all 0.6s ease-out";
+        ball.style.left = (hoop.offsetLeft + 6) + 'px';
+        ball.style.top = (hoop.offsetTop + 25) + 'px'; // Rebondit au bord
+      }, 50);
+
+      setTimeout(() => {
+        chances--;
+        document.getElementById('chances-left').innerText = chances;
+        ball.style.display = 'none';
+        
+        if (chances === 0) {
+          document.getElementById('shoot-btn').disabled = true;
+          document.getElementById('pay-box').style.display = "block";
+          alert("Oups ! Boul la soti deyò. Ou fin itilize 3 chans ou yo.");
+        } else {
+          alert("Tir raté ! Chans ki rete: " + chances);
+        }
+      }, 700);
     }
 
-    // Timer 1 Èdtan Similasyon
+    // Minuteur d'une heure
     let timeLeft = 3600;
     setInterval(() => {
       if (timeLeft > 0) {
@@ -167,5 +262,4 @@
   </script>
 
 </body>
-        </html>
-        
+</html>
