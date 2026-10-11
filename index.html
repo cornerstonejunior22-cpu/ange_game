@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ANGE JUNIORCORNERSTONE</title>
   <link rel="manifest" href="manifest.json">
+  
+  <!-- Firebase SDK Compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -40,7 +45,6 @@
     .stat-title { color: #bbb; font-size: 12px; margin-top: 4px; }
     .stat-val { font-size: 18px; font-weight: bold; color: #ffd700; }
     
-    /* Zone Achat de Code */
     .pay-section {
       background: #181818;
       border: 1px dashed #ffd700;
@@ -61,7 +65,6 @@
       margin-bottom: 8px;
     }
 
-    /* Terren Basket */
     .court {
       position: relative;
       width: 100%;
@@ -103,7 +106,6 @@
       transform: scale(1.15);
     }
 
-    /* 7 Pozisyon yo */
     #p1 { bottom: 20px; left: 12%; }
     #p2 { bottom: 65px; left: 22%; }
     #p3 { bottom: 95px; left: 38%; }
@@ -112,7 +114,6 @@
     #p6 { bottom: 65px; right: 22%; }
     #p7 { bottom: 20px; right: 12%; }
 
-    /* Ballon basket */
     .ball {
       position: absolute;
       width: 22px;
@@ -154,13 +155,12 @@
     <div class="stat-val" id="timer">59:59</div>
     
     <div class="stat-title">Joueurs inscrits dans ce bloc:</div>
-    <div class="stat-val"><span id="player-count">1</span> / 220</div>
+    <div class="stat-val"><span id="player-count">0</span> / 220</div>
 
     <div class="stat-title">Cagnotte Gagnant (90% du Pool):</div>
-    <div class="stat-val" id="jackpot-val">450 Gdes</div>
+    <div class="stat-val" id="jackpot-val">0 Gdes</div>
   </div>
 
-  <!-- Achat / Validation Code -->
   <div class="pay-section" id="pay-box">
     <p style="font-size: 14px; color: #ffd700;">Antre kòd 1,250 Gdes ou an pou debloke 3 tir :</p>
     <input type="text" id="game-code" class="code-input" placeholder="Eg: ANG-1250-99">
@@ -186,9 +186,22 @@
   <button class="btn-action" id="shoot-btn" onclick="shootBall()" disabled>Tire Boul la!</button>
 
   <script>
+    // Configuration Firebase Réelle
+    const firebaseConfig = {
+      apiKey: "AIzaSyBhVu7dY94w7c9v5ubojO4QRvntKHrkGkY",
+      authDomain: "ange-juniorcornerstone.firebaseapp.com",
+      projectId: "ange-juniorcornerstone",
+      storageBucket: "ange-juniorcornerstone.firebasestorage.app",
+      messagingSenderId: "201645186040",
+      appId: "1:201645186040:web:58b124ac07465a44fad40d",
+      measurementId: "G-5LK9JTTTHJ"
+    };
+
+    // Initialisation
+    firebase.initializeApp(firebaseConfig);
+
     let currentPos = 4;
     let chances = 0;
-    let playerCount = 1;
 
     function selectPos(p) {
       document.querySelectorAll('.pos-btn').forEach(btn => btn.classList.remove('active'));
@@ -203,10 +216,7 @@
         return;
       }
       chances = 3;
-      playerCount++;
       document.getElementById('chances-left').innerText = chances;
-      document.getElementById('player-count').innerText = playerCount;
-      document.getElementById('jackpot-val').innerText = (playerCount * 500 * 0.90) + " Gdes";
       document.getElementById('shoot-btn').disabled = false;
       document.getElementById('pay-box').style.display = "none";
       alert("Kòd valide ak siksè ! Ou gen 3 chans pou w tire kounye a.");
@@ -222,16 +232,14 @@
       const startBtn = document.getElementById('p' + currentPos);
       const hoop = document.getElementById('hoop');
 
-      // Positionner le ballon sur le bouton choisi
       ball.style.left = (startBtn.offsetLeft + 4) + 'px';
       ball.style.top = (startBtn.offsetTop + 4) + 'px';
       ball.style.display = 'block';
 
-      // Animation vers le panier
       setTimeout(() => {
         ball.style.transition = "all 0.6s ease-out";
         ball.style.left = (hoop.offsetLeft + 6) + 'px';
-        ball.style.top = (hoop.offsetTop + 25) + 'px'; // Rebondit au bord
+        ball.style.top = (hoop.offsetTop + 25) + 'px';
       }, 50);
 
       setTimeout(() => {
