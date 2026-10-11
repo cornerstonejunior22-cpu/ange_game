@@ -6,7 +6,6 @@
   <title>ANGE JUNIORCORNERSTONE</title>
   <link rel="manifest" href="manifest.json">
   
-  <!-- Firebase SDK Compat (App, Auth, and Firestore) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -52,17 +51,41 @@
       padding: 12px;
       margin-bottom: 15px;
     }
-    .code-input {
-      width: 80%;
+    .input-field {
+      width: 90%;
       padding: 10px;
       border-radius: 6px;
       border: 1px solid #444;
       background: #222;
       color: #fff;
       text-align: center;
-      font-size: 16px;
-      margin-top: 8px;
+      font-size: 15px;
+      margin-top: 6px;
       margin-bottom: 8px;
+    }
+    .btn-pay {
+      background: #28a745;
+      color: #fff;
+      font-weight: bold;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      margin: 5px 2px;
+    }
+    .btn-ussd {
+      background: #007bff;
+      color: #fff;
+      font-weight: bold;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin: 5px 2px;
     }
 
     .court {
@@ -151,20 +174,36 @@
   <h2>ANGE JUNIORCORNERSTONE</h2>
   
   <div class="dashboard">
-    <div class="stat-title">Temps restant (1h Max):</div>
+    <div class="stat-title">Tan ki rete (1h Max):</div>
     <div class="stat-val" id="timer">59:59</div>
     
-    <div class="stat-title">Joueurs inscrits dans ce bloc:</div>
+    <div class="stat-title">Jwè nan blòk la:</div>
     <div class="stat-val"><span id="player-count">0</span> / 220</div>
 
-    <div class="stat-title">Cagnotte Gagnant (90% du Pool):</div>
+    <div class="stat-title">Cagnotte Ganyan (90%):</div>
     <div class="stat-val" id="jackpot-val">0 Gdes</div>
   </div>
 
+  <!-- Seksyon Peman ak Demann Kòd -->
   <div class="pay-section" id="pay-box">
-    <p style="font-size: 14px; color: #ffd700;">Antre kòd 1,250 Gdes ou an pou debloke 3 tir :</p>
-    <input type="text" id="game-code" class="code-input" placeholder="Eg: ANG-1250-99">
-    <button class="btn-action" style="font-size: 14px; padding: 8px;" onclick="validateCode()">Valide Kòd la</button>
+    <p style="font-size: 13px; color: #ffd700; margin-bottom: 5px;">Voye 1,250 Gdes sou MonCash/Natcash pwopriyetè a:</p>
+    <div style="font-size: 15px; font-weight: bold; color: #fff; background: #222; padding: 6px; border-radius: 5px; margin-bottom: 8px;">
+      Numéro: <span id="owner-num">+509 3436-3143</span>
+    </div>
+    
+    <button class="btn-pay" onclick="copyNum()">Kopye Nimewo</button>
+    <a href="tel:*202%23" class="btn-ussd">*202# (Rele)</a>
+
+    <p style="font-size: 12px; color: #bbb; margin-top: 10px;">Apre peman an, antre enfòmasyon ou yo:</p>
+    <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou">
+    <input type="text" id="player-phone" class="input-field" placeholder="Nimewo MonCash/Natcash ou voye kòb la">
+    
+    <button class="btn-action" style="font-size: 14px; padding: 10px; margin-top: 5px;" onclick="submitPaymentRequest()">Mande Kòd Inik Mwen</button>
+    
+    <div style="margin-top: 12px;">
+      <input type="text" id="game-code" class="input-field" placeholder="Antre Kòd Inik ou resevwa a">
+      <button class="btn-action" style="font-size: 14px; padding: 8px;" onclick="validateCode()">Valide Kòd la</button>
+    </div>
   </div>
 
   <p style="margin-bottom: 10px; font-size: 14px;">Chwazi yon pozisyon (1 rive 7) :</p>
@@ -186,7 +225,6 @@
   <button class="btn-action" id="shoot-btn" onclick="shootBall()" disabled>Tire Boul la!</button>
 
   <script>
-    // Konfigirasyon Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBhVu7dY94w7c9v5ubojO4QRvntKHrkGkY",
       authDomain: "ange-juniorcornerstone.firebaseapp.com",
@@ -204,18 +242,40 @@
     let chances = 0;
     let currentPlayers = 0;
 
-    // Ale chache done blòk la an tan reyèl nan Firestore
+    function copyNum() {
+      navigator.clipboard.writeText("+50934363143");
+      alert("Nimewo a kopye avèk siksè!");
+    }
+
     db.collection("game_blocks").doc("active_block").onSnapshot((doc) => {
       if (doc.exists) {
         const data = doc.data();
         currentPlayers = parseInt(data.playersCount) || 0;
         document.getElementById('player-count').innerText = currentPlayers;
-        
-        // Kalkile Jackpot la an tan reyèl: N * 500 * 0.90
         let jackpot = currentPlayers * 500 * 0.90;
         document.getElementById('jackpot-val').innerText = jackpot + " Gdes";
       }
     });
+
+    async function submitPaymentRequest() {
+      const name = document.getElementById('player-name').value.trim();
+      const phone = document.getElementById('player-phone').value.trim();
+
+      if(name === "" || phone === "") {
+        alert("Tanpri antre non ou ak nimewo telefòn ou!");
+        return;
+      }
+
+      // Anrejistre demann lan nan Firestore pou admin an ka wè l
+      await db.collection("payment_requests").add({
+        playerName: name,
+        playerPhone: phone,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        status: "pending"
+      });
+
+      alert("Demann ou an voye bay pwopriyetè a! Lè l fin konfime peman an, w ap resevwa kòd inik ou a.");
+    }
 
     function selectPos(p) {
       document.querySelectorAll('.pos-btn').forEach(btn => btn.classList.remove('active'));
@@ -226,33 +286,28 @@
     async function validateCode() {
       const codeInput = document.getElementById('game-code').value.trim();
       if (codeInput === "") {
-        alert("Tanpri antre yon kòd valid ki peye 1,250 Gdes !");
+        alert("Tanpri antre kòd inik ou a!");
         return;
       }
 
-      try {
-        // Ajoute 1 jwè sou Firestore an tan reyèl
-        currentPlayers++;
-        await db.collection("game_blocks").doc("active_block").set({
-          playersCount: currentPlayers.toString(),
-          blockNumber: "1",
-          status: "active"
-        }, { merge: true });
+      // Tès validite kòd (nou kaajouste verifikasyon baz done pita)
+      currentPlayers++;
+      await db.collection("game_blocks").doc("active_block").set({
+        playersCount: currentPlayers.toString(),
+        blockNumber: "1",
+        status: "active"
+      }, { merge: true });
 
-        chances = 3;
-        document.getElementById('chances-left').innerText = chances;
-        document.getElementById('shoot-btn').disabled = false;
-        document.getElementById('pay-box').style.display = "none";
-        alert("Kòd valide ak siksè ! Ou gen 3 chans pou w tire kounye a.");
-      } catch (error) {
-        console.error("Erè:", error);
-        alert("Gen yon erè nan koneksyon ak baz done a.");
-      }
+      chances = 3;
+      document.getElementById('chances-left').innerText = chances;
+      document.getElementById('shoot-btn').disabled = false;
+      document.getElementById('pay-box').style.display = "none";
+      alert("Kòd valide! Tann lòt jwè yo pandan tan an ap desann.");
     }
 
     function shootBall() {
       if (chances <= 0) {
-        alert("Ou pa gen chans ankò! Achete yon lòt kòd.");
+        alert("Ou pa gen chans ankò!");
         return;
       }
 
@@ -277,15 +332,13 @@
         
         if (chances === 0) {
           document.getElementById('shoot-btn').disabled = true;
-          document.getElementById('pay-box').style.display = "block";
-          alert("Oups ! Boul la soti deyò. Ou fin itilize 3 chans ou yo.");
+          alert("Ou fini 3 chans ou yo!");
         } else {
-          alert("Tir raté ! Chans ki rete: " + chances);
+          alert("Tir rate! Chans ki rete: " + chances);
         }
       }, 700);
     }
 
-    // Minuteur d'une heure
     let timeLeft = 3600;
     setInterval(() => {
       if (timeLeft > 0) {
@@ -299,4 +352,3 @@
 
 </body>
 </html>
-
