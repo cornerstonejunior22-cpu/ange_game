@@ -1,39 +1,171 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="ht">
 <head>
-    <meta charset="UTF-8">
-    <title>ANGE JUNIORCORNERSTONE</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#00ff00">
-    <style>
-        body { background: #0b0b0b; color: #fff; font-family: sans-serif; padding: 20px; }
-        h1 { color: #e67e22; font-size: 22px; }
-        .card { background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        input { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
-        button { background: #2980b9; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; font-size: 16px; font-weight: bold; }
-        #res { background: #145a32; padding: 15px; border-radius: 5px; margin-top: 15px; display: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ANGE JUNIORCORNERSTONE</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0d0d0d;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 15px;
+    }
+    .header-logo {
+      width: 120px;
+      height: 120px;
+      border-radius: 15px;
+      border: 2px solid #ffd700;
+      margin-bottom: 10px;
+    }
+    .dashboard {
+      background: #1a1a1a;
+      border: 1px solid #ffd700;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 15px;
+    }
+    .stat-title { color: #aaa; font-size: 13px; }
+    .stat-val { font-size: 18px; font-weight: bold; color: #ffd700; margin-bottom: 5px; }
+    
+    /* Terren Basket */
+    .court {
+      position: relative;
+      width: 100%;
+      max-width: 350px;
+      height: 250px;
+      background: #8b4513;
+      border: 3px solid #fff;
+      border-radius: 10px;
+      margin: 0 auto 15px auto;
+      overflow: hidden;
+    }
+    .hoop {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 40px;
+      border: 4px solid #ff4500;
+      border-radius: 50%;
+    }
+    .pos-btn {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #ffd700;
+      color: #000;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+    /* 7 Pozisyon yo */
+    #p1 { bottom: 20px; left: 15%; }
+    #p2 { bottom: 60px; left: 25%; }
+    #p3 { bottom: 90px; left: 40%; }
+    #p4 { bottom: 100px; left: 50%; transform: translateX(-50%); }
+    #p5 { bottom: 90px; right: 40%; }
+    #p6 { bottom: 60px; right: 25%; }
+    #p7 { bottom: 20px; right: 15%; }
+
+    .ball {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: #ff6600;
+      border-radius: 50%;
+      display: none;
+      transition: all 0.8s ease-in-out;
+    }
+
+    .btn-action {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      font-weight: bold;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      max-width: 350px;
+    }
+  </style>
 </head>
 <body>
-    <h1>ANGE JUNIORCORNERSTONE</h1>
-    <div class="card">
-        <p><b>Jwèt:</b> 220 | <b>Frè:</b> 1,250 Gdes</p>
-        <p><b>Revni w:</b> 165,000 Gdes | <b>Jackpot:</b> 5,000 Gdes</p>
-    </div>
-    <div class="card">
-        <label>Chwazi Gayan (1-220):</label><br><br>
-        <input type="number" id="g" min="1" max="220" placeholder="Antre nimewo a...">
-    </div>
-    <button onclick="T()">Valide Tiraj la</button>
-    <div id="res"></div>
-<script>
-function T() {
-    let v = document.getElementById("g").value;
-    let n = (v !== "" && !isNaN(v)) ? parseInt(v) : Math.floor(Math.random() * 220) + 1;
-    let r = document.getElementById("res");
-    r.style.display = "block";
-    r.innerHTML = "<b>REZILTA TIRAJ:</b><br><br>🏆 Gayan: #" + n;
-}
-</script>
+
+  <img src="logo.png" alt="Logo" class="header-logo">
+  <h2>ANGE JUNIORCORNERSTONE</h2>
+  
+  <div class="dashboard">
+    <div class="stat-title">Temps restant (1h Max):</div>
+    <div class="stat-val" id="timer">59:59</div>
+    
+    <div class="stat-title">Joueurs inscrits dans ce bloc:</div>
+    <div class="stat-val"><span id="player-count">1</span> / 220</div>
+
+    <div class="stat-title">Cagnotte Gagnant (90% du Pool):</div>
+    <div class="stat-val" id="jackpot-val">450 Gdes</div>
+  </div>
+
+  <p style="margin-bottom: 10px;">Chwazi yon pozisyon (1 rive 7) pou w tire :</p>
+  
+  <div class="court">
+    <div class="hoop" id="hoop"></div>
+    <div class="ball" id="ball"></div>
+    
+    <button class="pos-btn" id="p1" onclick="selectPos(1)">1</button>
+    <button class="pos-btn" id="p2" onclick="selectPos(2)">2</button>
+    <button class="pos-btn" id="p3" onclick="selectPos(3)">3</button>
+    <button class="pos-btn" id="p4" onclick="selectPos(4)">4</button>
+    <button class="pos-btn" id="p5" onclick="selectPos(5)">5</button>
+    <button class="pos-btn" id="p6" onclick="selectPos(6)">6</button>
+    <button class="pos-btn" id="p7" onclick="selectPos(7)">7</button>
+  </div>
+
+  <p style="margin-bottom: 10px;">Chans ki rete: <b id="chances-left" style="color: #ffd700;">3</b> / 3</p>
+  <button class="btn-action" onclick="shootBall()">Tire Boul la!</button>
+
+  <script>
+    let currentPos = 4;
+    let chances = 3;
+    let playerCount = 1;
+
+    function selectPos(p) {
+      currentPos = p;
+      alert("Ou chwazi pozisyon " + p);
+    }
+
+    function shootBall() {
+      if (chances <= 0) {
+        alert("Ou fin itilize 3 chans ou yo!");
+        return;
+      }
+
+      chances--;
+      document.getElementById('chances-left').innerText = chances;
+
+      // Similasyon pou kounye a : tout 3 chans pèdi jiskaske lojik backend ranpli
+      alert("Tir nan pozisyon " + currentPos + " soti deyò! (Chans ki rete: " + chances + ")");
+    }
+
+    // Timer 1 Èdtan Similasyon
+    let timeLeft = 3600;
+    setInterval(() => {
+      if (timeLeft > 0) {
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+      }
+    }, 1000);
+  </script>
+
 </body>
-</html>
+        </html>
+        
