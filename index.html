@@ -6,9 +6,9 @@
   <title>ANGE JUNIORCORNERSTONE</title>
   <link rel="manifest" href="manifest.json">
   
-  <!-- Firebase SDK Compat -->
+  <!-- Firebase SDK Compat (App, Auth, and Firestore) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -186,7 +186,7 @@
   <button class="btn-action" id="shoot-btn" onclick="shootBall()" disabled>Tire Boul la!</button>
 
   <script>
-    // Configuration Firebase Réelle
+    // Konfigirasyon Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyBhVu7dY94w7c9v5ubojO4QRvntKHrkGkY",
       authDomain: "ange-juniorcornerstone.firebaseapp.com",
@@ -197,11 +197,25 @@
       measurementId: "G-5LK9JTTTHJ"
     };
 
-    // Initialisation
     firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
     let currentPos = 4;
     let chances = 0;
+    let currentPlayers = 0;
+
+    // Ale chache done blòk la an tan reyèl nan Firestore
+    db.collection("game_blocks").doc("active_block").onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        currentPlayers = parseInt(data.playersCount) || 0;
+        document.getElementById('player-count').innerText = currentPlayers;
+        
+        // Kalkile Jackpot la an tan reyèl: N * 500 * 0.90
+        let jackpot = currentPlayers * 500 * 0.90;
+        document.getElementById('jackpot-val').innerText = jackpot + " Gdes";
+      }
+    });
 
     function selectPos(p) {
       document.querySelectorAll('.pos-btn').forEach(btn => btn.classList.remove('active'));
@@ -209,17 +223,31 @@
       currentPos = p;
     }
 
-    function validateCode() {
+    async function validateCode() {
       const codeInput = document.getElementById('game-code').value.trim();
       if (codeInput === "") {
         alert("Tanpri antre yon kòd valid ki peye 1,250 Gdes !");
         return;
       }
-      chances = 3;
-      document.getElementById('chances-left').innerText = chances;
-      document.getElementById('shoot-btn').disabled = false;
-      document.getElementById('pay-box').style.display = "none";
-      alert("Kòd valide ak siksè ! Ou gen 3 chans pou w tire kounye a.");
+
+      try {
+        // Ajoute 1 jwè sou Firestore an tan reyèl
+        currentPlayers++;
+        await db.collection("game_blocks").doc("active_block").set({
+          playersCount: currentPlayers.toString(),
+          blockNumber: "1",
+          status: "active"
+        }, { merge: true });
+
+        chances = 3;
+        document.getElementById('chances-left').innerText = chances;
+        document.getElementById('shoot-btn').disabled = false;
+        document.getElementById('pay-box').style.display = "none";
+        alert("Kòd valide ak siksè ! Ou gen 3 chans pou w tire kounye a.");
+      } catch (error) {
+        console.error("Erè:", error);
+        alert("Gen yon erè nan koneksyon ak baz done a.");
+      }
     }
 
     function shootBall() {
@@ -271,3 +299,4 @@
 
 </body>
 </html>
+
