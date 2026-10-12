@@ -105,21 +105,21 @@
       box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
     }
 
-    /* ESPAS JWÈT 3D CANVAS */
-    #arena-container {
+    /* ESPAS TEREN BRAYÈL AK JWÈ AK BOUL LA */
+    #game-arena {
       position: relative;
       width: calc(100% - 30px);
-      max-width: 400px;
+      max-width: 380px;
       height: 380px;
       margin: 0 auto 20px auto;
-      border: 2px solid #ffd700;
+      background: radial-gradient(circle at center, #1b4d3e 0%, #0d231b 100%);
+      border: 3px solid #ffd700;
       border-radius: 15px;
       overflow: hidden;
-      box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
-      background: #111;
+      box-shadow: 0 5px 25px rgba(255, 215, 0, 0.4);
     }
 
-    #arena-container.full-screen-mode {
+    #game-arena.full-screen-mode {
       position: fixed;
       top: 0; left: 0;
       width: 100vw; height: 100vh;
@@ -128,12 +128,6 @@
       border: none;
       border-radius: 0;
       z-index: 1000;
-    }
-
-    canvas {
-      width: 100%;
-      height: 100%;
-      display: block;
     }
 
     .live-indicator {
@@ -148,24 +142,17 @@
       border-radius: 12px;
       box-shadow: 0 0 10px rgba(255, 69, 0, 0.8);
       z-index: 15;
-      animation: blinkLive 1.2s infinite;
-    }
-
-    @keyframes blinkLive {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
     }
 
     .chances-card {
       position: absolute;
       top: 12px;
       right: 12px;
-      background: rgba(0, 15, 35, 0.85);
+      background: rgba(0, 15, 35, 0.9);
       border: 2px solid #ffd700;
       border-radius: 10px;
       padding: 6px 10px;
       text-align: right;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
       z-index: 15;
     }
     .chances-title {
@@ -193,11 +180,11 @@
     }
     .ball-icon.off { opacity: 0.2; }
 
-    /* BOUTON POZISYON YO INTERACTIF SOU CANVAS LA */
-    .pos-overlay-btn {
+    /* 7 Pozisyon yo sou teren an */
+    .pos-btn-3d {
       position: absolute;
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 28px;
       border-radius: 50%;
       background: radial-gradient(circle, #ffd700, #ff8c00);
       color: #000;
@@ -211,22 +198,31 @@
       justify-content: center;
       font-size: 13px;
       transform: translate(-50%, -50%);
+      transition: transform 0.2s;
     }
-
-    .pos-overlay-btn.active {
+    .pos-btn-3d.active {
       background: radial-gradient(circle, #ff4500, #dc3545);
       color: #fff;
       box-shadow: 0 0 15px #ff4500;
-      transform: translate(-50%, -50%) scale(1.25);
+      transform: translate(-50%, -50%) scale(1.3);
     }
+
+    /* Pozisyon yo an pousantaj sou arène a */
+    #pos-1 { top: 55%; left: 18%; }
+    #pos-2 { top: 48%; left: 50%; }
+    #pos-3 { top: 55%; left: 82%; }
+    #pos-4 { top: 68%; left: 33%; }
+    #pos-5 { top: 72%; left: 50%; }
+    #pos-6 { top: 68%; left: 67%; }
+    #pos-7 { top: 86%; left: 50%; }
 
     .shoot-btn-3d {
       position: absolute;
       bottom: 12px;
       left: 50%;
       transform: translateX(-50%);
-      width: 80%;
-      max-width: 250px;
+      width: 75%;
+      max-width: 240px;
       padding: 10px;
       background: linear-gradient(135deg, #ffd700, #ff8c00);
       color: #000;
@@ -322,11 +318,11 @@
     </div>
   </div>
 
-  <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren 3D & Jwè k ap Drible (Pure Code) :</p>
+  <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren & Jwè an Mouvman :</p>
 
-  <!-- CONTAINER TEREN CANVAS 3D -->
-  <div id="arena-container">
-    <div class="live-indicator">🔴 JWÈT AN DIRECT (CANVAS 3D)</div>
+  <!-- TEREN JWÈT AN 3D VIVAN -->
+  <div id="game-arena">
+    <div class="live-indicator">🔴 TEREN AN DIRECT (VIDEYO)</div>
 
     <div class="chances-card">
       <div class="chances-title">TES CHANS</div>
@@ -335,19 +331,19 @@
       <div class="chance-item"><div class="ball-icon" id="c3"></div> 3 Chans</div>
     </div>
 
-    <!-- CANVAS PWOGRAME POU DESINE TEREN, JWÈ AK BOUL LA -->
-    <canvas id="gameCanvas"></canvas>
+    <!-- CANVAS POU DESINE TEREN, PANYE, JWÈ K AP DRIBLE AK BOUL LA -->
+    <canvas id="arenaCanvas"></canvas>
 
-    <!-- 7 POZISYON SOU TEREN LA -->
-    <div class="pos-overlay-btn active" style="top: 52%; left: 15%;" onclick="setPos(1)">1</div>
-    <div class="pos-overlay-btn" style="top: 45%; left: 50%;" onclick="setPos(2)">2</div>
-    <div class="pos-overlay-btn" style="top: 52%; left: 85%;" onclick="setPos(3)">3</div>
-    <div class="pos-overlay-btn" style="top: 65%; left: 32%;" onclick="setPos(4)">4</div>
-    <div class="pos-overlay-btn" style="top: 68%; left: 50%;" onclick="setPos(5)">5</div>
-    <div class="pos-overlay-btn" style="top: 65%; left: 68%;" onclick="setPos(6)">6</div>
-    <div class="pos-overlay-btn" style="top: 82%; left: 50%;" onclick="setPos(7)">7</div>
+    <!-- 7 POZISYON YO -->
+    <div class="pos-btn-3d active" id="pos-1" onclick="selectPos(1)">1</div>
+    <div class="pos-btn-3d" id="pos-2" onclick="selectPos(2)">2</div>
+    <div class="pos-btn-3d" id="pos-3" onclick="selectPos(3)">3</div>
+    <div class="pos-btn-3d" id="pos-4" onclick="selectPos(4)">4</div>
+    <div class="pos-btn-3d" id="pos-5" onclick="selectPos(5)">5</div>
+    <div class="pos-btn-3d" id="pos-6" onclick="selectPos(6)">6</div>
+    <div class="pos-btn-3d" id="pos-7" onclick="selectPos(7)">7</div>
 
-    <button class="shoot-btn-3d" id="shootBtn" onclick="triggerShot()" disabled>TIRE BOUL LA! (Bloke)</button>
+    <button class="shoot-btn-3d" id="shootBtn" onclick="shootBall()" disabled>TIRE BOUL LA! (Bloke)</button>
   </div>
 
   <div id="secret-admin-modal">
@@ -484,7 +480,7 @@
 
       isCodeValidated = true;
       document.getElementById('setup-screen').style.display = 'none';
-      document.getElementById('arena-container').classList.add('full-screen-mode');
+      document.getElementById('game-arena').classList.add('full-screen-mode');
       
       const shootBtn = document.getElementById('shootBtn');
       shootBtn.disabled = false;
@@ -494,9 +490,9 @@
     }
 
     // ==========================================
-    // ANTIMASYON CANVAS 3D JWÈ AK TEREN (PURE CODE)
+    // ANGLE CANVAS ANIMASYON "VIDEYO" TEREN AK JWÈ
     // ==========================================
-    const canvas = document.getElementById('gameCanvas');
+    const canvas = document.getElementById('arenaCanvas');
     const ctx = canvas.getContext('2d');
 
     function resizeCanvas() {
@@ -506,119 +502,125 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    let posCoords = {
-      1: { xRatio: 0.15, yRatio: 0.52 },
-      2: { xRatio: 0.50, yRatio: 0.45 },
-      3: { xRatio: 0.85, yRatio: 0.52 },
-      4: { xRatio: 0.32, yRatio: 0.65 },
-      5: { xRatio: 0.50, yRatio: 0.68 },
-      6: { xRatio: 0.68, yRatio: 0.65 },
-      7: { xRatio: 0.50, yRatio: 0.82 }
+    const positionsMap = {
+      1: { x: 0.18, y: 0.55 },
+      2: { x: 0.50, y: 0.48 },
+      3: { x: 0.82, y: 0.55 },
+      4: { x: 0.33, y: 0.68 },
+      5: { x: 0.50, y: 0.72 },
+      6: { x: 0.67, y: 0.68 },
+      7: { x: 0.50, y: 0.86 }
     };
 
-    let isShooting = false;
-    let ballPos = { x: 0, y: 0, z: 0 };
-    let playerJump = 0;
-    let dribbleFrame = 0;
-
-    function setPos(p) {
+    function selectPos(p) {
       currentPos = p;
-      document.querySelectorAll('.pos-overlay-btn').forEach((btn, idx) => {
+      document.querySelectorAll('.pos-btn-3d').forEach((btn, idx) => {
         btn.classList.toggle('active', (idx + 1) === p);
       });
     }
 
-    function renderGame() {
+    let dribbleTick = 0;
+    let isShooting = false;
+    let shotProgress = 0;
+    let currentBallPos = { x: 0, y: 0 };
+
+    function drawGame() {
       const W = canvas.width;
       const H = canvas.height;
 
-      // 1. DESSINER LE TERRAIN ET PANNIER (PERSPECTIVE 3D)
-      ctx.fillStyle = '#1e3d59';
+      // 1. FOND TEREN BASKETBALL PWOFESYONÈL
+      ctx.fillStyle = '#b85b14'; // Parquet bwa
       ctx.fillRect(0, 0, W, H);
 
-      // Fond Ciel/Stade
-      let grad = ctx.createLinearGradient(0, 0, 0, H * 0.3);
-      grad.addColorStop(0, '#0a1118');
-      grad.addColorStop(1, '#17222d');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, W, H * 0.3);
-
-      // Teren en parquet
-      ctx.fillStyle = '#b85b14';
-      ctx.beginPath();
-      ctx.moveTo(W * 0.05, H * 0.35);
-      ctx.lineTo(W * 0.95, H * 0.35);
-      ctx.lineTo(W, H);
-      ctx.lineTo(0, H);
-      ctx.closePath();
-      ctx.fill();
-
-      // Liy zòn panye a
+      // Liy teren an gwo klè
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
+      
+      // Arc de cercle 3 points
       ctx.beginPath();
-      ctx.moveTo(W * 0.35, H * 0.35);
-      ctx.lineTo(W * 0.3, H * 0.65);
-      ctx.lineTo(W * 0.7, H * 0.65);
-      ctx.lineTo(W * 0.65, H * 0.35);
+      ctx.arc(W * 0.5, H * 0.2, W * 0.4, 0, Math.PI);
       ctx.stroke();
 
-      // Panye Basketball (Hoop)
+      // Zòn panye a (Paint)
+      ctx.fillStyle = '#cc3300';
+      ctx.fillRect(W * 0.35, 0, W * 0.3, H * 0.45);
+      ctx.strokeRect(W * 0.35, 0, W * 0.3, H * 0.45);
+
+      // Panye Basketball (Anwo)
       let hoopX = W * 0.5;
-      let hoopY = H * 0.22;
-      // Poteau & Panneau
-      ctx.fillStyle = '#222';
-      ctx.fillRect(hoopX - 4, hoopY - 35, 8, 50);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.fillRect(hoopX - 25, hoopY - 30, 50, 30);
-      ctx.strokeStyle = '#000';
-      ctx.strokeRect(hoopX - 25, hoopY - 30, 50, 30);
-      // Sèk wouj la (Rim)
+      let hoopY = H * 0.12;
+      ctx.fillStyle = '#111';
+      ctx.fillRect(hoopX - 35, hoopY - 10, 70, 12);
       ctx.strokeStyle = '#ff4500';
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.arc(hoopX, hoopY, 12, 0, Math.PI * 2);
+      ctx.arc(hoopX, hoopY + 12, 14, 0, Math.PI * 2);
       ctx.stroke();
 
-      // 2. DESINE JWÈ A SOU POZISYON KOTE L AP DRIBLE OUBYEN SOTE TIRE
-      let targetCoord = posCoords[currentPos];
-      let pX = W * targetCoord.xRatio;
-      let pY = H * targetCoord.yRatio;
+      // 2. JWÈ A SOU POZISYON TELEGIDÈ A CHWAZI A
+      let posData = positionsMap[currentPos];
+      let jX = W * posData.x;
+      let jY = H * posData.y;
 
-      dribbleFrame += 0.12;
-      let dribbleY = Math.abs(Math.sin(dribbleFrame)) * 18;
+      dribbleTick += 0.15;
+      let bounce = Math.abs(Math.sin(dribbleTick)) * 14;
 
       ctx.save();
-      ctx.translate(pX, pY - playerJump);
-
-      // Ombramj Jwè a
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.beginPath();
-      ctx.ellipse(0, playerJump, 16, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Kò Jwè a (Maillot Bleu)
-      ctx.fillStyle = '#0055ff';
-      ctx.fillRect(-10, -40, 20, 25); // Maillot
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(-10, -15, 20, 10); // Short
-
-      // Tèt jwè a
-      ctx.fillStyle = '#6d4c41';
-      ctx.beginPath();
-      ctx.arc(0, -50, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Men ak Pye jwè a
-      ctx.strokeStyle = '#6d4c41';
-      ctx.lineWidth = 4;
-      // Pye
-      ctx.beginPath();
-      ctx.moveTo(-5, -5); ctx.lineTo(-7, 10);
-      ctx.moveTo(5, -5); ctx.lineTo(7, 10);
-      ctx.stroke();
-
-      // Bra ak animasyon drible
-      ctx.beginPath();
       if (!isShooting) {
-        ctx.moveTo(-8, -35); ctx.lineTo(-14, -20
+        // Jwè a kanpe ap drible
+        // Maillot ble
+        ctx.fillStyle = '#0044ff';
+        ctx.beginPath();
+        ctx.arc(jX, jY - 20, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Tèt
+        ctx.fillStyle = '#5c4033';
+        ctx.beginPath();
+        ctx.arc(jX, jY - 38, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Boul la ap drible nan men l
+        ctx.fillStyle = '#ff6f00';
+        ctx.beginPath();
+        ctx.arc(jX + 12, jY - 5 + bounce, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#000';
+        ctx.stroke();
+      } else {
+        // ANGLE TIR (VIDEO SHOT)
+        shotProgress += 0.035;
+        let tX = jX + (hoopX - jX) * shotProgress;
+        let tY = (jY - 30) + (hoopY - (jY - 30)) * shotProgress - (Math.sin(shotProgress * Math.PI) * 90);
+
+        currentBallPos = { x: tX, y: tY };
+
+        // Jwè a leve bra l pou l tire
+        ctx.fillStyle = '#0044ff';
+        ctx.beginPath();
+        ctx.arc(jX, jY - 25, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bra leve anlè
+        ctx.strokeStyle = '#5c4033';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(jX - 6, jY - 30); ctx.lineTo(jX, jY - 50);
+        ctx.stroke();
+
+        // Boul la k ap vole nan lè a
+        ctx.fillStyle = '#ff6f00';
+        ctx.beginPath();
+        ctx.arc(currentBallPos.x, currentBallPos.y, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#000';
+        ctx.stroke();
+
+        if (shotProgress >= 1) {
+          isShooting = false;
+          shotProgress = 0;
+        }
+ 
