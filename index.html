@@ -133,46 +133,14 @@
       position: absolute;
       top: 15px;
       left: 15px;
-      background: rgba(40, 167, 69, 0.85);
-      color: #fff;
+      background: rgba(255, 215, 0, 0.85);
+      color: #000;
       font-size: 10px;
       font-weight: bold;
       padding: 4px 8px;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(40, 167, 69, 0.6);
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
       z-index: 15;
-      animation: blinkLive 1.5s infinite;
-    }
-
-    @keyframes blinkLive {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    /* ANIMASYON DRIBLE BALON ATÈ A (MATEN BALON AN) */
-    .dribble-ball {
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      background: radial-gradient(circle at 6px 6px, #ff8c00, #b34700);
-      border: 1px solid #000;
-      border-radius: 50%;
-      bottom: 24%;
-      left: 23%;
-      z-index: 25;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.6);
-      animation: dribbleAction 0.6s infinite ease-in-out alternate;
-    }
-
-    @keyframes dribbleAction {
-      0% {
-        transform: translateY(0) scale(1);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-      }
-      100% {
-        transform: translateY(35px) scale(0.85, 0.7); /* Lè l frape atè a li plat ti kras */
-        box-shadow: 0 10px 15px rgba(0,0,0,0.8);
-      }
     }
 
     /* Panèl TES CHANS */
@@ -215,11 +183,11 @@
       opacity: 0.2;
     }
 
-    /* 7 Pozisyon yo */
+    /* 7 Pozisyon yo (Regle pou telegidè a chwazi) */
     .pos-btn-3d {
       position: absolute;
-      width: 36px;
-      height: 26px;
+      width: 38px;
+      height: 28px;
       border-radius: 50%;
       background: radial-gradient(circle, #ffd700, #ff8c00);
       color: #000;
@@ -232,23 +200,23 @@
       align-items: center;
       justify-content: center;
       font-size: 14px;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s ease, background 0.3s ease;
     }
 
     .pos-btn-3d.active {
       background: radial-gradient(circle, #ff4500, #dc3545);
       color: #fff;
       box-shadow: 0 0 15px #ff4500;
-      transform: scale(1.25);
+      transform: scale(1.3);
     }
 
-    /* Pozisyon yo */
-    #pos-1 { top: 50%; left: 10%; }
-    #pos-2 { top: 45%; left: 45%; }
-    #pos-3 { top: 50%; right: 10%; }
-    #pos-4 { top: 62%; left: 30%; }
-    #pos-5 { top: 66%; left: 48%; }
-    #pos-6 { top: 62%; right: 30%; }
+    /* Pozisyon sou pèspektiv teren an */
+    #pos-1 { top: 52%; left: 12%; }
+    #pos-2 { top: 45%; left: 48%; }
+    #pos-3 { top: 52%; right: 12%; }
+    #pos-4 { top: 64%; left: 32%; }
+    #pos-5 { top: 68%; left: 48%; }
+    #pos-6 { top: 64%; right: 32%; }
     #pos-7 { top: 82%; left: 48%; }
 
     /* Bouton Tire */
@@ -277,7 +245,7 @@
       cursor: not-allowed;
     }
 
-    /* BALLE EN ANIMATION TIR */
+    /* BALLE EN ANIMATION TIR 3D */
     .animated-basketball {
       position: absolute;
       width: 28px;
@@ -368,14 +336,11 @@
     </div>
   </div>
 
-  <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a (Jwè a ap drible) :</p>
+  <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a :</p>
 
   <!-- EKRAN 3D ARÈNE JWÈT LA -->
   <div id="game-arena">
-    <div class="live-indicator">🔴 EN DIRECT (DRIBLE EN MOUVMAN)</div>
-
-    <!-- TI BALON K AP DRIBLE AN REALTIME NAN MEN JWÈ A -->
-    <div class="dribble-ball" id="dribbler"></div>
+    <div class="live-indicator">🏀 TEREN CHWAZI POZISYON</div>
 
     <!-- Panèl TES CHANS -->
     <div class="chances-card">
@@ -388,7 +353,7 @@
     <!-- BALLE EN ANIMATION 3D POUR TIR -->
     <div class="animated-basketball" id="animated-ball"></div>
 
-    <!-- 7 Pozisyon yo -->
+    <!-- 7 Pozisyon yo (Telegidè a chwazi kote pou l tire) -->
     <div class="pos-btn-3d active" id="pos-1" onclick="selectPos3D(1)">1</div>
     <div class="pos-btn-3d" id="pos-2" onclick="selectPos3D(2)">2</div>
     <div class="pos-btn-3d" id="pos-3" onclick="selectPos3D(3)">3</div>
@@ -541,7 +506,7 @@
       shootBtn.disabled = false;
       shootBtn.innerText = "TIRE BOUL LA!";
 
-      alert("Kòd valide! Teren an elaji an plen ekran. Ou lib pou jwe kounye a!");
+      alert("Kòd valide! Teren an elaji an plen ekran. Ou lib pou chwazi pozisyon w ak tire!");
     }
 
     function selectPos3D(p) {
@@ -559,9 +524,6 @@
 
       const shootBtn = document.getElementById('shoot-btn-3d');
       shootBtn.disabled = true;
-
-      // Kache drible la pandan l ap tire
-      document.getElementById('dribbler').style.display = 'none';
 
       if (chances === 3) document.getElementById('c3').classList.add('off');
       else if (chances === 2) document.getElementById('c2').classList.add('off');
@@ -611,4 +573,26 @@
             alert("BOUYEN! 🏀 Boul la antre nan panye a! Ou genyen!");
           } else {
             if (chances > 0) {
-              alert("Oups! Boul la pa antre. Ou rete
+              alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
+              shootBtn.disabled = false;
+            } else {
+              alert("Oups! 3 chans ou yo fini. Ou pèdi nan blòk sa a!");
+            }
+          }
+        }
+      }, 25);
+    }
+
+    let timeLeft = 3600;
+    setInterval(() => {
+      if (timeLeft > 0) {
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+      }
+    }, 1000);
+  </script>
+
+</body>
+</html>
