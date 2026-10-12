@@ -2,7 +2,7 @@
 <html lang="ht">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ANGE JUNIORCORNERSTONE</title>
   <link rel="manifest" href="manifest.json">
   
@@ -16,14 +16,16 @@
       color: #fff;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       text-align: center;
-      padding: 15px;
+      padding: 0;
+      margin: 0;
+      overflow-x: hidden;
     }
     .header-logo {
-      width: 100px;
-      height: 100px;
+      width: 90px;
+      height: 90px;
       border-radius: 18px;
       border: 2px solid #ffd700;
-      margin-bottom: 6px;
+      margin: 10px 0 6px 0;
       box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
       cursor: pointer;
     }
@@ -32,14 +34,13 @@
       color: #ffd700;
       margin-bottom: 10px;
       text-transform: uppercase;
-      letter-spacing: 1px;
     }
     .dashboard {
       background: rgba(26, 26, 26, 0.9);
       border: 1px solid #ffd700;
       border-radius: 12px;
       padding: 10px;
-      margin-bottom: 12px;
+      margin: 0 15px 12px 15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
     .stat-title { color: #bbb; font-size: 11px; margin-top: 2px; }
@@ -50,7 +51,7 @@
       border: 1px dashed #ffd700;
       border-radius: 10px;
       padding: 10px;
-      margin-bottom: 12px;
+      margin: 0 15px 12px 15px;
     }
     .input-field, .select-field {
       width: 90%;
@@ -88,99 +89,6 @@
       display: inline-block;
       margin: 2px;
     }
-
-    /* Teren Baskèt ki pi reyalis */
-    .court {
-      position: relative;
-      width: 100%;
-      max-width: 340px;
-      height: 280px;
-      background: linear-gradient(to bottom, #d2691e, #8b4513);
-      border: 3px solid #fff;
-      border-radius: 15px;
-      margin: 0 auto 12px auto;
-      overflow: hidden;
-      box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
-    }
-    /* Liy teren an */
-    .court::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 50%;
-      transform: translateX(-50%);
-      width: 140px;
-      height: 100px;
-      border: 2px dashed rgba(255,255,255,0.4);
-      border-top: none;
-      border-radius: 0 0 70px 70px;
-    }
-
-    .hoop {
-      position: absolute;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 44px;
-      height: 26px;
-      border: 4px solid #ff4500;
-      border-radius: 50%;
-      box-shadow: 0 0 10px #ff4500;
-      z-index: 1;
-    }
-    .backboard {
-      position: absolute;
-      top: 8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 65px;
-      height: 10px;
-      background: #fff;
-      border-radius: 2px;
-    }
-
-    .pos-btn {
-      position: absolute;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: #ffd700;
-      color: #000;
-      font-weight: bold;
-      border: 2px solid #000;
-      cursor: pointer;
-      z-index: 2;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.5);
-      transition: 0.2s;
-    }
-    .pos-btn:hover { transform: scale(1.1); }
-    .pos-btn.active {
-      background: #ff4500;
-      color: #fff;
-      transform: scale(1.2);
-      box-shadow: 0 0 10px #ff4500;
-    }
-
-    /* 7 Pozisyon yo sou arc an */
-    #p1 { bottom: 25px; left: 10%; }
-    #p2 { bottom: 65px; left: 18%; }
-    #p3 { bottom: 115px; left: 28%; }
-    #p4 { bottom: 135px; left: 50%; transform: translateX(-50%); }
-    #p5 { bottom: 115px; right: 28%; }
-    #p6 { bottom: 65px; right: 18%; }
-    #p7 { bottom: 25px; right: 10%; }
-
-    .ball {
-      position: absolute;
-      width: 24px;
-      height: 24px;
-      background: radial-gradient(circle at 8px 8px, #ff8c00, #b22222);
-      border-radius: 50%;
-      border: 1px solid #000;
-      z-index: 5;
-      display: none;
-      box-shadow: 0 0 8px rgba(255,69,0,0.8);
-    }
-
     .btn-action {
       background: linear-gradient(135deg, #ffd700, #ff8c00);
       color: #000;
@@ -190,16 +98,115 @@
       border-radius: 25px;
       font-size: 15px;
       cursor: pointer;
-      width: 100%;
+      width: 90%;
       max-width: 340px;
       box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
     }
-    .btn-action:disabled {
-      background: #555;
-      color: #888;
-      box-shadow: none;
+
+    /* ESPAS JWÈT FULL SCREEN 3D (KONTWÒL PA FOTO OU VOYE A) */
+    #game-arena {
+      display: none; /* Kache jiskaske li valide kòd la */
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: url('court_bg.png') no-repeat center center;
+      background-size: cover;
+      z-index: 1000;
     }
 
+    /* Panèl TES CHANS (Anwo a Dwat) - Regle selon pèspektiv foto an */
+    .chances-card {
+      position: absolute;
+      top: 25px;
+      right: 25px;
+      background: rgba(0, 15, 35, 0.85);
+      border: 2px solid #ffd700;
+      border-radius: 10px;
+      padding: 10px 15px;
+      text-align: right;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+    }
+    .chances-title {
+      color: #fff;
+      font-weight: bold;
+      font-size: 12px;
+      letter-spacing: 1px;
+      margin-bottom: 5px;
+    }
+    .chance-item {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      color: #fff;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    .ball-icon {
+      width: 20px;
+      height: 20px;
+      background: radial-gradient(circle at 5px 5px, #ff8c00, #d2691e);
+      border-radius: 50%;
+      border: 1px solid #000;
+    }
+    .ball-icon.off {
+      opacity: 0.2;
+    }
+
+    /* 7 Pozisyon yo plase 3D sou teren an - Regle selon foto an */
+    .pos-btn-3d {
+      position: absolute;
+      width: 40px;
+      height: 28px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffd700, #ff8c00);
+      color: #000;
+      font-weight: bold;
+      border: 2px solid #fff;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 0 10px #ffd700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+    .pos-btn-3d.active {
+      background: radial-gradient(circle, #ff4500, #dc3545);
+      color: #fff;
+      box-shadow: 0 0 15px #ff4500;
+      transform: scale(1.2);
+    }
+
+    /* Pozisyon sou pèspektiv foto an */
+    #pos-1 { top: 50%; left: 10%; }
+    #pos-2 { top: 45%; left: 45%; }
+    #pos-3 { top: 50%; right: 10%; }
+    #pos-4 { top: 62%; left: 30%; }
+    #pos-5 { top: 66%; left: 48%; }
+    #pos-6 { top: 62%; right: 30%; }
+    #pos-7 { top: 82%; left: 48%; }
+
+    /* Bouton Tire a nan kwen anba - Mete l sou kote pou l pa kouvri pozisyon yo */
+    .shoot-btn-3d {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70%;
+      max-width: 250px;
+      padding: 12px;
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #000;
+      font-weight: bold;
+      font-size: 16px;
+      border: none;
+      border-radius: 30px;
+      box-shadow: 0 4px 15px rgba(255,215,0,0.5);
+      cursor: pointer;
+    }
+
+    /* Admin Modal */
     #secret-admin-modal {
       display: none;
       position: fixed;
@@ -231,69 +238,76 @@
 </head>
 <body>
 
-  <img src="logo.png" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
-  <h2>ANGE JUNIORCORNERSTONE</h2>
-  
-  <div class="dashboard">
-    <div class="stat-title">Tan ki rete (1h Max):</div>
-    <div class="stat-val" id="timer">59:59</div>
+  <!-- UI Premye Ekran (Peman ak Enfòmasyon) -->
+  <div id="setup-screen">
+    <img src="logo.png" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
+    <h2>ANGE JUNIORCORNERSTONE</h2>
     
-    <div class="stat-title">Jwè nan blòk sa a:</div>
-    <div class="stat-val"><span id="player-count">0</span> / 220</div>
+    <div class="dashboard">
+      <div class="stat-title">Tan ki rete (1h Max):</div>
+      <div class="stat-val" id="timer">59:59</div>
+      
+      <div class="stat-title">Jwè nan blòk sa a:</div>
+      <div class="stat-val"><span id="player-count">0</span> / 220</div>
 
-    <div class="stat-title">Cagnotte Ganyan (90%):</div>
-    <div class="stat-val" id="jackpot-val">0 Gdes</div>
-  </div>
-
-  <div class="pay-section" id="pay-box">
-    <p style="font-size: 12px; color: #ffd700; margin-bottom: 6px;">
-      Achte kòd inik ou (1,250 / 250 / 100 Gdes)
-    </p>
-
-    <div style="font-size: 12px; background: #222; padding: 6px; border-radius: 6px; margin-bottom: 6px; text-align: left;">
-      <p><b>MonCash :</b> +509 3436-3143 <button class="btn-pay" onclick="copyNum('34363143')">Kopye</button></p>
-      <p style="margin-top: 3px;"><b>Natcash :</b> +509 4212-5630 <button class="btn-pay" onclick="copyNum('42125630')">Kopye</button></p>
+      <div class="stat-title">Cagnotte Ganyan (90%):</div>
+      <div class="stat-val" id="jackpot-val">0 Gdes</div>
     </div>
-    
-    <a href="tel:*202%23" class="btn-ussd">*202# MonCash</a>
-    <a href="tel:*202%23" class="btn-ussd" style="background:#dc3545;">*202# Natcash</a>
 
-    <select id="group-select" class="select-field" onchange="switchGroup()">
-      <option value="1250">Gwoup 1 - Code 1,250 Gdes</option>
-      <option value="250">Gwoup 2 - Code 250 Gdes</option>
-      <option value="100">Gwoup 3 - Code 100 Gdes</option>
-    </select>
+    <div class="pay-section" id="pay-box">
+      <p style="font-size: 12px; color: #ffd700; margin-bottom: 6px;">
+        Achte kòd inik ou (1,250 / 250 / 100 Gdes)
+      </p>
 
-    <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou">
-    <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la">
-    
-    <button class="btn-action" style="font-size: 13px; padding: 8px;" onclick="submitPaymentRequest()">Mande Kòd Inik Mwen</button>
-    
-    <div style="margin-top: 8px;">
-      <input type="text" id="game-code" class="input-field" placeholder="Antre Kòd Inik ou resevwa a">
-      <button class="btn-action" style="font-size: 13px; padding: 6px;" onclick="validateCode()">Valide Kòd la</button>
+      <div style="font-size: 12px; background: #222; padding: 6px; border-radius: 6px; margin-bottom: 6px; text-align: left;">
+        <p><b>MonCash :</b> +509 3436-3143 <button class="btn-pay" onclick="copyNum('34363143')">Kopye</button></p>
+        <p style="margin-top: 3px;"><b>Natcash :</b> +509 4212-5630 <button class="btn-pay" onclick="copyNum('42125630')">Kopye</button></p>
+      </div>
+      
+      <a href="tel:*202%23" class="btn-ussd">*202# MonCash</a>
+      <a href="tel:*202%23" class="btn-ussd" style="background:#dc3545;">*202# Natcash</a>
+
+      <select id="group-select" class="select-field" onchange="switchGroup()">
+        <option value="1250">Gwoup 1 - Code 1,250 Gdes</option>
+        <option value="250">Gwoup 2 - Code 250 Gdes</option>
+        <option value="100">Gwoup 3 - Code 100 Gdes</option>
+      </select>
+
+      <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou">
+      <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la">
+      
+      <button class="btn-action" style="font-size: 13px; padding: 8px;" onclick="submitPaymentRequest()">Mande Kòd Inik Mwen</button>
+      
+      <div style="margin-top: 8px;">
+        <input type="text" id="game-code" class="input-field" placeholder="Antre Kòd Inik ou resevwa a">
+        <button class="btn-action" style="font-size: 13px; padding: 6px;" onclick="validateCode()">Valide Kòd la</button>
+      </div>
     </div>
   </div>
 
-  <p style="margin-bottom: 8px; font-size: 13px;">Chwazi yon pozisyon (1 rive 7) epi tire :</p>
-  
-  <div class="court">
-    <div class="backboard"></div>
-    <div class="hoop" id="hoop"></div>
-    <div class="ball" id="ball"></div>
-    
-    <button class="pos-btn" id="p1" onclick="selectPos(1)">1</button>
-    <button class="pos-btn" id="p2" onclick="selectPos(2)">2</button>
-    <button class="pos-btn" id="p3" onclick="selectPos(3)">3</button>
-    <button class="pos-btn active" id="p4" onclick="selectPos(4)">4</button>
-    <button class="pos-btn" id="p5" onclick="selectPos(5)">5</button>
-    <button class="pos-btn" id="p6" onclick="selectPos(6)">6</button>
-    <button class="pos-btn" id="p7" onclick="selectPos(7)">7</button>
+  <!-- EKRAN FULL SCREEN 3D ARÈNE JWÈT LA (FON AK FOTO OU VOYE A) -->
+  <div id="game-arena">
+    <!-- Panèl TES CHANS -->
+    <div class="chances-card">
+      <div class="chances-title">TES CHANS</div>
+      <div class="chance-item"><div class="ball-icon" id="c1"></div> 1 Chans</div>
+      <div class="chance-item"><div class="ball-icon" id="c2"></div> 2 Chans</div>
+      <div class="chance-item"><div class="ball-icon" id="c3"></div> 3 Chans</div>
+    </div>
+
+    <!-- 7 Pozisyon yo (Regle selon foto) -->
+    <div class="pos-btn-3d" id="pos-1" onclick="selectPos3D(1)">1</div>
+    <div class="pos-btn-3d" id="pos-2" onclick="selectPos3D(2)">2</div>
+    <div class="pos-btn-3d" id="pos-3" onclick="selectPos3D(3)">3</div>
+    <div class="pos-btn-3d" id="pos-4" onclick="selectPos3D(4)">4</div>
+    <div class="pos-btn-3d" id="pos-5" onclick="selectPos3D(5)">5</div>
+    <div class="pos-btn-3d" id="pos-6" onclick="selectPos3D(6)">6</div>
+    <div class="pos-btn-3d" id="pos-7" onclick="selectPos3D(7)">7</div>
+
+    <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()">TIRE BOUL LA!</button>
   </div>
 
-  <p style="margin-bottom: 8px; font-size: 13px;">Chans ki rete: <b id="chances-left" style="color: #ffd700;">3</b> / 3</p>
-  <button class="btn-action" id="shoot-btn" onclick="shootBall()" disabled>Tire Boul la!</button>
-
+  <!-- Admin Secret Modal -->
   <div id="secret-admin-modal">
     <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
@@ -316,11 +330,9 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let currentPos = 4;
+    let currentPos = 5;
     let chances = 3;
     let currentPlayers = 0;
-    let isShooting = false;
-
     let logoClickCount = 0;
     let clickTimer;
 
@@ -416,13 +428,6 @@
       alert("Demann voye! Tann pwopriyetè a konfime.");
     }
 
-    function selectPos(p) {
-      if (chances <= 0) return;
-      document.querySelectorAll('.pos-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById('p' + p).classList.add('active');
-      currentPos = p;
-    }
-
     async function validateCode() {
       const codeInput = document.getElementById('game-code').value.trim();
       const group = document.getElementById('group-select').value;
@@ -433,58 +438,42 @@
         playersCount: currentPlayers.toString(), status: "active"
       }, { merge: true });
 
-      chances = 3;
-      document.getElementById('chances-left').innerText = chances;
-      document.getElementById('shoot-btn').disabled = false;
-      document.getElementById('pay-box').style.display = "none";
-      alert("Kòd valide! Ou gen 3 chans pou w chwazi pozisyon epi tire.");
+      // Kache premye ekran an, ouvri gwo ekran 3D la
+      document.getElementById('setup-screen').style.display = 'none';
+      document.getElementById('game-arena').style.display = 'block';
+      alert("Kòd valide! Byenveni sou teren an. Chwazi yon pozisyon pou tire!");
     }
 
-    function shootBall() {
-      if (chances <= 0 || isShooting) return;
-      isShooting = true;
+    function selectPos3D(p) {
+      if (chances <= 0) return;
+      document.querySelectorAll('.pos-btn-3d').forEach(btn => btn.classList.remove('active'));
+      document.getElementById('pos-' + p).classList.add('active');
+      currentPos = p;
+    }
 
-      const ball = document.getElementById('ball');
-      const startBtn = document.getElementById('p' + currentPos);
-      const hoop = document.getElementById('hoop');
+    function shootBall3D() {
+      if (chances <= 0) return;
 
-      // Mete boul la sou pozisyon jwè a chwazi a
-      ball.style.left = (startBtn.offsetLeft + 4) + 'px';
-      ball.style.top = (startBtn.offsetTop + 4) + 'px';
-      ball.style.display = 'block';
-      ball.style.transition = "none";
+      // Mete yon chans mwens
+      if (chances === 3) document.getElementById('c3').classList.add('off');
+      else if (chances === 2) document.getElementById('c2').classList.add('off');
+      else if (chances === 1) document.getElementById('c1').classList.add('off');
 
-      // Jere chans yo desann
       chances--;
-      document.getElementById('chances-left').innerText = chances;
 
-      // Animasyon vòl boul la vize panye a
-      setTimeout(() => {
-        ball.style.transition = "all 0.6s cubic-bezier(0.1, 0.8, 0.3, 1)";
-        ball.style.left = (hoop.offsetLeft + 10) + 'px';
-        ball.style.top = (hoop.offsetTop + 8) + 'px';
-      }, 50);
+      let isGoal = Math.random() < 0.35; // 35% chans pou l antre
 
-      setTimeout(() => {
-        ball.style.display = 'none';
-        isShooting = false;
-
-        // Desizyon sistèm: Eske li antre? (Pè a aza pou tès oswa lojik gayan)
-        let isGoal = Math.random() < 0.35; // 35% chans pou l antre (oswa regle jan w vle l)
-
-        if (isGoal) {
-          alert("BOUYEN! 🏀 Boul la antre nan panye a! Ou genyen!");
-          document.getElementById('shoot-btn').disabled = true;
+      if (isGoal) {
+        alert("BOUYEN! 🏀 Boul la antre nan panye a! Ou genyen!");
+        document.getElementById('shoot-btn-3d').disabled = true;
+      } else {
+        if (chances > 0) {
+          alert("Oups! Boul la pa antre. Ou rete " + chans + " chans!");
         } else {
-          if (chances > 0) {
-            alert("Oups! Boul la pase deyò. Ou rete " + chans + " chans. Chwazi yon lòt pozisyon oswa menm pozisyon an pou w eseye ankò!");
-          } else {
-            alert("Oups! Ou fin itilize 3 chans ou yo san boul la pa antre. Ou pèdi nèt nan blòk sa a!");
-            document.getElementById('shoot-btn').disabled = true;
-            document.getElementById('pay-box').style.display = "block"; // Retounen nan acha si l vle rekòmanse
-          }
+          alert("Oups! 3 chans ou yo fini. Ou pèdi nan blòk sa a!");
+          document.getElementById('shoot-btn-3d').disabled = true;
         }
-      }, 700);
+      }
     }
 
     let timeLeft = 3600;
