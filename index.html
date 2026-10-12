@@ -19,18 +19,18 @@
       padding: 15px;
     }
     .header-logo {
-      width: 110px;
-      height: 110px;
+      width: 100px;
+      height: 100px;
       border-radius: 18px;
       border: 2px solid #ffd700;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-      cursor: pointer; /* Pou klike sou li pou sekrè a */
+      cursor: pointer;
     }
     h2 {
-      font-size: 20px;
+      font-size: 18px;
       color: #ffd700;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -38,84 +38,110 @@
       background: rgba(26, 26, 26, 0.9);
       border: 1px solid #ffd700;
       border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 15px;
+      padding: 10px;
+      margin-bottom: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
-    .stat-title { color: #bbb; font-size: 12px; margin-top: 4px; }
-    .stat-val { font-size: 18px; font-weight: bold; color: #ffd700; }
+    .stat-title { color: #bbb; font-size: 11px; margin-top: 2px; }
+    .stat-val { font-size: 16px; font-weight: bold; color: #ffd700; }
     
     .pay-section {
       background: #181818;
       border: 1px dashed #ffd700;
       border-radius: 10px;
-      padding: 12px;
-      margin-bottom: 15px;
+      padding: 10px;
+      margin-bottom: 12px;
     }
     .input-field, .select-field {
       width: 90%;
-      padding: 10px;
+      padding: 8px;
       border-radius: 6px;
       border: 1px solid #444;
       background: #222;
       color: #fff;
       text-align: center;
-      font-size: 14px;
-      margin-top: 6px;
-      margin-bottom: 8px;
+      font-size: 13px;
+      margin-top: 4px;
+      margin-bottom: 6px;
     }
     .btn-pay {
       background: #28a745;
       color: #fff;
       font-weight: bold;
-      padding: 8px 12px;
+      padding: 6px 10px;
       border: none;
-      border-radius: 18px;
-      font-size: 13px;
+      border-radius: 15px;
+      font-size: 12px;
       cursor: pointer;
-      margin: 4px 2px;
+      margin: 2px;
     }
     .btn-ussd {
       background: #007bff;
       color: #fff;
       font-weight: bold;
-      padding: 8px 12px;
+      padding: 6px 10px;
       border: none;
-      border-radius: 18px;
-      font-size: 13px;
+      border-radius: 15px;
+      font-size: 12px;
       cursor: pointer;
       text-decoration: none;
       display: inline-block;
-      margin: 4px 2px;
+      margin: 2px;
     }
 
+    /* Teren Baskèt ki pi reyalis */
     .court {
       position: relative;
       width: 100%;
       max-width: 340px;
-      height: 240px;
-      background: linear-gradient(to bottom, #8b4513, #a0522d);
+      height: 280px;
+      background: linear-gradient(to bottom, #d2691e, #8b4513);
       border: 3px solid #fff;
-      border-radius: 12px;
-      margin: 0 auto 15px auto;
+      border-radius: 15px;
+      margin: 0 auto 12px auto;
       overflow: hidden;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
     }
+    /* Liy teren an */
+    .court::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 100px;
+      border: 2px dashed rgba(255,255,255,0.4);
+      border-top: none;
+      border-radius: 0 0 70px 70px;
+    }
+
     .hoop {
       position: absolute;
-      top: 15px;
+      top: 20px;
       left: 50%;
       transform: translateX(-50%);
-      width: 36px;
-      height: 36px;
+      width: 44px;
+      height: 26px;
       border: 4px solid #ff4500;
       border-radius: 50%;
-      box-shadow: 0 0 8px #ff4500;
+      box-shadow: 0 0 10px #ff4500;
+      z-index: 1;
     }
+    .backboard {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 65px;
+      height: 10px;
+      background: #fff;
+      border-radius: 2px;
+    }
+
     .pos-btn {
       position: absolute;
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       background: #ffd700;
       color: #000;
@@ -123,40 +149,46 @@
       border: 2px solid #000;
       cursor: pointer;
       z-index: 2;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+      transition: 0.2s;
     }
+    .pos-btn:hover { transform: scale(1.1); }
     .pos-btn.active {
       background: #ff4500;
       color: #fff;
-      transform: scale(1.15);
+      transform: scale(1.2);
+      box-shadow: 0 0 10px #ff4500;
     }
 
-    #p1 { bottom: 20px; left: 12%; }
-    #p2 { bottom: 65px; left: 22%; }
-    #p3 { bottom: 95px; left: 38%; }
-    #p4 { bottom: 105px; left: 50%; transform: translateX(-50%); }
-    #p5 { bottom: 95px; right: 38%; }
-    #p6 { bottom: 65px; right: 22%; }
-    #p7 { bottom: 20px; right: 12%; }
+    /* 7 Pozisyon yo sou arc an */
+    #p1 { bottom: 25px; left: 10%; }
+    #p2 { bottom: 65px; left: 18%; }
+    #p3 { bottom: 115px; left: 28%; }
+    #p4 { bottom: 135px; left: 50%; transform: translateX(-50%); }
+    #p5 { bottom: 115px; right: 28%; }
+    #p6 { bottom: 65px; right: 18%; }
+    #p7 { bottom: 25px; right: 10%; }
 
     .ball {
       position: absolute;
-      width: 22px;
-      height: 22px;
-      background: radial-gradient(circle at 7px 7px, #ff8c00, #d2691e);
+      width: 24px;
+      height: 24px;
+      background: radial-gradient(circle at 8px 8px, #ff8c00, #b22222);
       border-radius: 50%;
       border: 1px solid #000;
-      z-index: 3;
+      z-index: 5;
       display: none;
+      box-shadow: 0 0 8px rgba(255,69,0,0.8);
     }
 
     .btn-action {
       background: linear-gradient(135deg, #ffd700, #ff8c00);
       color: #000;
       font-weight: bold;
-      padding: 12px 20px;
+      padding: 10px 20px;
       border: none;
       border-radius: 25px;
-      font-size: 16px;
+      font-size: 15px;
       cursor: pointer;
       width: 100%;
       max-width: 340px;
@@ -168,7 +200,6 @@
       box-shadow: none;
     }
 
-    /* CSS pou Panèl Sekrè Pwopriyetè a (Kache pa defo) */
     #secret-admin-modal {
       display: none;
       position: fixed;
@@ -200,7 +231,6 @@
 </head>
 <body>
 
-  <!-- Logo ke w ap klike 3 fwa sou li pou ouvri espas sekrè a -->
   <img src="logo.png" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
   <h2>ANGE JUNIORCORNERSTONE</h2>
   
@@ -216,24 +246,18 @@
   </div>
 
   <div class="pay-section" id="pay-box">
-    <p style="font-size: 13px; color: #ffd700; margin-bottom: 8px;">
-      Achte kòd inik ou (1,250 Gdes MonCash/Natcash) oubyen (250 Gdes MonCash/Natcash) oubyen (100 Gdes MonCash/Natcash)
+    <p style="font-size: 12px; color: #ffd700; margin-bottom: 6px;">
+      Achte kòd inik ou (1,250 / 250 / 100 Gdes)
     </p>
 
-    <div style="font-size: 13px; background: #222; padding: 8px; border-radius: 6px; margin-bottom: 8px; text-align: left;">
-      <p><b>MonCash :</b> +509 3436-3143 
-        <button class="btn-pay" onclick="copyNum('34363143')">Kopye</button>
-      </p>
-      <p style="margin-top: 4px;"><b>Natcash :</b> +509 4212-5630 
-        <button class="btn-pay" onclick="copyNum('42125630')">Kopye</button>
-      </p>
+    <div style="font-size: 12px; background: #222; padding: 6px; border-radius: 6px; margin-bottom: 6px; text-align: left;">
+      <p><b>MonCash :</b> +509 3436-3143 <button class="btn-pay" onclick="copyNum('34363143')">Kopye</button></p>
+      <p style="margin-top: 3px;"><b>Natcash :</b> +509 4212-5630 <button class="btn-pay" onclick="copyNum('42125630')">Kopye</button></p>
     </div>
     
     <a href="tel:*202%23" class="btn-ussd">*202# MonCash</a>
     <a href="tel:*202%23" class="btn-ussd" style="background:#dc3545;">*202# Natcash</a>
 
-    <p style="font-size: 12px; color: #bbb; margin-top: 10px;">Chwazi gwoup ou peye a epi antre enfòmasyon ou yo:</p>
-    
     <select id="group-select" class="select-field" onchange="switchGroup()">
       <option value="1250">Gwoup 1 - Code 1,250 Gdes</option>
       <option value="250">Gwoup 2 - Code 250 Gdes</option>
@@ -241,19 +265,20 @@
     </select>
 
     <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou">
-    <input type="text" id="player-phone" class="input-field" placeholder="Nimewo MonCash/Natcash ou voye kòb la">
+    <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la">
     
-    <button class="btn-action" style="font-size: 14px; padding: 10px; margin-top: 5px;" onclick="submitPaymentRequest()">Mande Kòd Inik Mwen</button>
+    <button class="btn-action" style="font-size: 13px; padding: 8px;" onclick="submitPaymentRequest()">Mande Kòd Inik Mwen</button>
     
-    <div style="margin-top: 12px;">
+    <div style="margin-top: 8px;">
       <input type="text" id="game-code" class="input-field" placeholder="Antre Kòd Inik ou resevwa a">
-      <button class="btn-action" style="font-size: 14px; padding: 8px;" onclick="validateCode()">Valide Kòd la</button>
+      <button class="btn-action" style="font-size: 13px; padding: 6px;" onclick="validateCode()">Valide Kòd la</button>
     </div>
   </div>
 
-  <p style="margin-bottom: 10px; font-size: 14px;">Chwazi yon pozisyon (1 rive 7) :</p>
+  <p style="margin-bottom: 8px; font-size: 13px;">Chwazi yon pozisyon (1 rive 7) epi tire :</p>
   
   <div class="court">
+    <div class="backboard"></div>
     <div class="hoop" id="hoop"></div>
     <div class="ball" id="ball"></div>
     
@@ -266,12 +291,11 @@
     <button class="pos-btn" id="p7" onclick="selectPos(7)">7</button>
   </div>
 
-  <p style="margin-bottom: 10px;">Chans ki rete: <b id="chances-left" style="color: #ffd700;">0</b> / 3</p>
+  <p style="margin-bottom: 8px; font-size: 13px;">Chans ki rete: <b id="chances-left" style="color: #ffd700;">3</b> / 3</p>
   <button class="btn-action" id="shoot-btn" onclick="shootBall()" disabled>Tire Boul la!</button>
 
-  <!-- ESPAS SEKRÈ PWOPRIYETÈ A (MODAL ADMIN) -->
   <div id="secret-admin-modal">
-    <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
+    <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
     <div id="admin-requests-list">
       <p style="color: #aaa;">N ap chaje demann yo...</p>
@@ -293,29 +317,22 @@
     const db = firebase.firestore();
 
     let currentPos = 4;
-    let chances = 0;
+    let chances = 3;
     let currentPlayers = 0;
+    let isShooting = false;
 
-    // Lojik Sekrè pou ouvri Panèl Pwopriyetè a (3 klik sou logo a + PIN)
     let logoClickCount = 0;
     let clickTimer;
 
     function handleSecretClick() {
       logoClickCount++;
       clearTimeout(clickTimer);
-      
-      clickTimer = setTimeout(() => {
-        logoClickCount = 0;
-      }, 1200); // 1.2 segonn pou fè 3 klik yo
-
+      clickTimer = setTimeout(() => { logoClickCount = 0; }, 1200);
       if (logoClickCount === 3) {
         logoClickCount = 0;
         const pin = prompt("Antre PIN Sekrè Pwopriyetè a :");
-        if (pin === "1234") { // Ou ka chanje '1234' pa PIN ou vle a
-          openAdminPanel();
-        } else if(pin !== null) {
-          alert("PIN pa bon!");
-        }
+        if (pin === "1234") { openAdminPanel(); }
+        else if(pin !== null) { alert("PIN pa bon!"); }
       }
     }
 
@@ -332,33 +349,19 @@
       db.collection("payment_requests").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         const container = document.getElementById('admin-requests-list');
         container.innerHTML = "";
-
         if (snapshot.empty) {
-          container.innerHTML = '<p style="color: #888;">Pa gen okenn demann kòd pou kounye a.</p>';
+          container.innerHTML = '<p style="color: #888;">Pa gen okenn demann kòd.</p>';
           return;
         }
-
         snapshot.forEach((doc) => {
           const data = doc.data();
           const id = doc.id;
-
           const card = document.createElement('div');
           card.className = "admin-card";
-
-          let statusHTML = '';
-          if (data.status === "pending") {
-            statusHTML = `<button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${id}')">Konfime Peman & Bay Kòd</button>`;
-          } else {
-            statusHTML = `<div style="color:#00ffcc; margin-top:5px;">Kòd: <b>${data.generatedCode}</b></div>`;
-          }
-
-          card.innerHTML = `
-            <div><b>Non :</b> ${data.playerName}</div>
-            <div><b>Telefòn :</b> ${data.playerPhone}</div>
-            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice} Gdes</span></div>
-            ${statusHTML}
-          `;
-
+          let statusHTML = data.status === "pending" 
+            ? `<button class="btn-pay" style="background:#28a745; width:100%; margin-top:6px;" onclick="confirmPaymentAdmin('${id}')">Konfime & Bay Kòd</button>`
+            : `<div style="color:#00ffcc; margin-top:4px;">Kòd: <b>${data.generatedCode}</b></div>`;
+          card.innerHTML = `<div><b>Non:</b> ${data.playerName}</div><div><b>Tel:</b> ${data.playerPhone}</div><div><b>Gwoup:</b> <span style="color:#ffd700;">${data.groupPrice} Gdes</span></div>${statusHTML}`;
           container.appendChild(card);
         });
       });
@@ -373,15 +376,13 @@
       alert("Peman konfime! Kòd: " + uniqueCode);
     }
 
-    // Lojik jwèt jeneral
     function copyNum(num) {
       navigator.clipboard.writeText(num);
       alert("Nimewo " + num + " kopye!");
     }
 
     function switchGroup() {
-      const selectedGroup = document.getElementById('group-select').value;
-      listenToBlock(selectedGroup);
+      listenToBlock(document.getElementById('group-select').value);
     }
 
     function listenToBlock(groupVal) {
@@ -406,24 +407,17 @@
       const name = document.getElementById('player-name').value.trim();
       const phone = document.getElementById('player-phone').value.trim();
       const group = document.getElementById('group-select').value;
-
-      if(name === "" || phone === "") {
-        alert("Tanpri antre non ou ak nimewo telefòn ou!");
-        return;
-      }
+      if(name === "" || phone === "") { alert("Tanpri antre non ou ak nimewo telefòn ou!"); return; }
 
       await db.collection("payment_requests").add({
-        playerName: name,
-        playerPhone: phone,
-        groupPrice: group,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        status: "pending"
+        playerName: name, playerPhone: phone, groupPrice: group,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: "pending"
       });
-
-      alert("Demann ou voye pou gwoup " + group + " Gdes! Tann pwopriyetè a konfime.");
+      alert("Demann voye! Tann pwopriyetè a konfime.");
     }
 
     function selectPos(p) {
+      if (chances <= 0) return;
       document.querySelectorAll('.pos-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById('p' + p).classList.add('active');
       currentPos = p;
@@ -432,51 +426,63 @@
     async function validateCode() {
       const codeInput = document.getElementById('game-code').value.trim();
       const group = document.getElementById('group-select').value;
-
-      if (codeInput === "") {
-        alert("Tanpri antre kòd inik ou a!");
-        return;
-      }
+      if (codeInput === "") { alert("Tanpri antre kòd inik ou a!"); return; }
 
       currentPlayers++;
       await db.collection("game_blocks").doc("block_" + group).set({
-        playersCount: currentPlayers.toString(),
-        status: "active"
+        playersCount: currentPlayers.toString(), status: "active"
       }, { merge: true });
 
       chances = 3;
       document.getElementById('chances-left').innerText = chances;
       document.getElementById('shoot-btn').disabled = false;
       document.getElementById('pay-box').style.display = "none";
-      alert("Kòd valide! Tann lòt jwè yo pandan tan an ap desann.");
+      alert("Kòd valide! Ou gen 3 chans pou w chwazi pozisyon epi tire.");
     }
 
     function shootBall() {
-      if (chances <= 0) return;
+      if (chances <= 0 || isShooting) return;
+      isShooting = true;
 
       const ball = document.getElementById('ball');
       const startBtn = document.getElementById('p' + currentPos);
       const hoop = document.getElementById('hoop');
 
+      // Mete boul la sou pozisyon jwè a chwazi a
       ball.style.left = (startBtn.offsetLeft + 4) + 'px';
       ball.style.top = (startBtn.offsetTop + 4) + 'px';
       ball.style.display = 'block';
+      ball.style.transition = "none";
 
+      // Jere chans yo desann
+      chances--;
+      document.getElementById('chances-left').innerText = chances;
+
+      // Animasyon vòl boul la vize panye a
       setTimeout(() => {
-        ball.style.transition = "all 0.6s ease-out";
-        ball.style.left = (hoop.offsetLeft + 6) + 'px';
-        ball.style.top = (hoop.offsetTop + 25) + 'px';
+        ball.style.transition = "all 0.6s cubic-bezier(0.1, 0.8, 0.3, 1)";
+        ball.style.left = (hoop.offsetLeft + 10) + 'px';
+        ball.style.top = (hoop.offsetTop + 8) + 'px';
       }, 50);
 
       setTimeout(() => {
-        chances--;
-        document.getElementById('chances-left').innerText = chances;
         ball.style.display = 'none';
-        if (chances === 0) {
+        isShooting = false;
+
+        // Desizyon sistèm: Eske li antre? (Pè a aza pou tès oswa lojik gayan)
+        let isGoal = Math.random() < 0.35; // 35% chans pou l antre (oswa regle jan w vle l)
+
+        if (isGoal) {
+          alert("BOUYEN! 🏀 Boul la antre nan panye a! Ou genyen!");
           document.getElementById('shoot-btn').disabled = true;
-          alert("Ou fini 3 chans ou yo!");
         } else {
-          alert("Tir rate! Chans ki rete: " + chances);
+          if (chances > 0) {
+            alert("Oups! Boul la pase deyò. Ou rete " + chans + " chans. Chwazi yon lòt pozisyon oswa menm pozisyon an pou w eseye ankò!");
+          } else {
+            alert("Oups! Ou fin itilize 3 chans ou yo san boul la pa antre. Ou pèdi nèt nan blòk sa a!");
+            document.getElementById('shoot-btn').disabled = true;
+            document.getElementById('pay-box').style.display = "block"; // Retounen nan acha si l vle rekòmanse
+          }
         }
       }, 700);
     }
@@ -493,5 +499,4 @@
   </script>
 
 </body>
-                                  </html>
-
+</html>
