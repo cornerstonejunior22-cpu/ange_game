@@ -103,7 +103,7 @@
       box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
     }
 
-    /* ESPAS JWÈT TEREN 3D AK ANIMASYON DRIBLE AP PARÈT DEPI PREMYE SEKÒN */
+    /* ESPAS JWÈT TEREN 3D */
     #game-arena {
       display: block;
       position: relative;
@@ -117,16 +117,18 @@
       overflow: hidden;
       box-shadow: 0 5px 15px rgba(0,0,0,0.8);
       transition: all 0.5s ease-in-out;
-      /* Animasyon sou tout teren an pou bay l lavi (ti respire atlèt) */
-      animation: courtPulse 4s infinite ease-in-out;
     }
 
-    @keyframes courtPulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.008); }
+    #game-arena.full-screen-mode {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      margin: 0;
+      border: none;
+      border-radius: 0;
+      z-index: 1000;
     }
 
-    /* Efè drible/mouvman konstan sou tout teren an oswa sou pozisyon yo pou montre l ap viv */
     .live-indicator {
       position: absolute;
       top: 15px;
@@ -147,16 +149,30 @@
       50% { opacity: 0.4; }
     }
 
-    /* Mòd Full Screen lè li kòmanse jwe */
-    #game-arena.full-screen-mode {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      margin: 0;
-      border: none;
-      border-radius: 0;
-      z-index: 1000;
-      animation: none; /* Nan full screen li vin estab pou jwèt la */
+    /* ANIMASYON DRIBLE BALON ATÈ A (MATEN BALON AN) */
+    .dribble-ball {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      background: radial-gradient(circle at 6px 6px, #ff8c00, #b34700);
+      border: 1px solid #000;
+      border-radius: 50%;
+      bottom: 24%;
+      left: 23%;
+      z-index: 25;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+      animation: dribbleAction 0.6s infinite ease-in-out alternate;
+    }
+
+    @keyframes dribbleAction {
+      0% {
+        transform: translateY(0) scale(1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      }
+      100% {
+        transform: translateY(35px) scale(0.85, 0.7); /* Lè l frape atè a li plat ti kras */
+        box-shadow: 0 10px 15px rgba(0,0,0,0.8);
+      }
     }
 
     /* Panèl TES CHANS */
@@ -199,7 +215,7 @@
       opacity: 0.2;
     }
 
-    /* 7 Pozisyon yo plase 3D sou teren an ak ti mouvman bat sou plas yo */
+    /* 7 Pozisyon yo */
     .pos-btn-3d {
       position: absolute;
       width: 36px;
@@ -217,12 +233,6 @@
       justify-content: center;
       font-size: 14px;
       transition: transform 0.2s ease;
-      animation: buttonBounce 2s infinite ease-in-out;
-    }
-
-    @keyframes buttonBounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-3px); }
     }
 
     .pos-btn-3d.active {
@@ -230,17 +240,16 @@
       color: #fff;
       box-shadow: 0 0 15px #ff4500;
       transform: scale(1.25);
-      animation: none;
     }
 
-    /* Pozisyon sou pèspektiv foto an */
-    #pos-1 { top: 50%; left: 10%; animation-delay: 0.1s; }
-    #pos-2 { top: 45%; left: 45%; animation-delay: 0.2s; }
-    #pos-3 { top: 50%; right: 10%; animation-delay: 0.3s; }
-    #pos-4 { top: 62%; left: 30%; animation-delay: 0.4s; }
-    #pos-5 { top: 66%; left: 48%; animation-delay: 0.5s; }
-    #pos-6 { top: 62%; right: 30%; animation-delay: 0.6s; }
-    #pos-7 { top: 82%; left: 48%; animation-delay: 0.7s; }
+    /* Pozisyon yo */
+    #pos-1 { top: 50%; left: 10%; }
+    #pos-2 { top: 45%; left: 45%; }
+    #pos-3 { top: 50%; right: 10%; }
+    #pos-4 { top: 62%; left: 30%; }
+    #pos-5 { top: 66%; left: 48%; }
+    #pos-6 { top: 62%; right: 30%; }
+    #pos-7 { top: 82%; left: 48%; }
 
     /* Bouton Tire */
     .shoot-btn-3d {
@@ -268,7 +277,7 @@
       cursor: not-allowed;
     }
 
-    /* BALLE EN ANIMATION 3D */
+    /* BALLE EN ANIMATION TIR */
     .animated-basketball {
       position: absolute;
       width: 28px;
@@ -282,7 +291,6 @@
       pointer-events: none;
     }
 
-    /* Admin Modal */
     #secret-admin-modal {
       display: none;
       position: fixed;
@@ -314,7 +322,6 @@
 </head>
 <body>
 
-  <!-- UI Premye Ekran -->
   <div id="setup-screen">
     <img src="logo.png" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
     <h2>ANGE JUNIORCORNERSTONE</h2>
@@ -361,11 +368,14 @@
     </div>
   </div>
 
-  <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a (An Mouvman) :</p>
+  <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a (Jwè a ap drible) :</p>
 
-  <!-- EKRAN 3D ARÈNE JWÈT LA (K AP VIV DEPI PREMYE SEKÒN) -->
+  <!-- EKRAN 3D ARÈNE JWÈT LA -->
   <div id="game-arena">
-    <div class="live-indicator">🔴 EN DIRECT (EN MOUVMAN)</div>
+    <div class="live-indicator">🔴 EN DIRECT (DRIBLE EN MOUVMAN)</div>
+
+    <!-- TI BALON K AP DRIBLE AN REALTIME NAN MEN JWÈ A -->
+    <div class="dribble-ball" id="dribbler"></div>
 
     <!-- Panèl TES CHANS -->
     <div class="chances-card">
@@ -375,7 +385,7 @@
       <div class="chance-item"><div class="ball-icon" id="c3"></div> 3 Chans</div>
     </div>
 
-    <!-- BALLE EN ANIMATION 3D -->
+    <!-- BALLE EN ANIMATION 3D POUR TIR -->
     <div class="animated-basketball" id="animated-ball"></div>
 
     <!-- 7 Pozisyon yo -->
@@ -390,7 +400,6 @@
     <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()" disabled>TIRE BOUL LA! (Bloke)</button>
   </div>
 
-  <!-- Admin Secret Modal -->
   <div id="secret-admin-modal">
     <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
@@ -418,7 +427,7 @@
     let currentPlayers = 0;
     let logoClickCount = 0;
     let clickTimer;
-    let isCodeValidated = false; // Tcheke si kòd la valide anvan ou tire
+    let isCodeValidated = false;
 
     function handleSecretClick() {
       logoClickCount++;
@@ -541,7 +550,6 @@
       currentPos = p;
     }
 
-    /* ANIMASYON TIRE BOUL LA (SÈLMAN LÈ KÒD VALIDE) */
     function shootBall3D() {
       if (!isCodeValidated) {
         alert("Atansyon! Ou dwe antre kòd inik ou a epi valide l anvan ou ka tire!");
@@ -551,6 +559,9 @@
 
       const shootBtn = document.getElementById('shoot-btn-3d');
       shootBtn.disabled = true;
+
+      // Kache drible la pandan l ap tire
+      document.getElementById('dribbler').style.display = 'none';
 
       if (chances === 3) document.getElementById('c3').classList.add('off');
       else if (chances === 2) document.getElementById('c2').classList.add('off');
@@ -597,4 +608,7 @@
           ball.style.display = 'none';
 
           if (isGoal) {
-            alert("BOUYEN! 🏀 Bo
+            alert("BOUYEN! 🏀 Boul la antre nan panye a! Ou genyen!");
+          } else {
+            if (chances > 0) {
+              alert("Oups! Boul la pa antre. Ou rete
