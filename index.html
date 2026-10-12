@@ -103,35 +103,52 @@
       box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
     }
 
-    /* ESPAS JWÈT FULL SCREEN 3D (KONTWÒL PA FOTO OU VOYE A) */
+    /* ESPAS JWÈT TEREN 3D (AP PARÈT ANBA A PREMYE TAN, DRISE POU L PRAN EKRAM LÈ L VALIDE) */
     #game-arena {
-      display: none; /* Kache jiskaske li valide kòd la */
+      display: block; /* Li parèt dirèkteman anba fòm nan! */
+      position: relative;
+      width: calc(100% - 30px);
+      height: 380px;
+      margin: 0 auto 20px auto;
+      background: url('court_bg.png') no-repeat center center;
+      background-size: cover;
+      border: 2px solid #ffd700;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.8);
+      transition: all 0.5s ease-in-out;
+    }
+
+    /* Mòd Full Screen lè li kòmanse jwe */
+    #game-arena.full-screen-mode {
       position: fixed;
       top: 0; left: 0;
       width: 100vw; height: 100vh;
-      background: url('court_bg.png') no-repeat center center;
-      background-size: cover;
+      margin: 0;
+      border: none;
+      border-radius: 0;
       z-index: 1000;
     }
 
-    /* Panèl TES CHANS (Anwo a Dwat) - Regle selon pèspektiv foto an */
+    /* Panèl TES CHANS */
     .chances-card {
       position: absolute;
-      top: 25px;
-      right: 25px;
+      top: 15px;
+      right: 15px;
       background: rgba(0, 15, 35, 0.85);
       border: 2px solid #ffd700;
       border-radius: 10px;
-      padding: 10px 15px;
+      padding: 8px 12px;
       text-align: right;
       box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+      z-index: 15;
     }
     .chances-title {
       color: #fff;
       font-weight: bold;
-      font-size: 12px;
+      font-size: 11px;
       letter-spacing: 1px;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
     .chance-item {
       display: flex;
@@ -139,12 +156,12 @@
       justify-content: flex-end;
       gap: 6px;
       color: #fff;
-      font-size: 13px;
-      margin-top: 4px;
+      font-size: 12px;
+      margin-top: 3px;
     }
     .ball-icon {
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       background: radial-gradient(circle at 5px 5px, #ff8c00, #d2691e);
       border-radius: 50%;
       border: 1px solid #000;
@@ -153,11 +170,11 @@
       opacity: 0.2;
     }
 
-    /* 7 Pozisyon yo plase 3D sou teren an - Regle selon foto an */
+    /* 7 Pozisyon yo plase 3D sou teren an */
     .pos-btn-3d {
       position: absolute;
-      width: 40px;
-      height: 28px;
+      width: 36px;
+      height: 26px;
       border-radius: 50%;
       background: radial-gradient(circle, #ffd700, #ff8c00);
       color: #000;
@@ -169,7 +186,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 15px;
+      font-size: 14px;
     }
     .pos-btn-3d.active {
       background: radial-gradient(circle, #ff4500, #dc3545);
@@ -187,23 +204,29 @@
     #pos-6 { top: 62%; right: 30%; }
     #pos-7 { top: 82%; left: 48%; }
 
-    /* Bouton Tire a nan kwen anba - Mete l sou kote pou l pa kouvri pozisyon yo */
+    /* Bouton Tire a nan kwen anba */
     .shoot-btn-3d {
       position: absolute;
-      bottom: 25px;
+      bottom: 15px;
       left: 50%;
       transform: translateX(-50%);
-      width: 70%;
+      width: 75%;
       max-width: 250px;
-      padding: 12px;
+      padding: 10px;
       background: linear-gradient(135deg, #ffd700, #ff8c00);
       color: #000;
       font-weight: bold;
-      font-size: 16px;
+      font-size: 15px;
       border: none;
       border-radius: 30px;
       box-shadow: 0 4px 15px rgba(255,215,0,0.5);
       cursor: pointer;
+      z-index: 15;
+    }
+    .shoot-btn-3d:disabled {
+      background: #555;
+      color: #888;
+      box-shadow: none;
     }
 
     /* Admin Modal */
@@ -280,12 +303,14 @@
       
       <div style="margin-top: 8px;">
         <input type="text" id="game-code" class="input-field" placeholder="Antre Kòd Inik ou resevwa a">
-        <button class="btn-action" style="font-size: 13px; padding: 6px;" onclick="validateCode()">Valide Kòd la</button>
+        <button class="btn-action" style="font-size: 13px; padding: 6px;" onclick="validateCode()">Valide Kòd la & Joue</button>
       </div>
     </div>
   </div>
 
-  <!-- EKRAN FULL SCREEN 3D ARÈNE JWÈT LA (FON AK FOTO OU VOYE A) -->
+  <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a :</p>
+
+  <!-- EKRAN 3D ARÈNE JWÈT LA (PARÈT ANBA A, EPI ELAJI SOU TOUT EKRAN LÈ L VALIDE) -->
   <div id="game-arena">
     <!-- Panèl TES CHANS -->
     <div class="chances-card">
@@ -295,7 +320,7 @@
       <div class="chance-item"><div class="ball-icon" id="c3"></div> 3 Chans</div>
     </div>
 
-    <!-- 7 Pozisyon yo (Regle selon foto) -->
+    <!-- 7 Pozisyon yo -->
     <div class="pos-btn-3d" id="pos-1" onclick="selectPos3D(1)">1</div>
     <div class="pos-btn-3d" id="pos-2" onclick="selectPos3D(2)">2</div>
     <div class="pos-btn-3d" id="pos-3" onclick="selectPos3D(3)">3</div>
@@ -304,7 +329,7 @@
     <div class="pos-btn-3d" id="pos-6" onclick="selectPos3D(6)">6</div>
     <div class="pos-btn-3d" id="pos-7" onclick="selectPos3D(7)">7</div>
 
-    <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()">TIRE BOUL LA!</button>
+    <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()" disabled>TIRE BOUL LA!</button>
   </div>
 
   <!-- Admin Secret Modal -->
@@ -438,9 +463,14 @@
         playersCount: currentPlayers.toString(), status: "active"
       }, { merge: true });
 
-      // Kache premye ekran an, ouvri gwo ekran 3D la
+      // Kache fòm nan ak enfòmasyon yo an background
       document.getElementById('setup-screen').style.display = 'none';
-      document.getElementById('game-arena').style.display = 'block';
+      
+      // Elaji arène jwèt la pou l pran tout ekran an (Full Screen)
+      const arena = document.getElementById('game-arena');
+      arena.classList.add('full-screen-mode');
+      document.getElementById('shoot-btn-3d').disabled = false;
+
       alert("Kòd valide! Byenveni sou teren an. Chwazi yon pozisyon pou tire!");
     }
 
@@ -454,7 +484,6 @@
     function shootBall3D() {
       if (chances <= 0) return;
 
-      // Mete yon chans mwens
       if (chances === 3) document.getElementById('c3').classList.add('off');
       else if (chances === 2) document.getElementById('c2').classList.add('off');
       else if (chances === 1) document.getElementById('c1').classList.add('off');
@@ -488,4 +517,5 @@
   </script>
 
 </body>
-</html>
+    </html>
+    
