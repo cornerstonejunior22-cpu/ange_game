@@ -25,6 +25,7 @@
       border: 2px solid #ffd700;
       margin-bottom: 8px;
       box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+      cursor: pointer; /* Pou klike sou li pou sekrè a */
     }
     h2 {
       font-size: 20px;
@@ -166,11 +167,41 @@
       color: #888;
       box-shadow: none;
     }
+
+    /* CSS pou Panèl Sekrè Pwopriyetè a (Kache pa defo) */
+    #secret-admin-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #111;
+      z-index: 9999;
+      padding: 20px;
+      overflow-y: auto;
+      text-align: left;
+    }
+    .admin-card {
+      background: #1e1e1e;
+      border: 1px solid #ffd700;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .btn-close-admin {
+      background: #dc3545;
+      color: #fff;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      float: right;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-  <img src="logo.png" alt="Logo" class="header-logo">
+  <!-- Logo ke w ap klike 3 fwa sou li pou ouvri espas sekrè a -->
+  <img src="logo.png" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
   <h2>ANGE JUNIORCORNERSTONE</h2>
   
   <div class="dashboard">
@@ -184,13 +215,11 @@
     <div class="stat-val" id="jackpot-val">0 Gdes</div>
   </div>
 
-  <!-- Section de Paiement Mise à Jour -->
   <div class="pay-section" id="pay-box">
     <p style="font-size: 13px; color: #ffd700; margin-bottom: 8px;">
       Achte kòd inik ou (1,250 Gdes MonCash/Natcash) oubyen (250 Gdes MonCash/Natcash) oubyen (100 Gdes MonCash/Natcash)
     </p>
 
-    <!-- Numéros du Propriétaire -->
     <div style="font-size: 13px; background: #222; padding: 8px; border-radius: 6px; margin-bottom: 8px; text-align: left;">
       <p><b>MonCash :</b> +509 3436-3143 
         <button class="btn-pay" onclick="copyNum('34363143')">Kopye</button>
@@ -240,6 +269,15 @@
   <p style="margin-bottom: 10px;">Chans ki rete: <b id="chances-left" style="color: #ffd700;">0</b> / 3</p>
   <button class="btn-action" id="shoot-btn" onclick="shootBall()" disabled>Tire Boul la!</button>
 
+  <!-- ESPAS SEKRÈ PWOPRIYETÈ A (MODAL ADMIN) -->
+  <div id="secret-admin-modal">
+    <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
+    <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
+    <div id="admin-requests-list">
+      <p style="color: #aaa;">N ap chaje demann yo...</p>
+    </div>
+  </div>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBhVu7dY94w7c9v5ubojO4QRvntKHrkGkY",
@@ -258,9 +296,87 @@
     let chances = 0;
     let currentPlayers = 0;
 
+    // Lojik Sekrè pou ouvri Panèl Pwopriyetè a (3 klik sou logo a + PIN)
+    let logoClickCount = 0;
+    let clickTimer;
+
+    function handleSecretClick() {
+      logoClickCount++;
+      clearTimeout(clickTimer);
+      
+      clickTimer = setTimeout(() => {
+        logoClickCount = 0;
+      }, 1200); // 1.2 segonn pou fè 3 klik yo
+
+      if (logoClickCount === 3) {
+        logoClickCount = 0;
+        const pin = prompt("Antre PIN Sekrè Pwopriyetè a :");
+        if (pin === "1234") { // Ou ka chanje '1234' pa PIN ou vle a
+          openAdminPanel();
+        } else if(pin !== null) {
+          alert("PIN pa bon!");
+        }
+      }
+    }
+
+    function openAdminPanel() {
+      document.getElementById('secret-admin-modal').style.display = 'block';
+      loadAdminRequests();
+    }
+
+    function closeAdminPanel() {
+      document.getElementById('secret-admin-modal').style.display = 'none';
+    }
+
+    function loadAdminRequests() {
+      db.collection("payment_requests").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+        const container = document.getElementById('admin-requests-list');
+        container.innerHTML = "";
+
+        if (snapshot.empty) {
+          container.innerHTML = '<p style="color: #888;">Pa gen okenn demann kòd pou kounye a.</p>';
+          return;
+        }
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const id = doc.id;
+
+          const card = document.createElement('div');
+          card.className = "admin-card";
+
+          let statusHTML = '';
+          if (data.status === "pending") {
+            statusHTML = `<button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${id}')">Konfime Peman & Bay Kòd</button>`;
+          } else {
+            statusHTML = `<div style="color:#00ffcc; margin-top:5px;">Kòd: <b>${data.generatedCode}</b></div>`;
+          }
+
+          card.innerHTML = `
+            <div><b>Non :</b> ${data.playerName}</div>
+            <div><b>Telefòn :</b> ${data.playerPhone}</div>
+            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice} Gdes</span></div>
+            ${statusHTML}
+          `;
+
+          container.appendChild(card);
+        });
+      });
+    }
+
+    async function confirmPaymentAdmin(docId) {
+      const uniqueCode = "ANG-" + Math.floor(1000 + Math.random() * 9000);
+      await db.collection("payment_requests").doc(docId).update({
+        status: "confirmed",
+        generatedCode: uniqueCode
+      });
+      alert("Peman konfime! Kòd: " + uniqueCode);
+    }
+
+    // Lojik jwèt jeneral
     function copyNum(num) {
       navigator.clipboard.writeText(num);
-      alert("Nimewo " + num + " kopye avèk siksè!");
+      alert("Nimewo " + num + " kopye!");
     }
 
     function switchGroup() {
@@ -274,7 +390,6 @@
           const data = doc.data();
           currentPlayers = parseInt(data.playersCount) || 0;
           document.getElementById('player-count').innerText = currentPlayers;
-          
           let poolShare = groupVal === "1250" ? 500 : (groupVal === "250" ? 100 : 40);
           let jackpot = currentPlayers * poolShare * 0.90;
           document.getElementById('jackpot-val').innerText = jackpot.toLocaleString() + " Gdes";
@@ -285,7 +400,6 @@
       });
     }
 
-    // Écouter le groupe 1250 par défaut
     listenToBlock("1250");
 
     async function submitPaymentRequest() {
@@ -306,7 +420,7 @@
         status: "pending"
       });
 
-      alert("Demann ou voye pou gwoup " + group + " Gdes! Lè pwopriyetè a fin konfime peman an, w ap resevwa kòd inik ou a.");
+      alert("Demann ou voye pou gwoup " + group + " Gdes! Tann pwopriyetè a konfime.");
     }
 
     function selectPos(p) {
@@ -338,10 +452,7 @@
     }
 
     function shootBall() {
-      if (chances <= 0) {
-        alert("Ou pa gen chans ankò!");
-        return;
-      }
+      if (chances <= 0) return;
 
       const ball = document.getElementById('ball');
       const startBtn = document.getElementById('p' + currentPos);
@@ -361,7 +472,6 @@
         chances--;
         document.getElementById('chances-left').innerText = chances;
         ball.style.display = 'none';
-        
         if (chances === 0) {
           document.getElementById('shoot-btn').disabled = true;
           alert("Ou fini 3 chans ou yo!");
@@ -383,5 +493,5 @@
   </script>
 
 </body>
-  </html>
-  
+                                  </html>
+
