@@ -103,9 +103,9 @@
       box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
     }
 
-    /* ESPAS JWÈT TEREN 3D (AP PARÈT ANBA A PREMYE TAN, DRISE POU L PRAN EKRAM LÈ L VALIDE) */
+    /* ESPAS JWÈT TEREN 3D */
     #game-arena {
-      display: block; /* Li parèt dirèkteman anba fòm nan! */
+      display: block;
       position: relative;
       width: calc(100% - 30px);
       height: 380px;
@@ -187,15 +187,16 @@
       align-items: center;
       justify-content: center;
       font-size: 14px;
+      transition: transform 0.2s ease;
     }
     .pos-btn-3d.active {
       background: radial-gradient(circle, #ff4500, #dc3545);
       color: #fff;
       box-shadow: 0 0 15px #ff4500;
-      transform: scale(1.2);
+      transform: scale(1.25);
     }
 
-    /* Pozisyon sou pèspektiv foto an */
+    /* Positions sur la perspective du terrain */
     #pos-1 { top: 50%; left: 10%; }
     #pos-2 { top: 45%; left: 45%; }
     #pos-3 { top: 50%; right: 10%; }
@@ -204,7 +205,7 @@
     #pos-6 { top: 62%; right: 30%; }
     #pos-7 { top: 82%; left: 48%; }
 
-    /* Bouton Tire a nan kwen anba */
+    /* Bouton Tire */
     .shoot-btn-3d {
       position: absolute;
       bottom: 15px;
@@ -227,6 +228,20 @@
       background: #555;
       color: #888;
       box-shadow: none;
+    }
+
+    /* BALLE EN ANIMATION 3D */
+    .animated-basketball {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      background: radial-gradient(circle at 7px 7px, #ff8c00, #b34700);
+      border: 1px solid #000;
+      border-radius: 50%;
+      z-index: 50;
+      display: none;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+      pointer-events: none;
     }
 
     /* Admin Modal */
@@ -261,7 +276,7 @@
 </head>
 <body>
 
-  <!-- UI Premye Ekran (Peman ak Enfòmasyon) -->
+  <!-- UI Premye Ekran -->
   <div id="setup-screen">
     <img src="logo.png" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
     <h2>ANGE JUNIORCORNERSTONE</h2>
@@ -310,7 +325,7 @@
 
   <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a :</p>
 
-  <!-- EKRAN 3D ARÈNE JWÈT LA (PARÈT ANBA A, EPI ELAJI SOU TOUT EKRAN LÈ L VALIDE) -->
+  <!-- EKRAN 3D ARÈNE JWÈT LA -->
   <div id="game-arena">
     <!-- Panèl TES CHANS -->
     <div class="chances-card">
@@ -320,8 +335,11 @@
       <div class="chance-item"><div class="ball-icon" id="c3"></div> 3 Chans</div>
     </div>
 
+    <!-- BALLE DE BASKET ANIMÉE -->
+    <div class="animated-basketball" id="animated-ball"></div>
+
     <!-- 7 Pozisyon yo -->
-    <div class="pos-btn-3d" id="pos-1" onclick="selectPos3D(1)">1</div>
+    <div class="pos-btn-3d active" id="pos-1" onclick="selectPos3D(1)">1</div>
     <div class="pos-btn-3d" id="pos-2" onclick="selectPos3D(2)">2</div>
     <div class="pos-btn-3d" id="pos-3" onclick="selectPos3D(3)">3</div>
     <div class="pos-btn-3d" id="pos-4" onclick="selectPos3D(4)">4</div>
@@ -355,7 +373,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let currentPos = 5;
+    let currentPos = 1;
     let chances = 3;
     let currentPlayers = 0;
     let logoClickCount = 0;
@@ -463,10 +481,8 @@
         playersCount: currentPlayers.toString(), status: "active"
       }, { merge: true });
 
-      // Kache fòm nan ak enfòmasyon yo an background
       document.getElementById('setup-screen').style.display = 'none';
       
-      // Elaji arène jwèt la pou l pran tout ekran an (Full Screen)
       const arena = document.getElementById('game-arena');
       arena.classList.add('full-screen-mode');
       document.getElementById('shoot-btn-3d').disabled = false;
@@ -481,28 +497,74 @@
       currentPos = p;
     }
 
+    /* FUNCTION D'ANIMATION DE LA BALLE DE BASKETBALL */
     function shootBall3D() {
       if (chances <= 0) return;
 
+      const shootBtn = document.getElementById('shoot-btn-3d');
+      shootBtn.disabled = true;
+
+      // Gestion des chances
       if (chances === 3) document.getElementById('c3').classList.add('off');
       else if (chances === 2) document.getElementById('c2').classList.add('off');
       else if (chances === 1) document.getElementById('c1').classList.add('off');
 
       chances--;
 
-      let isGoal = Math.random() < 0.35; // 35% chans pou l antre
+      // Récupérer la position du bouton sélectionné (point de départ)
+      const startBtn = document.getElementById('pos-' + currentPos);
+      const arena = document.getElementById('game-arena');
+      const arenaRect = arena.getBoundingClientRect();
+      const btnRect = startBtn.getBoundingClientRect();
 
-      if (isGoal) {
-        alert("BOUYEN! 🏀 Boul la antre nan panye a! Ou genyen!");
-        document.getElementById('shoot-btn-3d').disabled = true;
-      } else {
-        if (chances > 0) {
-          alert("Oups! Boul la pa antre. Ou rete " + chans + " chans!");
+      const startX = btnRect.left - arenaRect.left + (btnRect.width / 2) - 14;
+      const startY = btnRect.top - arenaRect.top + (btnRect.height / 2) - 14;
+
+      // Cible du panier (milieu haut)
+      const targetX = arenaRect.width * 0.5 - 14;
+      const targetY = arenaRect.height * 0.22;
+
+      const ball = document.getElementById('animated-ball');
+      ball.style.left = startX + 'px';
+      ball.style.top = startY + 'px';
+      ball.style.display = 'block';
+
+      let isGoal = Math.random() < 0.40; // 40% de chance de marquer
+      let progress = 0;
+
+      const animationInterval = setInterval(() => {
+        progress += 0.04;
+        
+        if (progress <= 1) {
+          // Trajectoire en arc parabolique
+          let currentX = startX + (targetX - startX) * progress;
+          let currentY = startY + (targetY - startY) * progress - (Math.sin(progress * Math.PI) * 120);
+          let scale = 1 - (progress * 0.4); // La balle rétrécit légèrement en s'éloignant
+
+          if (!isGoal && progress > 0.8) {
+            // Rebond si le tir est raté
+            currentX += (Math.random() > 0.5 ? 25 : -25);
+          }
+
+          ball.style.left = currentX + 'px';
+          ball.style.top = currentY + 'px';
+          ball.style.transform = `scale(${scale}) rotate(${progress * 360}deg)`;
         } else {
-          alert("Oups! 3 chans ou yo fini. Ou pèdi nan blòk sa a!");
-          document.getElementById('shoot-btn-3d').disabled = true;
+          clearInterval(animationInterval);
+          ball.style.display = 'none';
+
+          if (isGoal) {
+            alert("BOUYEN! 🏀 Boul la antre nan panye a! Ou genyen!");
+          } else {
+            if (chances > 0) {
+              alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
+              shootBtn.disabled = false;
+            } else {
+              alert("Oups! 3 chans ou yo fini. Ou pèdi nan blòk sa a!");
+            }
+          }
         }
-      }
+      }, 25);
     }
 
     let timeLeft = 3600;
@@ -517,5 +579,4 @@
   </script>
 
 </body>
-    </html>
-    
+</html>
