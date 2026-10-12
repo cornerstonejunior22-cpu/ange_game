@@ -105,6 +105,7 @@
       box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
     }
 
+    /* ESPAS JWÈT TEREN 3D AN MOUVMAN KONSTAN */
     #game-arena {
       display: block;
       position: relative;
@@ -275,6 +276,7 @@
       pointer-events: none;
     }
 
+    /* Panèl Sekrè Pwopriyetè a */
     #secret-admin-modal {
       display: none;
       position: fixed;
@@ -307,8 +309,8 @@
 <body>
 
   <div id="setup-screen">
-    <!-- LOGO A AVÈK UN ID KLÈ POU KLIKE -->
-    <img src="logo.png" alt="Logo" class="header-logo" id="admin-logo">
+    <!-- Logo ke w ap klike 3 fwa sou li pou ouvri espas sekrè a -->
+    <img src="logo.png" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
     <h2>ANGE JUNIORCORNERSTONE</h2>
     
     <div class="dashboard">
@@ -378,8 +380,9 @@
     <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()" disabled>TIRE BOUL LA! (Bloke)</button>
   </div>
 
+  <!-- ESPAS SEKRÈ PWOPRIYETÈ A (MODAL ADMIN) -->
   <div id="secret-admin-modal">
-    <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen</button>
+    <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
     <div id="admin-requests-list">
       <p style="color: #aaa;">N ap chaje demann yo...</p>
@@ -403,33 +406,29 @@
     let currentPos = 1;
     let chances = 3;
     let currentPlayers = 0;
-    let adminClickCount = 0;
-    let adminTimer = null;
     let isCodeValidated = false;
 
-    // Jere klike sou logo la yon fason solid anpil
-    const logoEl = document.getElementById('admin-logo');
-    if (logoEl) {
-      logoEl.addEventListener('click', function(e) {
-        e.preventDefault();
-        adminClickCount++;
-        
-        if (adminTimer) clearTimeout(adminTimer);
+    // Lojik Sekrè pou ouvri Panèl Pwopriyetè a (3 klik sou logo a + PIN)
+    let logoClickCount = 0;
+    let clickTimer;
 
-        if (adminClickCount === 3) {
-          adminClickCount = 0;
-          const pin = prompt("Antre PIN Sekrè Pwopriyetè a :");
-          if (pin === "1234") {
-            openAdminPanel();
-          } else if (pin !== null) {
-            alert("PIN pa bon!");
-          }
-        } else {
-          adminTimer = setTimeout(() => {
-            adminClickCount = 0;
-          }, 1000);
+    function handleSecretClick() {
+      logoClickCount++;
+      clearTimeout(clickTimer);
+      
+      clickTimer = setTimeout(() => {
+        logoClickCount = 0;
+      }, 1200); // 1.2 segonn pou fè 3 klik yo
+
+      if (logoClickCount === 3) {
+        logoClickCount = 0;
+        const pin = prompt("Antre PIN Sekrè Pwopriyetè a :");
+        if (pin === "1234") { // Kòd PIN pwopriyetè a
+          openAdminPanel();
+        } else if(pin !== null) {
+          alert("PIN pa bon!");
         }
-      });
+      }
     }
 
     function openAdminPanel() {
@@ -445,19 +444,33 @@
       db.collection("payment_requests").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
         const container = document.getElementById('admin-requests-list');
         container.innerHTML = "";
+
         if (snapshot.empty) {
-          container.innerHTML = '<p style="color: #888;">Pa gen okenn demann kòd.</p>';
+          container.innerHTML = '<p style="color: #888;">Pa gen okenn demann kòd pou kounye a.</p>';
           return;
         }
+
         snapshot.forEach((doc) => {
           const data = doc.data();
           const id = doc.id;
+
           const card = document.createElement('div');
           card.className = "admin-card";
-          let statusHTML = data.status === "pending" 
-            ? `<button class="btn-pay" style="background:#28a745; width:100%; margin-top:6px;" onclick="confirmPaymentAdmin('${id}')">Konfime & Bay Kòd</button>`
-            : `<div style="color:#00ffcc; margin-top:4px;">Kòd: <b>${data.generatedCode}</b></div>`;
-          card.innerHTML = `<div><b>Non:</b> ${data.playerName}</div><div><b>Tel:</b> ${data.playerPhone}</div><div><b>Gwoup:</b> <span style="color:#ffd700;">${data.groupPrice} Gdes</span></div>${statusHTML}`;
+
+          let statusHTML = '';
+          if (data.status === "pending") {
+            statusHTML = `<button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${id}')">Konfime Peman & Bay Kòd</button>`;
+          } else {
+            statusHTML = `<div style="color:#00ffcc; margin-top:5px;">Kòd: <b>${data.generatedCode}</b></div>`;
+          }
+
+          card.innerHTML = `
+            <div><b>Non :</b> ${data.playerName}</div>
+            <div><b>Telefòn :</b> ${data.playerPhone}</div>
+            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice} Gdes</span></div>
+            ${statusHTML}
+          `;
+
           container.appendChild(card);
         });
       });
@@ -472,6 +485,7 @@
       alert("Peman konfime! Kòd: " + uniqueCode);
     }
 
+    // Lojik Peman ak Aksyon Jwèt
     function copyNum(num) {
       navigator.clipboard.writeText(num);
       alert("Nimewo " + num + " kopye!");
@@ -610,4 +624,15 @@
     }
 
     let timeLeft = 3600;
-    s
+    setInterval(() => {
+      if (timeLeft > 0) {
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+      }
+    }, 1000);
+  </script>
+
+</body>
+</html>
