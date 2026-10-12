@@ -105,18 +105,18 @@
       box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
     }
 
-    /* VRAI TEREN BASKETBALL CSS / VISUEL PROPRE */
+    /* ESPAS TEREN CANVAS A */
     #game-arena {
       position: relative;
       width: calc(100% - 30px);
       max-width: 380px;
-      height: 380px;
+      height: 400px;
       margin: 0 auto 20px auto;
-      background: linear-gradient(180deg, #122820 0%, #1a4d36 30%, #a65e2e 30%, #c46d33 100%);
       border: 3px solid #ffd700;
       border-radius: 15px;
       overflow: hidden;
       box-shadow: 0 5px 25px rgba(255, 215, 0, 0.4);
+      background: #000;
     }
 
     #game-arena.full-screen-mode {
@@ -128,6 +128,12 @@
       border: none;
       border-radius: 0;
       z-index: 1000;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
     }
 
     .live-indicator {
@@ -180,79 +186,11 @@
     }
     .ball-icon.off { opacity: 0.2; }
 
-    /* Panye anwo a */
-    .court-hoop {
-      position: absolute;
-      top: 22%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 44px;
-      height: 24px;
-      border: 4px solid #ff4500;
-      border-radius: 50%;
-      box-shadow: 0 0 10px #ff4500;
-      z-index: 5;
-    }
-    .court-backboard {
-      position: absolute;
-      top: 14%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60px;
-      height: 25px;
-      background: rgba(255, 255, 255, 0.85);
-      border: 2px solid #000;
-      z-index: 4;
-    }
-
-    /* Jwè vityèl ki ap deplase sou pozisyon yo */
-    .player-avatar {
-      position: absolute;
-      width: 35px;
-      height: 45px;
-      transform: translate(-50%, -100%);
-      z-index: 12;
-      transition: all 0.3s ease-in-out;
-      pointer-events: none;
-    }
-    .player-body {
-      width: 22px;
-      height: 28px;
-      background: #0044ff;
-      border-radius: 6px;
-      margin: 0 auto;
-      border: 1px solid #fff;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.5);
-    }
-    .player-head {
-      width: 12px;
-      height: 12px;
-      background: #5c4033;
-      border-radius: 50%;
-      margin: 0 auto -2px auto;
-    }
-    .player-ball {
-      position: absolute;
-      bottom: 2px;
-      right: -4px;
-      width: 12px;
-      height: 12px;
-      background: radial-gradient(circle at 4px 4px, #ff8c00, #d2691e);
-      border-radius: 50%;
-      border: 1px solid #000;
-      animation: dribbleAnim 0.5s infinite alternate;
-    }
-
-    @keyframes dribbleAnim {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-8px); }
-    }
-
-    /* 7 Pozisyon yo sou teren an */
+    /* 7 POZISYON SOU TEREN AN */
     .pos-btn-3d {
       position: absolute;
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: 50%;
       background: radial-gradient(circle, #ffd700, #ff8c00);
       color: #000;
@@ -271,29 +209,16 @@
       background: radial-gradient(circle, #ff4500, #dc3545);
       color: #fff;
       box-shadow: 0 0 15px #ff4500;
-      transform: translate(-50%, -50%) scale(1.2);
+      transform: translate(-50%, -50%) scale(1.25);
     }
 
     #pos-1 { top: 58%; left: 18%; }
     #pos-2 { top: 46%; left: 50%; }
     #pos-3 { top: 58%; left: 82%; }
     #pos-4 { top: 70%; left: 33%; }
-    #pos-5 { top: 75%; left: 50%; }
+    #pos-5 { top: 76%; left: 50%; }
     #pos-6 { top: 70%; left: 67%; }
     #pos-7 { top: 90%; left: 50%; }
-
-    /* Boul k ap vole lè y ap tire */
-    .flying-ball {
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      background: radial-gradient(circle at 5px 5px, #ff8c00, #d2691e);
-      border-radius: 50%;
-      border: 1px solid #000;
-      z-index: 25;
-      display: none;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
 
     .shoot-btn-3d {
       position: absolute;
@@ -311,7 +236,7 @@
       border-radius: 25px;
       box-shadow: 0 4px 15px rgba(255,215,0,0.5);
       cursor: pointer;
-      z-index: 30;
+      z-index: 25;
     }
     .shoot-btn-3d:disabled {
       background: #555;
@@ -397,11 +322,11 @@
     </div>
   </div>
 
-  <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren & Jwè an Mouvman :</p>
+  <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren & Jwè an Mouvman (Canvas Vivant) :</p>
 
-  <!-- VRAI TEREN BASKETBALL KOTE JWÈ A AP DEPLASE -->
+  <!-- TEREN JWÈT LA AK CANVAS -->
   <div id="game-arena">
-    <div class="live-indicator">🔴 TEREN AN DIRECT</div>
+    <div class="live-indicator">🔴 JWÈT AN DIRECT (VIDEYO)</div>
 
     <div class="chances-card">
       <div class="chances-title">TES CHANS</div>
@@ -410,22 +335,10 @@
       <div class="chance-item"><div class="ball-icon" id="c3"></div> 3 Chans</div>
     </div>
 
-    <!-- Panye ak Panneau -->
-    <div class="court-backboard"></div>
-    <div class="court-hoop"></div>
+    <!-- CANVAS ENGINE POU DESINE TEREN PARQUET, PANYE, AK JWÈ K AP DRIBLE -->
+    <canvas id="courtCanvas"></canvas>
 
-    <!-- AVATAR JWÈ A KI AP SUIVI POZISYON W CHWAZI A -->
-    <div class="player-avatar" id="playerAvatar" style="top: 58%; left: 18%;">
-      <div class="player-head"></div>
-      <div class="player-body">
-        <div class="player-ball"></div>
-      </div>
-    </div>
-
-    <!-- BOUL K AP VOLE LÈ W TIRE -->
-    <div class="flying-ball" id="flyingBall"></div>
-
-    <!-- 7 POZISYON YO -->
+    <!-- 7 POZISYON SOU TÈ A -->
     <div class="pos-btn-3d active" id="pos-1" onclick="selectPos(1)">1</div>
     <div class="pos-btn-3d" id="pos-2" onclick="selectPos(2)">2</div>
     <div class="pos-btn-3d" id="pos-3" onclick="selectPos(3)">3</div>
@@ -580,15 +493,27 @@
       alert("Kòd valide! Teren an elaji an plen ekran. Ou lib pou chwazi pozisyon w ak tire!");
     }
 
-    // MAP POZISYON JWÈ A SOU TEREN AN
-    const positionsCoords = {
-      1: { top: '58%', left: '18%' },
-      2: { top: '46%', left: '50%' },
-      3: { top: '58%', left: '82%' },
-      4: { top: '70%', left: '33%' },
-      5: { top: '75%', left: '50%' },
-      6: { top: '70%', left: '67%' },
-      7: { top: '90%', left: '50%' }
+    // ==========================================
+    // MÒD CANVAS RENDERING POU TEREN AK JWÈ A
+    // ==========================================
+    const canvas = document.getElementById('courtCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const positionsRatios = {
+      1: { x: 0.18, y: 0.58 },
+      2: { x: 0.50, y: 0.46 },
+      3: { x: 0.82, y: 0.58 },
+      4: { x: 0.33, y: 0.70 },
+      5: { x: 0.50, y: 0.76 },
+      6: { x: 0.67, y: 0.70 },
+      7: { x: 0.50, y: 0.90 }
     };
 
     function selectPos(p) {
@@ -596,33 +521,112 @@
       document.querySelectorAll('.pos-btn-3d').forEach((btn, idx) => {
         btn.classList.toggle('active', (idx + 1) === p);
       });
-
-      // Deplase jwè a imedyatman sou nouvo pozisyon chwazi a
-      const avatar = document.getElementById('playerAvatar');
-      const pos = positionsCoords[p];
-      avatar.style.top = pos.top;
-      avatar.style.left = pos.left;
     }
 
-    // AKSYON LÈ TELEGIDÈ A KLIKE SOU TIRE
-    function shootBall() {
-      if (!isCodeValidated || chances <= 0) return;
+    let dribbleTime = 0;
+    let isShooting = false;
+    let shotProgress = 0;
+    let flyingBallX = 0, flyingBallY = 0;
 
-      const shootBtn = document.getElementById('shootBtn');
-      shootBtn.disabled = true;
+    function renderScene() {
+      const W = canvas.width;
+      const H = canvas.height;
 
-      if (chances === 3) document.getElementById('c3').classList.add('off');
-      else if (chances === 2) document.getElementById('c2').classList.add('off');
-      else if (chances === 1) document.getElementById('c1').classList.add('off');
+      // 1. DESSIN DU TERRAIN (PARQUET BOIS)
+      ctx.fillStyle = '#b85b14'; // Koulè bwa bèl
+      ctx.fillRect(0, 0, W, H);
 
-      chances--;
+      // Efè liy bwa orizontal yo
+      ctx.strokeStyle = '#994410';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < H; i += 15) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(W, i);
+        ctx.stroke();
+      }
 
-      const avatar = document.getElementById('playerAvatar');
-      const flyingBall = document.getElementById('flyingBall');
-      
-      // Pran pozisyon aktyèl jwè a
-      const avatarRect = avatar.getBoundingClientRect();
-      const arenaRect = document.getElementById('game-arena').getBoundingClientRect();
+      // Liy zòn panye a (Paint / Key)
+      ctx.fillStyle = '#cc3300';
+      ctx.fillRect(W * 0.32, 0, W * 0.36, H * 0.42);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(W * 0.32, 0, W * 0.36, H * 0.42);
 
-      let startX = avatarRect.left - arenaRect.left + 15;
-      let startY = avatarRect.top - a
+      // Arc de cercle 3 points
+      ctx.beginPath();
+      ctx.arc(W * 0.5, H * 0.15, W * 0.38, 0, Math.PI);
+      ctx.stroke();
+
+      // Panneau et Panye (Hoop) anwo a
+      let hoopX = W * 0.5;
+      let hoopY = H * 0.15;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(hoopX - 30, hoopY - 15, 60, 18);
+      ctx.strokeStyle = '#000';
+      ctx.strokeRect(hoopX - 30, hoopY - 15, 60, 18);
+
+      // Sèk wouj la
+      ctx.strokeStyle = '#ff4500';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.arc(hoopX, hoopY + 10, 15, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 2. JWÈ A SOU POZISYON KOTE L AP DRIBLE
+      let pos = positionsRatios[currentPos];
+      let pX = W * pos.x;
+      let pY = H * pos.y;
+
+      dribbleTime += 0.15;
+      let bounce = Math.abs(Math.sin(dribbleTime)) * 12;
+
+      ctx.save();
+      if (!isShooting) {
+        // Kò Jwè (Ble)
+        ctx.fillStyle = '#0044ff';
+        ctx.beginPath();
+        ctx.arc(pX, pY - 22, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Tèt Jwè
+        ctx.fillStyle = '#5c4033';
+        ctx.beginPath();
+        ctx.arc(pX, pY - 40, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Boul nan men l ap drible
+        ctx.fillStyle = '#ff6f00';
+        ctx.beginPath();
+        ctx.arc(pX + 14, pY - 8 + bounce, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else {
+        // ANGLE TIR (VIDEO)
+        shotProgress += 0.035;
+        let targetX = hoopX;
+        let targetY = hoopY + 10;
+
+        flyingBallX = pX + (targetX - pX) * shotProgress;
+        flyingBallY = (pY - 25) + (targetY - (pY - 25)) * shotProgress - (Math.sin(shotProgress * Math.PI) * 90);
+
+        // Jwè leve bra
+        ctx.fillStyle = '#0044ff';
+        ctx.beginPath();
+        ctx.arc(pX, pY - 25, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#5c4033';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(pX, pY - 30); ctx.lineTo(pX, pY - 52);
+        ctx.stroke();
+
+        // Boul k ap vole
+        ctx.fillStyle = '#ff6f00';
+        ctx.beginPath()
