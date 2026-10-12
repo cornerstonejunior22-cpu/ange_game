@@ -103,7 +103,6 @@
       box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
     }
 
-    /* ESPAS JWÈT TEREN 3D AN MOUVMAN KONSTAN (AP TANN TELEGIDÈ A) */
     #game-arena {
       display: block;
       position: relative;
@@ -117,7 +116,6 @@
       overflow: hidden;
       box-shadow: 0 5px 20px rgba(255, 215, 0, 0.3);
       transition: all 0.5s ease-in-out;
-      /* Animasyon ki fè teren an respire ak viv kontinyèlman */
       animation: arenaVibe 3.5s infinite ease-in-out;
     }
 
@@ -134,7 +132,7 @@
       border: none;
       border-radius: 0;
       z-index: 1000;
-      animation: none; /* Rete estab nan mòd full screen pou l ka jwe byen */
+      animation: none;
     }
 
     .live-indicator {
@@ -157,7 +155,6 @@
       50% { opacity: 0.4; }
     }
 
-    /* Panèl TES CHANS */
     .chances-card {
       position: absolute;
       top: 15px;
@@ -197,7 +194,6 @@
       opacity: 0.2;
     }
 
-    /* 7 Pozisyon yo ap flote/anime tout tan pou bay lavi */
     .pos-btn-3d {
       position: absolute;
       width: 38px;
@@ -231,7 +227,6 @@
       animation: none;
     }
 
-    /* Pozisyon sou teren an */
     #pos-1 { top: 52%; left: 12%; animation-delay: 0.1s; }
     #pos-2 { top: 45%; left: 48%; animation-delay: 0.2s; }
     #pos-3 { top: 52%; right: 12%; animation-delay: 0.3s; }
@@ -240,7 +235,6 @@
     #pos-6 { top: 64%; right: 32%; animation-delay: 0.6s; }
     #pos-7 { top: 82%; left: 48%; animation-delay: 0.7s; }
 
-    /* Bouton Tire */
     .shoot-btn-3d {
       position: absolute;
       bottom: 15px;
@@ -266,7 +260,6 @@
       cursor: not-allowed;
     }
 
-    /* BALLE EN ANIMATION TIR 3D */
     .animated-basketball {
       position: absolute;
       width: 28px;
@@ -312,7 +305,8 @@
 <body>
 
   <div id="setup-screen">
-    <img src="logo.png" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
+    <!-- LOGO AK FONKSYON 3 KLIK AMELIORE -->
+    <img src="logo.png" alt="Logo" class="header-logo" id="app-logo">
     <h2>ANGE JUNIORCORNERSTONE</h2>
     
     <div class="dashboard">
@@ -357,13 +351,11 @@
     </div>
   </div>
 
-  <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a (An Mouvman Kòm Ap Tann Telegidè a) :</p>
+  <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a :</p>
 
-  <!-- EKRAN 3D ARÈNE JWÈT LA AN MOUVMAN -->
   <div id="game-arena">
     <div class="live-indicator">🔴 AP TANN TELEGIDÈ A...</div>
 
-    <!-- Panèl TES CHANS -->
     <div class="chances-card">
       <div class="chances-title">TES CHANS</div>
       <div class="chance-item"><div class="ball-icon" id="c1"></div> 1 Chans</div>
@@ -371,10 +363,8 @@
       <div class="chance-item"><div class="ball-icon" id="c3"></div> 3 Chans</div>
     </div>
 
-    <!-- BALLE EN ANIMATION 3D POUR TIR -->
     <div class="animated-basketball" id="animated-ball"></div>
 
-    <!-- 7 Pozisyon yo ap viv -->
     <div class="pos-btn-3d active" id="pos-1" onclick="selectPos3D(1)">1</div>
     <div class="pos-btn-3d" id="pos-2" onclick="selectPos3D(2)">2</div>
     <div class="pos-btn-3d" id="pos-3" onclick="selectPos3D(3)">3</div>
@@ -415,17 +405,25 @@
     let clickTimer;
     let isCodeValidated = false;
 
-    function handleSecretClick() {
+    // Konekte fonksyon klike sou logo la dirèkteman nan kòd la
+    document.getElementById('app-logo').addEventListener('click', function() {
       logoClickCount++;
       clearTimeout(clickTimer);
-      clickTimer = setTimeout(() => { logoClickCount = 0; }, 1200);
+      
       if (logoClickCount === 3) {
         logoClickCount = 0;
         const pin = prompt("Antre PIN Sekrè Pwopriyetè a :");
-        if (pin === "1234") { openAdminPanel(); }
-        else if(pin !== null) { alert("PIN pa bon!"); }
+        if (pin === "1234") {
+          openAdminPanel();
+        } else if (pin !== null) {
+          alert("PIN pa bon!");
+        }
+      } else {
+        clickTimer = setTimeout(() => {
+          logoClickCount = 0;
+        }, 1500); // Tan pou fè 3 klik yo (1.5 segonn)
       }
-    }
+    });
 
     function openAdminPanel() {
       document.getElementById('secret-admin-modal').style.display = 'block';
@@ -597,4 +595,17 @@
               alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
               shootBtn.disabled = false;
             } else {
-           
+              alert("Oups! 3 chans ou yo fini. Ou pèdi nan blòk sa a!");
+            }
+          }
+        }
+      }, 25);
+    }
+
+    let timeLeft = 3600;
+    setInterval(() => {
+      if (timeLeft > 0) {
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        document.getElementById('
