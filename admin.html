@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ht">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADMIN - ANGE JUNIORCORNERSTONE</title>
+  
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #121212;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 15px;
+    }
+    h2 {
+      color: #ffd700;
+      text-align: center;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+    .card {
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    }
+    .player-info {
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+    .group-badge {
+      background: #ffd700;
+      color: #000;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .btn-confirm {
+      background: #28a745;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 8px;
+      width: 100%;
+      font-size: 14px;
+    }
+    .code-display {
+      background: #222;
+      color: #00ffcc;
+      padding: 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 16px;
+      margin-top: 6px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Panèl Kontwòl Pwopriyetè</h2>
+
+  <div id="requests-list">
+    <p style="text-align: center; color: #888;">N ap chaje demann yo...</p>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBhVu7dY94w7c9v5ubojO4QRvntKHrkGkY",
+      authDomain: "ange-juniorcornerstone.firebaseapp.com",
+      projectId: "ange-juniorcornerstone",
+      storageBucket: "ange-juniorcornerstone.firebasestorage.app",
+      messagingSenderId: "201645186040",
+      appId: "1:201645186040:web:58b124ac07465a44fad40d",
+      measurementId: "G-5LK9JTTTHJ"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Koute epi afiche tout demann peman yo an tan reyèl
+    db.collection("payment_requests").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+      const container = document.getElementById('requests-list');
+      container.innerHTML = "";
+
+      if (snapshot.empty) {
+        container.innerHTML = '<p style="text-align: center; color: #888;">Pa gen okenn demann kòd pou kounye a.</p>';
+        return;
+      }
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const id = doc.id;
+
+        const card = document.createElement('div');
+        card.className = "card";
+
+        let statusHTML = '';
+        if (data.status === "pending") {
+          statusHTML = `<button class="btn-confirm" onclick="confirmPayment('${id}')">Konfime Peman & Bay Kòd Inik</button>`;
+        } else {
+          statusHTML = `<div class="code-display">Kòd ki Genere : <b>${data.generatedCode}</b></div>`;
+        }
+
+        card.innerHTML = `
+          <div class="player-info"><b>Non :</b> ${data.playerName}</div>
+          <div class="player-info"><b>Nimewo Telefòn :</b> ${data.playerPhone}</div>
+          <div class="player-info"><b>Gwoup :</b> <span class="group-badge">${data.groupPrice} Gdes</span></div>
+          ${statusHTML}
+        `;
+
+        container.appendChild(card);
+      });
+    });
+
+    async function confirmPayment(docId) {
+      // Genere yon kòd inik pou jwè a
+      const uniqueCode = "ANG-" + Math.floor(1000 + Math.random() * 9000);
+
+      await db.collection("payment_requests").doc(docId).update({
+        status: "confirmed",
+        generatedCode: uniqueCode
+      });
+
+      alert("Peman konfime ak siksè! Kòd inik ki kreye an se : " + uniqueCode);
+    }
+  </script>
+
+</body>
+</html>
