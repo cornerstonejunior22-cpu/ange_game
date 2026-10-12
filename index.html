@@ -28,6 +28,8 @@
       margin: 10px 0 6px 0;
       box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
       cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
     h2 {
       font-size: 18px;
@@ -305,8 +307,8 @@
 <body>
 
   <div id="setup-screen">
-    <!-- LOGO AK FONKSYON 3 KLIK AMELIORE -->
-    <img src="logo.png" alt="Logo" class="header-logo" id="app-logo">
+    <!-- LOGO A AVÈK UN ID KLÈ POU KLIKE -->
+    <img src="logo.png" alt="Logo" class="header-logo" id="admin-logo">
     <h2>ANGE JUNIORCORNERSTONE</h2>
     
     <div class="dashboard">
@@ -401,29 +403,34 @@
     let currentPos = 1;
     let chances = 3;
     let currentPlayers = 0;
-    let logoClickCount = 0;
-    let clickTimer;
+    let adminClickCount = 0;
+    let adminTimer = null;
     let isCodeValidated = false;
 
-    // Konekte fonksyon klike sou logo la dirèkteman nan kòd la
-    document.getElementById('app-logo').addEventListener('click', function() {
-      logoClickCount++;
-      clearTimeout(clickTimer);
-      
-      if (logoClickCount === 3) {
-        logoClickCount = 0;
-        const pin = prompt("Antre PIN Sekrè Pwopriyetè a :");
-        if (pin === "1234") {
-          openAdminPanel();
-        } else if (pin !== null) {
-          alert("PIN pa bon!");
+    // Jere klike sou logo la yon fason solid anpil
+    const logoEl = document.getElementById('admin-logo');
+    if (logoEl) {
+      logoEl.addEventListener('click', function(e) {
+        e.preventDefault();
+        adminClickCount++;
+        
+        if (adminTimer) clearTimeout(adminTimer);
+
+        if (adminClickCount === 3) {
+          adminClickCount = 0;
+          const pin = prompt("Antre PIN Sekrè Pwopriyetè a :");
+          if (pin === "1234") {
+            openAdminPanel();
+          } else if (pin !== null) {
+            alert("PIN pa bon!");
+          }
+        } else {
+          adminTimer = setTimeout(() => {
+            adminClickCount = 0;
+          }, 1000);
         }
-      } else {
-        clickTimer = setTimeout(() => {
-          logoClickCount = 0;
-        }, 1500); // Tan pou fè 3 klik yo (1.5 segonn)
-      }
-    });
+      });
+    }
 
     function openAdminPanel() {
       document.getElementById('secret-admin-modal').style.display = 'block';
@@ -603,9 +610,4 @@
     }
 
     let timeLeft = 3600;
-    setInterval(() => {
-      if (timeLeft > 0) {
-        timeLeft--;
-        let m = Math.floor(timeLeft / 60);
-        let s = timeLeft % 60;
-        document.getElementById('
+    s
