@@ -42,12 +42,12 @@
       background: rgba(26, 26, 26, 0.9);
       border: 1px solid #ffd700;
       border-radius: 12px;
-      padding: 10px;
+      padding: 12px;
       margin: 0 15px 12px 15px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
     }
-    .stat-title { color: #bbb; font-size: 11px; margin-top: 2px; }
-    .stat-val { font-size: 16px; font-weight: bold; color: #ffd700; }
+    .stat-title { color: #bbb; font-size: 12px; margin-top: 2px; }
+    .stat-val { font-size: 22px; font-weight: bold; color: #ffd700; }
     
     .pay-section {
       background: #181818;
@@ -106,7 +106,7 @@
       box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
     }
 
-    /* ESPAS JWÈT TEREN 3D AN MOUVMAN KONSTAN */
+    /* ESPAS JWÈT TEREN 3D */
     #game-arena {
       display: block;
       position: relative;
@@ -255,7 +255,6 @@
       cursor: not-allowed;
     }
 
-    /* CANVAS POU JWÈT LA AK BOUL LA */
     #game-canvas {
       position: absolute;
       top: 0;
@@ -266,7 +265,7 @@
       pointer-events: none;
     }
 
-    /* Panèl Sekrè Pwopriyetè a */
+    /* Panèl Sekrè Pwopriyetè a (Modal Admin) */
     #secret-admin-modal {
       display: none;
       position: fixed;
@@ -283,6 +282,13 @@
       border-radius: 8px;
       padding: 12px;
       margin-bottom: 10px;
+    }
+    .admin-stat-box {
+      background: #222;
+      border: 1px solid #ffd700;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 15px;
     }
     .btn-close-admin {
       background: #dc3545;
@@ -303,15 +309,10 @@
     <img src="logo.png" onerror="this.src='https://placehold.co/90x90/ffd700/000?text=ANG';" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
     <h2>ANGE JUNIORCORNERSTONE</h2>
     
+    <!-- DASHBOARD TELEGIDÈ (SÈLMAN TAN AN K AP MONTRE) -->
     <div class="dashboard">
-      <div class="stat-title">Tan ki rete (1h Max):</div>
+      <div class="stat-title">Tan ki rete nan blòk sa a (1h Max):</div>
       <div class="stat-val" id="timer">59:59</div>
-      
-      <div class="stat-title">Jwè nan blòk sa a:</div>
-      <div class="stat-val"><span id="player-count">0</span> / 220</div>
-
-      <div class="stat-title">Cagnotte Ganyan (90%):</div>
-      <div class="stat-val" id="jackpot-val">0 Gdes</div>
     </div>
 
     <div class="pay-section" id="pay-box">
@@ -357,7 +358,6 @@
       <div class="chance-item"><div class="ball-icon" id="c3"></div> 3 Chans</div>
     </div>
 
-    <!-- CANVAS POU RENDERING ANIMATION 60FPS -->
     <canvas id="game-canvas"></canvas>
 
     <div class="pos-btn-3d active" id="pos-1" onclick="selectPos3D(1)">1</div>
@@ -371,10 +371,21 @@
     <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()" disabled>TIRE BOUL LA! (Bloke)</button>
   </div>
 
-  <!-- ESPAS SEKRÈ PWOPRIYETÈ A (MODAL ADMIN) -->
+  <!-- ESPAS SEKRÈ PWOPRIYETÈ A (ENFÒMASYON SEKRÈ YO METE LA A) -->
   <div id="secret-admin-modal">
     <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
+    
+    <!-- STATISTIK SEKRÈ YO -->
+    <div class="admin-stat-box">
+      <div style="color: #bbb; font-size: 12px;">Jwè nan blòk sa a:</div>
+      <div style="font-size: 18px; font-weight: bold; color: #ffd700; margin-bottom: 8px;"><span id="admin-player-count">0</span> / 220</div>
+      
+      <div style="color: #bbb; font-size: 12px;">Cagnotte Ganyan (90%):</div>
+      <div style="font-size: 18px; font-weight: bold; color: #28a745;" id="admin-jackpot-val">0 Gdes</div>
+    </div>
+
+    <h4 style="color: #fff; margin-bottom: 10px;">Demann Kòd Peman Yo:</h4>
     <div id="admin-requests-list">
       <p style="color: #aaa;">N ap chaje demann yo...</p>
     </div>
@@ -399,7 +410,7 @@
     let currentPlayers = 0;
     let isCodeValidated = false;
 
-    // --- LOGIK SEKRÈ PROPRIETÈ A (3 clicks + PIN) ---
+    // LOGIK SEKRÈ PROPRIETÈ A (3 clicks + PIN)
     let logoClickCount = 0;
     let clickTimer;
 
@@ -486,13 +497,15 @@
         if (doc.exists) {
           const data = doc.data();
           currentPlayers = parseInt(data.playersCount) || 0;
-          document.getElementById('player-count').innerText = currentPlayers;
+          
+          // MÈT ENFÒMASYON SA YO NAN PANÈL SEKRÈ A SÈLMAN
+          document.getElementById('admin-player-count').innerText = currentPlayers;
           let poolShare = groupVal === "1250" ? 500 : (groupVal === "250" ? 100 : 40);
           let jackpot = currentPlayers * poolShare * 0.90;
-          document.getElementById('jackpot-val').innerText = jackpot.toLocaleString() + " Gdes";
+          document.getElementById('admin-jackpot-val').innerText = jackpot.toLocaleString() + " Gdes";
         } else {
-          document.getElementById('player-count').innerText = "0";
-          document.getElementById('jackpot-val').innerText = "0 Gdes";
+          document.getElementById('admin-player-count').innerText = "0";
+          document.getElementById('admin-jackpot-val').innerText = "0 Gdes";
         }
       });
     }
@@ -547,7 +560,6 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Pwopriyete Jwè ak Boul pou simulation an
     let player = {
       x: 0,
       y: 0,
@@ -617,172 +629,10 @@
       chances--;
 
       player.isShooting = true;
-      let isGoal = Math.random() < 0.45; // 45% chans pou antre nan panye a
+      let isGoal = Math.random() < 0.45;
       
       setTimeout(() => {
         ball.isShot = true;
         ball.isGoal = isGoal;
         ball.progress = 0;
-        ball.startX = player.x;
-        ball.startY = player.y - 50;
-        
-        // Egzakteman nan mitan panye ki sou imaj background nan (Anviwon 50% lajè ak 31% wotè)
-        ball.targetX = canvas.width * 0.50;
-        ball.targetY = canvas.height * 0.31;
-      }, 300);
-    }
-
-    function gameLoop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      frameCount++;
-
-      // 1. Deplasman Jwè a
-      let dx = player.targetX - player.x;
-      let dy = player.targetY - player.y;
-      let dist = Math.hypot(dx, dy);
-
-      if (dist > 3) {
-        player.x += (dx / dist) * player.speed;
-        player.y += (dy / dist) * player.speed;
-      }
-
-      if (player.isShooting) {
-        player.jumpOffset = Math.sin(frameCount * 0.2) * 15;
-      } else {
-        player.jumpOffset = 0;
-      }
-
-      // 2. Ombra Jwè a
-      ctx.beginPath();
-      ctx.ellipse(player.x, player.y + 10, 18, 6, 0, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.fill();
-
-      // 3. Desine JWÈ A
-      let py = player.y - player.jumpOffset;
-      
-      // Tèt
-      ctx.beginPath();
-      ctx.arc(player.x, py - 65, 9, 0, Math.PI * 2);
-      ctx.fillStyle = "#ffd700";
-      ctx.fill();
-
-      // Maillot (Ble)
-      ctx.beginPath();
-      ctx.moveTo(player.x - 10, py - 52);
-      ctx.lineTo(player.x + 10, py - 52);
-      ctx.lineTo(player.x + 8, py - 25);
-      ctx.lineTo(player.x - 8, py - 25);
-      ctx.closePath();
-      ctx.fillStyle = "#0055ff";
-      ctx.fill();
-
-      // Janm
-      ctx.strokeStyle = "#ffd700";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(player.x - 5, py - 25);
-      ctx.lineTo(player.x - 8, py);
-      ctx.moveTo(player.x + 5, py - 25);
-      ctx.lineTo(player.x + 8, py);
-      ctx.stroke();
-
-      // Bra & Dribble
-      ctx.beginPath();
-      if (player.isShooting) {
-        ctx.moveTo(player.x - 8, py - 50);
-        ctx.lineTo(player.x - 12, py - 70);
-        ctx.moveTo(player.x + 8, py - 50);
-        ctx.lineTo(player.x + 12, py - 70);
-      } else {
-        let handY = py - 35 + Math.sin(frameCount * 0.25) * 6;
-        ctx.moveTo(player.x - 8, py - 50);
-        ctx.lineTo(player.x - 14, py - 35);
-        ctx.moveTo(player.x + 8, py - 50);
-        ctx.lineTo(player.x + 16, handY);
-      }
-      ctx.stroke();
-
-      // 4. LOJIK BOUL LA (Dribble oswa Vol nan Panye a)
-      if (!ball.isShot) {
-        ball.dribbleOffset += 0.25 * ball.dribbleDir;
-        if (ball.dribbleOffset > 1 || ball.dribbleOffset < 0) ball.dribbleDir *= -1;
-
-        let bx = player.x + 18;
-        let by = py - 30 + (ball.dribbleOffset * 30);
-        
-        drawBasketball(bx, by, 10);
-      } else {
-        ball.progress += 0.035;
-
-        if (ball.progress <= 1) {
-          let currX = ball.startX + (ball.targetX - ball.startX) * ball.progress;
-          // Pwojektil parabolik ki dirije egzakteman nan panye a
-          let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 110);
-          
-          let radius = 11 - (ball.progress * 5.5); // Boul la retresi pandan l ap monte anndan panye a
-
-          if (!ball.isGoal && ball.progress > 0.8) {
-            // Si l rate, li frape rim lan epi li devye
-            currX += (ball.progress - 0.8) * 60;
-            currY += (ball.progress - 0.8) * 30;
-          }
-
-          drawBasketball(currX, currY, Math.max(radius, 3));
-        } else {
-          ball.isShot = false;
-          player.isShooting = false;
-          
-          const shootBtn = document.getElementById('shoot-btn-3d');
-
-          if (ball.isGoal) {
-            alert("BOUYEN! 🏀 Boul la antre nan panye a pafètman! Ou genyen!");
-          } else {
-            if (chances > 0) {
-              alert("Oups! Boul la frape rim lan epi li pa antre. Ou rete " + chances + " chans!");
-              shootBtn.disabled = false;
-            } else {
-              alert("Oups! 3 chans ou yo fini. Ou pèdi nan blòk sa a!");
-            }
-          }
-        }
-      }
-
-      requestAnimationFrame(gameLoop);
-    }
-
-    function drawBasketball(x, y, radius) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      
-      let grad = ctx.createRadialGradient(x - radius/3, y - radius/3, 1, x, y, radius);
-      grad.addColorStop(0, '#ff9900');
-      grad.addColorStop(1, '#b33c00');
-      ctx.fillStyle = grad;
-      ctx.fill();
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(x - radius, y); ctx.lineTo(x + radius, y);
-      ctx.moveTo(x, y - radius); ctx.lineTo(x, y + radius);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    requestAnimationFrame(gameLoop);
-
-    let timeLeft = 3600;
-    setInterval(() => {
-      if (timeLeft > 0) {
-        timeLeft--;
-        let m = Math.floor(timeLeft / 60);
-        let s = timeLeft % 60;
-        document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
-      }
-    }, 1000);
-  </script>
-</body>
-</html>
+        ba
