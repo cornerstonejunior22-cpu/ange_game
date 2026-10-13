@@ -635,4 +635,155 @@
         ball.isShot = true;
         ball.isGoal = isGoal;
         ball.progress = 0;
-        ba
+        ball.startX = player.x;
+        ball.startY = player.y - 50;
+        
+        ball.targetX = canvas.width * 0.50;
+        ball.targetY = canvas.height * 0.31;
+      }, 300);
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      frameCount++;
+
+      let dx = player.targetX - player.x;
+      let dy = player.targetY - player.y;
+      let dist = Math.hypot(dx, dy);
+
+      if (dist > 3) {
+        player.x += (dx / dist) * player.speed;
+        player.y += (dy / dist) * player.speed;
+      }
+
+      if (player.isShooting) {
+        player.jumpOffset = Math.sin(frameCount * 0.2) * 15;
+      } else {
+        player.jumpOffset = 0;
+      }
+
+      ctx.beginPath();
+      ctx.ellipse(player.x, player.y + 10, 18, 6, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+      ctx.fill();
+
+      let py = player.y - player.jumpOffset;
+      
+      ctx.beginPath();
+      ctx.arc(player.x, py - 65, 9, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffd700";
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.moveTo(player.x - 10, py - 52);
+      ctx.lineTo(player.x + 10, py - 52);
+      ctx.lineTo(player.x + 8, py - 25);
+      ctx.lineTo(player.x - 8, py - 25);
+      ctx.closePath();
+      ctx.fillStyle = "#0055ff";
+      ctx.fill();
+
+      ctx.strokeStyle = "#ffd700";
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(player.x - 5, py - 25);
+      ctx.lineTo(player.x - 8, py);
+      ctx.moveTo(player.x + 5, py - 25);
+      ctx.lineTo(player.x + 8, py);
+      ctx.stroke();
+
+      ctx.beginPath();
+      if (player.isShooting) {
+        ctx.moveTo(player.x - 8, py - 50);
+        ctx.lineTo(player.x - 12, py - 70);
+        ctx.moveTo(player.x + 8, py - 50);
+        ctx.lineTo(player.x + 12, py - 70);
+      } else {
+        let handY = py - 35 + Math.sin(frameCount * 0.25) * 6;
+        ctx.moveTo(player.x - 8, py - 50);
+        ctx.lineTo(player.x - 14, py - 35);
+        ctx.moveTo(player.x + 8, py - 50);
+        ctx.lineTo(player.x + 16, handY);
+      }
+      ctx.stroke();
+
+      if (!ball.isShot) {
+        ball.dribbleOffset += 0.25 * ball.dribbleDir;
+        if (ball.dribbleOffset > 1 || ball.dribbleOffset < 0) ball.dribbleDir *= -1;
+
+        let bx = player.x + 18;
+        let by = py - 30 + (ball.dribbleOffset * 30);
+        
+        drawBasketball(bx, by, 10);
+      } else {
+        ball.progress += 0.035;
+
+        if (ball.progress <= 1) {
+          let currX = ball.startX + (ball.targetX - ball.startX) * ball.progress;
+          let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 110);
+          
+          let radius = 11 - (ball.progress * 5.5);
+
+          if (!ball.isGoal && ball.progress > 0.8) {
+            currX += (ball.progress - 0.8) * 60;
+            currY += (ball.progress - 0.8) * 30;
+          }
+
+          drawBasketball(currX, currY, Math.max(radius, 3));
+        } else {
+          ball.isShot = false;
+          player.isShooting = false;
+          
+          const shootBtn = document.getElementById('shoot-btn-3d');
+
+          if (ball.isGoal) {
+            alert("BOUYEN! 🏀 Boul la antre nan panye a pafètman! Ou genyen!");
+          } else {
+            if (chances > 0) {
+              alert("Oups! Boul la frape rim lan epi li pa antre. Ou rete " + chances + " chans!");
+              shootBtn.disabled = false;
+            } else {
+              alert("Oups! 3 chans ou yo fini. Ou pèdi nan blòk sa a!");
+            }
+          }
+        }
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    function drawBasketball(x, y, radius) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      
+      let grad = ctx.createRadialGradient(x - radius/3, y - radius/3, 1, x, y, radius);
+      grad.addColorStop(0, '#ff9900');
+      grad.addColorStop(1, '#b33c00');
+      ctx.fillStyle = grad;
+      ctx.fill();
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(x - radius, y); ctx.lineTo(x + radius, y);
+      ctx.moveTo(x, y - radius); ctx.lineTo(x, y + radius);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    requestAnimationFrame(gameLoop);
+
+    let timeLeft = 3600;
+    setInterval(() => {
+      if (timeLeft > 0) {
+        timeLeft--;
+        let m = Math.floor(timeLeft / 60);
+        let s = timeLeft % 60;
+        document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
