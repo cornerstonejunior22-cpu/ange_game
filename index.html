@@ -381,7 +381,6 @@
   </div>
 
   <script>
-    // Firebase Configuration
     const firebaseConfig = {
       apiKey: "AIzaSyBhVu7dY94w7c9v5ubojO4QRvntKHrkGkY",
       authDomain: "ange-juniorcornerstone.firebaseapp.com",
@@ -407,7 +406,6 @@
     function handleSecretClick() {
       logoClickCount++;
       clearTimeout(clickTimer);
-      
       clickTimer = setTimeout(() => { logoClickCount = 0; }, 1200);
 
       if (logoClickCount === 3) {
@@ -563,10 +561,6 @@
     let ball = {
       x: 0,
       y: 0,
-      z: 0, // Pou kalkil altitid ak gwozè
-      vx: 0,
-      vy: 0,
-      vz: 0,
       isShot: false,
       isGoal: false,
       progress: 0,
@@ -576,7 +570,6 @@
 
     let frameCount = 0;
 
-    // Jwenn pozisyon X ak Y sou Canvas la pou chak bouton (1-7)
     function getPosCoords(posNum) {
       const btn = document.getElementById('pos-' + posNum);
       const arena = document.getElementById('game-arena');
@@ -589,7 +582,6 @@
       };
     }
 
-    // Lè chwazi yon pozisyon: Jwè a mache ale sou li
     function selectPos3D(p) {
       document.querySelectorAll('.pos-btn-3d').forEach(btn => btn.classList.remove('active'));
       document.getElementById('pos-' + p).classList.add('active');
@@ -600,7 +592,6 @@
       player.targetY = coords.y;
     }
 
-    // Initialisation
     setTimeout(() => {
       const initialCoords = getPosCoords(1);
       player.x = initialCoords.x;
@@ -609,7 +600,6 @@
       player.targetY = initialCoords.y;
     }, 300);
 
-    // MOUD WOTATION AK TIRE
     function shootBall3D() {
       if (!isCodeValidated) {
         alert("Atansyon! Ou dwe antre kòd inik ou a epi valide l anvan ou ka tire!");
@@ -627,19 +617,18 @@
       chances--;
 
       player.isShooting = true;
-      let isGoal = Math.random() < 0.45; // 45% chans genyen
+      let isGoal = Math.random() < 0.45; // 45% chans pou antre nan panye a
       
-      // Kòmanse animasyon tire a
       setTimeout(() => {
         ball.isShot = true;
         ball.isGoal = isGoal;
         ball.progress = 0;
         ball.startX = player.x;
-        ball.startY = player.y - 50; // Lage boul la anwo nan men jwè a
+        ball.startY = player.y - 50;
         
-        // Target: Rim anwo nan panye a
-        ball.targetX = canvas.width * 0.5;
-        ball.targetY = canvas.height * 0.22;
+        // Egzakteman nan mitan panye ki sou imaj background nan (Anviwon 50% lajè ak 31% wotè)
+        ball.targetX = canvas.width * 0.50;
+        ball.targetY = canvas.height * 0.31;
       }, 300);
     }
 
@@ -647,7 +636,7 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       frameCount++;
 
-      // 1. Lojik deplasman Jwè a
+      // 1. Deplasman Jwè a
       let dx = player.targetX - player.x;
       let dy = player.targetY - player.y;
       let dist = Math.hypot(dx, dy);
@@ -657,29 +646,28 @@
         player.y += (dy / dist) * player.speed;
       }
 
-      // Lojik sote pou tire
       if (player.isShooting) {
         player.jumpOffset = Math.sin(frameCount * 0.2) * 15;
       } else {
         player.jumpOffset = 0;
       }
 
-      // 2. Desine Omb (Shadow) Jwè a
+      // 2. Ombra Jwè a
       ctx.beginPath();
       ctx.ellipse(player.x, player.y + 10, 18, 6, 0, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
       ctx.fill();
 
-      // 3. Desine JWÈ A (Silwèt Basquetballer reyèl an 3D)
+      // 3. Desine JWÈ A
       let py = player.y - player.jumpOffset;
       
-      // Tèt Jwè a
+      // Tèt
       ctx.beginPath();
       ctx.arc(player.x, py - 65, 9, 0, Math.PI * 2);
       ctx.fillStyle = "#ffd700";
       ctx.fill();
 
-      // Kò Jwè a (Maillot Ble)
+      // Maillot (Ble)
       ctx.beginPath();
       ctx.moveTo(player.x - 10, py - 52);
       ctx.lineTo(player.x + 10, py - 52);
@@ -689,7 +677,7 @@
       ctx.fillStyle = "#0055ff";
       ctx.fill();
 
-      // Janm Jwè a
+      // Janm
       ctx.strokeStyle = "#ffd700";
       ctx.lineWidth = 4;
       ctx.beginPath();
@@ -699,16 +687,14 @@
       ctx.lineTo(player.x + 8, py);
       ctx.stroke();
 
-      // Bras ak Mouvman Mate Boul la
+      // Bra & Dribble
       ctx.beginPath();
       if (player.isShooting) {
-        // Leve men anwo pou tire
         ctx.moveTo(player.x - 8, py - 50);
         ctx.lineTo(player.x - 12, py - 70);
         ctx.moveTo(player.x + 8, py - 50);
         ctx.lineTo(player.x + 12, py - 70);
       } else {
-        // Mouvman dribble
         let handY = py - 35 + Math.sin(frameCount * 0.25) * 6;
         ctx.moveTo(player.x - 8, py - 50);
         ctx.lineTo(player.x - 14, py - 35);
@@ -717,9 +703,8 @@
       }
       ctx.stroke();
 
-      // 4. LOJIK BOUL LA (Dribble vs Vol Pwojektil 3D)
+      // 4. LOJIK BOUL LA (Dribble oswa Vol nan Panye a)
       if (!ball.isShot) {
-        // Dribble sou plas / pandan l ap mache
         ball.dribbleOffset += 0.25 * ball.dribbleDir;
         if (ball.dribbleOffset > 1 || ball.dribbleOffset < 0) ball.dribbleDir *= -1;
 
@@ -728,34 +713,33 @@
         
         drawBasketball(bx, by, 10);
       } else {
-        // BOUL LA AYY NAN LÈ A (Pwojektil Parabolik)
-        ball.progress += 0.03;
+        ball.progress += 0.035;
 
         if (ball.progress <= 1) {
           let currX = ball.startX + (ball.targetX - ball.startX) * ball.progress;
-          let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 140);
+          // Pwojektil parabolik ki dirije egzakteman nan panye a
+          let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 110);
           
-          // Echèl 3D (Boul la vin pi piti pandan l ap pwoche bò panye a)
-          let radius = 11 - (ball.progress * 4.5);
+          let radius = 11 - (ball.progress * 5.5); // Boul la retresi pandan l ap monte anndan panye a
 
-          if (!ball.isGoal && ball.progress > 0.85) {
-            // Si l p ap antre, l ap devye sou rim lan
-            currX += (ball.progress - 0.85) * 80;
+          if (!ball.isGoal && ball.progress > 0.8) {
+            // Si l rate, li frape rim lan epi li devye
+            currX += (ball.progress - 0.8) * 60;
+            currY += (ball.progress - 0.8) * 30;
           }
 
-          drawBasketball(currX, currY, radius);
+          drawBasketball(currX, currY, Math.max(radius, 3));
         } else {
-          // Finisyon kout zam la
           ball.isShot = false;
           player.isShooting = false;
           
           const shootBtn = document.getElementById('shoot-btn-3d');
 
           if (ball.isGoal) {
-            alert("BOUYEN! 🏀 Boul la antre nan panye a! Ou genyen!");
+            alert("BOUYEN! 🏀 Boul la antre nan panye a pafètman! Ou genyen!");
           } else {
             if (chances > 0) {
-              alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
+              alert("Oups! Boul la frape rim lan epi li pa antre. Ou rete " + chances + " chans!");
               shootBtn.disabled = false;
             } else {
               alert("Oups! 3 chans ou yo fini. Ou pèdi nan blòk sa a!");
@@ -767,7 +751,6 @@
       requestAnimationFrame(gameLoop);
     }
 
-    // Fonksyon pou desine yon Basketball ak tout detay li yo
     function drawBasketball(x, y, radius) {
       ctx.save();
       ctx.beginPath();
@@ -782,7 +765,6 @@
       ctx.lineWidth = 1;
       ctx.stroke();
 
-      // Liy nwa basquetball yo
       ctx.beginPath();
       ctx.moveTo(x - radius, y); ctx.lineTo(x + radius, y);
       ctx.moveTo(x, y - radius); ctx.lineTo(x, y + radius);
@@ -790,10 +772,8 @@
       ctx.restore();
     }
 
-    // Kòmanse animasyon an tan reyèl la
     requestAnimationFrame(gameLoop);
 
-    // Countdown Timer (1 èdtan)
     let timeLeft = 3600;
     setInterval(() => {
       if (timeLeft > 0) {
