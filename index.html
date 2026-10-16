@@ -493,7 +493,6 @@
       document.getElementById('secret-admin-modal').style.display = 'none';
     }
 
-    // FÒMIL DINAMIK KALKIL LAJAN PA GWOUP AN TAN REYÈL
     function getGroupCalculations(groupPrice, count) {
       let total = count * groupPrice;
       let winnerPrize = 0;
@@ -514,7 +513,6 @@
     }
 
     function listenAllGroups() {
-      // Gwoup 1250
       db.collection("game_blocks").doc("block_1250").onSnapshot(doc => {
         let count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
         let calc = getGroupCalculations(1250, count);
@@ -524,7 +522,6 @@
         document.getElementById('p1250-winner').innerText = calc.winnerPrize.toLocaleString();
       });
 
-      // Gwoup 250
       db.collection("game_blocks").doc("block_250").onSnapshot(doc => {
         let count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
         let calc = getGroupCalculations(250, count);
@@ -534,7 +531,6 @@
         document.getElementById('p250-winner').innerText = calc.winnerPrize.toLocaleString();
       });
 
-      // Gwoup 100
       db.collection("game_blocks").doc("block_100").onSnapshot(doc => {
         let count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
         let calc = getGroupCalculations(100, count);
@@ -575,10 +571,11 @@
           if (data.status === "pending") {
             actionHTML = `<button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${id}')">Konfime & Bay Kòd</button>`;
           } else if (data.isWinner) {
+            let paidCheck = data.paidConfirmed ? `<span style="color:#28a745; font-size:16px; font-weight:bold;">✓ PEYE</span>` : ``;
             actionHTML = `
-              <div style="color:#00ffcc; margin-top:5px;">GANYAN PEYE : <b>${data.winnerPrize} Gdes</b></div>
+              <div style="color:#00ffcc; margin-top:5px;">GANYAN PEYE : <b>${data.winnerPrize} Gdes</b> ${paidCheck}</div>
               <a href="tel:${ussdCode}" class="btn-ussd" style="width:100%; text-align:center; margin-top:6px;">Peye Ganyan an (*202#)</a>
-              <button class="btn-pay" style="background:#ff8c00; width:100%; margin-top:4px;" onclick="sendWinnerNotification('${data.playerName}', '${data.winnerPrize}', '${data.groupPrice}')">Voye Konfèmasyon sou Ekran l</button>
+              <button class="btn-pay" style="background:#ff8c00; width:100%; margin-top:4px;" onclick="sendWinnerNotification('${id}', '${data.playerName}', '${data.winnerPrize}', '${data.groupPrice}')">Voye Konfèmasyon sou Ekran l</button>
             `;
           } else {
             actionHTML = `<div style="color:#00ffcc; margin-top:5px;">Kòd: <b>${data.generatedCode}</b></div>`;
@@ -605,13 +602,14 @@
       alert("Peman konfime! Kòd: " + uniqueCode);
     }
 
-    async function sendWinnerNotification(name, prize, group) {
+    async function sendWinnerNotification(docId, name, prize, group) {
+      await db.collection("payment_requests").doc(docId).update({ paidConfirmed: true });
       await db.collection("winners_announced").doc("group_" + group).set({
         winnerName: name,
         prizeAmount: prize,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
-      alert("Anons Ganyan an pibliye sou ekran tout moun nan gwoup sa a!");
+      alert("Anons Ganyan an pibliye sou ekran tout moun nan gwoup sa a! (✓ PEYE deklannche)");
     }
 
     function copyNum(num) {
@@ -686,8 +684,9 @@
     resizeCanvas();
 
     let player = { x: 0, y: 0, targetX: 0, targetY: 0, speed: 4, isShooting: false, jumpOffset: 0 };
-    let ball = { x: 0, y: 0, isShot: false, isGoal: false, progress: 0, dribbleOffset: 0, dribbleDir: 1 };
+    let ball = { x: 0, y: 0, isShot: false, isGoal: false, progress: 0, dribbleOffset: 0, dribbleDir: 1, bounceY: 0, isBouncing: false };
     let frameCount = 0;
+    let netShake = 0;
 
     function getPosCoords(posNum) {
       const btn = document.getElementById('pos-' + posNum);
@@ -739,7 +738,6 @@
       let userPhone = document.getElementById('player-phone').value.trim();
       let isGoal = false;
 
-      // SI GEN MWEN PASKE 5 MOUN, TOUT MOUN PÈDI OTOMATIKMAN
       if (totalPlayers >= 5) {
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) {
           isGoal = true;
@@ -752,11 +750,12 @@
         ball.isShot = true;
         ball.isGoal = isGoal;
         ball.progress = 0;
+        ball.isBouncing = false;
         ball.startX = player.x;
         ball.startY = player.y - 50;
         
         ball.targetX = canvas.width * 0.50;
-        ball.targetY = canvas.height * 0.31;
+        ball.targetY = canvas.height * 0.30; // Nivo Rim panye a
 
         if (isGoal) {
           let calc = getGroupCalculations(parseInt(userGroup), totalPlayers);
@@ -844,12 +843,11 @@
         
         drawBasketball(bx, by, 10);
       } else {
-        ball.progress += 0.035;
+        ball.progress += 0.03;
 
         if (ball.progress <= 1) {
           let currX = ball.startX + (ball.targetX - ball.startX) * ball.progress;
           let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 110);
-          
           let radius = 11 - (ball.progress * 5.5);
 
           if (!ball.isGoal && ball.progress > 0.8) {
@@ -858,14 +856,33 @@
           }
 
           drawBasketball(currX, currY, Math.max(radius, 3));
+          
+          if (ball.isGoal && ball.progress > 0.85) {
+            netShake = Math.sin(frameCount * 0.8) * 6;
+          }
+          drawNetForeground(canvas.width * 0.50, canvas.height * 0.30, netShake);
+
+        } else if (ball.isGoal && ball.progress <= 1.4) {
+          // EFÈ BOUL LA K AP GLISE AK TONBE SOTI NAN PANYE A POU AL ATÈ A
+          let dropProgress = (ball.progress - 1) / 0.4;
+          let dropX = canvas.width * 0.50;
+          let dropY = (canvas.height * 0.30 + 15) + (dropProgress * (canvas.height * 0.35));
+          let bounceOffset = Math.abs(Math.sin(dropProgress * Math.PI * 3)) * (15 * (1 - dropProgress));
+          
+          drawBasketball(dropX, dropY - bounceOffset, 5.5 + (dropProgress * 2));
+          
+          netShake = Math.sin(frameCount * 0.8) * (6 * (1 - dropProgress));
+          drawNetForeground(canvas.width * 0.50, canvas.height * 0.30, netShake);
+
         } else {
           ball.isShot = false;
           player.isShooting = false;
+          netShake = 0;
           
           const shootBtn = document.getElementById('shoot-btn-3d');
 
           if (ball.isGoal) {
-            alert("BOUYEN! 🏀 Boul la antre nan panye a pafètman! Ou genyen!");
+            alert("BOUYEN! 🏀 Boul la rantre pafètman nan panye a epi li tonbe atè a! Ou genyen!");
           } else {
             if (chances > 0) {
               alert("Oups! Boul la frape rim lan epi li pa antre. Ou rete " + chances + " chans!");
@@ -878,6 +895,31 @@
       }
 
       requestAnimationFrame(gameLoop);
+    }
+
+    // DESINE RIM METHAL AK FILÈ TRANSPARAN K AP SOUKE LÈ BOUL LA TRAVÈSE L
+    function drawNetForeground(rimX, rimY, shake) {
+      ctx.save();
+      ctx.translate(shake, 0);
+
+      // Filè trame/filière
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(rimX - 16, rimY + 2); ctx.lineTo(rimX - 8, rimY + 25);
+      ctx.moveTo(rimX + 16, rimY + 2); ctx.lineTo(rimX + 8, rimY + 25);
+      ctx.moveTo(rimX - 8, rimY + 2);  ctx.lineTo(rimX + 4, rimY + 25);
+      ctx.moveTo(rimX + 8, rimY + 2);  ctx.lineTo(rimX - 4, rimY + 25);
+      ctx.stroke();
+
+      // Rim sèk wouj anlè filè a
+      ctx.beginPath();
+      ctx.ellipse(rimX, rimY, 18, 5, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ff3300';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      ctx.restore();
     }
 
     function drawBasketball(x, y, radius) {
