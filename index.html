@@ -329,7 +329,7 @@
     <h2>ANGE JUNIORCORNERSTONE</h2>
     
     <div class="dashboard">
-      <div class="stat-title">Tan ki rete nan blòk sa a (1h Max):</div>
+      <div class="stat-title" id="timer-label">Tan Rasanbleman Blòk la (1h Max):</div>
       <div class="stat-val" id="timer">59:59</div>
     </div>
 
@@ -359,7 +359,7 @@
       
       <div style="margin-top: 8px;">
         <input type="text" id="game-code" class="input-field" placeholder="Antre Kòd Inik ou resevwa a">
-        <button class="btn-action" style="font-size: 13px; padding: 6px;" onclick="validateCode()">Valide Kòd la & Joue</button>
+        <button class="btn-action" style="font-size: 13px; padding: 6px;" onclick="validateCode()">Valide Kòd la</button>
       </div>
     </div>
   </div>
@@ -367,7 +367,7 @@
   <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a :</p>
 
   <div id="game-arena">
-    <div class="live-indicator">🔴 AP TANN TELEGIDÈ A...</div>
+    <div class="live-indicator" id="game-status-indicator">🔴 PANN LÈ A RIVE...</div>
 
     <div class="chances-card">
       <div class="chances-title">TES CHANS</div>
@@ -386,7 +386,7 @@
     <div class="pos-btn-3d" id="pos-6" onclick="selectPos3D(6)">6</div>
     <div class="pos-btn-3d" id="pos-7" onclick="selectPos3D(7)">7</div>
 
-    <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()" disabled>TIRE BOUL LA! (Bloke)</button>
+    <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()" disabled>TANN LÈ A RIVE...</button>
   </div>
 
   <!-- PANÈL SEKRÈ PWOPRIYETÈ A -->
@@ -394,7 +394,6 @@
     <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
 
-    <!-- GWOUP 1,250 GDES -->
     <div class="admin-group-card">
       <div class="group-title">Gwoup 1,250 Gdes</div>
       <div>Kantite Moun (X): <b><span id="p1250-count">0</span> / 220</b></div>
@@ -403,7 +402,6 @@
       <div>Minimòm Avantaj Ganyan: <b style="color:#ffd700;"><span id="p1250-winner">0</span> Gdes</b></div>
     </div>
 
-    <!-- GWOUP 250 GDES -->
     <div class="admin-group-card">
       <div class="group-title">Gwoup 250 Gdes</div>
       <div>Kantite Moun (X): <b><span id="p250-count">0</span> / 220</b></div>
@@ -412,7 +410,6 @@
       <div>Minimòm Avantaj Ganyan: <b style="color:#ffd700;"><span id="p250-winner">0</span> Gdes</b></div>
     </div>
 
-    <!-- GWOUP 100 GDES -->
     <div class="admin-group-card">
       <div class="group-title">Gwoup 100 Gdes</div>
       <div>Kantite Moun (X): <b><span id="p100-count">0</span> / 220</b></div>
@@ -421,7 +418,6 @@
       <div>Minimòm Avantaj Ganyan: <b style="color:#ffd700;"><span id="p100-winner">0</span> Gdes</b></div>
     </div>
 
-    <!-- BOUTON POU FÒSE YON GANYAN SOU FÒS -->
     <div class="admin-group-card" style="border-color: #ff4500;">
       <div class="group-title" style="color: #ff4500;">Bouton Sekrè: Chwazi Ganyan an</div>
       <input type="text" id="forced-winner-phone" class="input-field" placeholder="Nimewo moun ou vle fè genyen an">
@@ -434,7 +430,7 @@
     </div>
   </div>
 
-  <!-- POPUP ANONS GANYAN POU TOUT MOUN NAN GWOUP LA -->
+  <!-- POPUP ANONS GANYAN -->
   <div id="winner-banner-modal">
     <div class="winner-box">
       <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 GANYAN DETEKTE! 🏆</h2>
@@ -464,6 +460,11 @@
     let userGroup = "1250";
     let isCodeValidated = false;
     let forcedWinnerPhone = "";
+
+    // Sètifikasyon Etap Siperyè: 0 = Rasanbleman (1h), 1 = Jwèt an Aksyon (10 minit)
+    let sessionState = "collecting"; 
+    let blockSecondsLeft = 3600; // 1èdtan
+    let gamePlaySecondsLeft = 600; // 10 minit
 
     let logoClickCount = 0;
     let clickTimer;
@@ -594,6 +595,10 @@
     }
 
     async function confirmPaymentAdmin(docId) {
+      if (sessionState === "playing") {
+        alert("Atansyon: Blòk rasanbleman an fini! Pòt nouvo kòd fèmen pou sesyon sa a.");
+        return;
+      }
       const uniqueCode = "ANG-" + Math.floor(1000 + Math.random() * 9000);
       await db.collection("payment_requests").doc(docId).update({
         status: "confirmed",
@@ -609,7 +614,7 @@
         prizeAmount: prize,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
-      alert("Anons Ganyan an pibliye sou ekran tout moun nan gwoup sa a! (✓ PEYE deklannche)");
+      alert("Anons Ganyan an pibliye sou ekran tout moun nan gwoup sa a!");
     }
 
     function copyNum(num) {
@@ -618,6 +623,10 @@
     }
 
     async function submitPaymentRequest() {
+      if (sessionState === "playing") {
+        alert("Tan rasanbleman 1h a fini! Ou pa ka antre nan sesyon sa a ankò.");
+        return;
+      }
       const name = document.getElementById('player-name').value.trim();
       const phone = document.getElementById('player-phone').value.trim();
       const group = document.getElementById('group-select').value;
@@ -648,13 +657,20 @@
       arena.classList.add('full-screen-mode');
       
       const shootBtn = document.getElementById('shoot-btn-3d');
-      shootBtn.disabled = false;
-      shootBtn.innerText = "TIRE BOUL LA!";
+      
+      // Si sesyon jwèt 10 minit la poko kòmanse, kenbe bouton an bloke epi di l pou l tann
+      if (sessionState === "collecting") {
+        shootBtn.disabled = true;
+        shootBtn.innerText = "TANN LÈ A RIVE (00:00)...";
+        alert("Kòd valide! Ou anrejistre nan blòk sa a. Tann lè rasanbleman an fini pou tout moun kòmanse ansanm.");
+      } else {
+        shootBtn.disabled = false;
+        shootBtn.innerText = "TIRE BOUL LA!";
+        alert("Kòd valide! Sesyon jwèt la an kou. Ou lib pou tire!");
+      }
 
       listenForWinners(userGroup);
-
       resizeCanvas();
-      alert("Kòd valide! Teren an elaji an plen ekran. Ou lib pou chwazi pozisyon w ak tire!");
     }
 
     function listenForWinners(group) {
@@ -683,8 +699,8 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    let player = { x: 0, y: 0, targetX: 0, targetY: 0, speed: 4, isShooting: false, jumpOffset: 0 };
-    let ball = { x: 0, y: 0, isShot: false, isGoal: false, progress: 0, dribbleOffset: 0, dribbleDir: 1, bounceY: 0, isBouncing: false };
+    let player = { x: 0, y: 0, targetX: 0, targetY: 0 };
+    let ball = { x: 0, y: 0, isShot: false, isGoal: false, progress: 0, startX: 0, startY: 0 };
     let frameCount = 0;
     let netShake = 0;
 
@@ -720,6 +736,10 @@
 
     async function shootBall3D() {
       if (!isCodeValidated) { alert("Antre kòd ou a anvan!"); return; }
+      if (sessionState !== "playing") {
+        alert("Tan an poko rive! Tann sesyon 10 minit la deklannche.");
+        return;
+      }
       if (chances <= 0 || ball.isShot) return;
 
       const shootBtn = document.getElementById('shoot-btn-3d');
@@ -730,8 +750,7 @@
       else if (chances === 1) document.getElementById('c1').classList.add('off');
 
       chances--;
-      player.isShooting = true;
-
+      
       const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
       let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
 
@@ -746,149 +765,76 @@
         }
       }
 
-      setTimeout(async () => {
-        ball.isShot = true;
-        ball.isGoal = isGoal;
-        ball.progress = 0;
-        ball.isBouncing = false;
-        ball.startX = player.x;
-        ball.startY = player.y - 50;
-        
-        ball.targetX = canvas.width * 0.50;
-        ball.targetY = canvas.height * 0.30; // Nivo Rim panye a
+      ball.isShot = true;
+      ball.isGoal = isGoal;
+      ball.progress = 0;
+      ball.startX = player.x;
+      ball.startY = player.y - 10;
+      
+      ball.targetX = canvas.width * 0.58; 
+      ball.targetY = canvas.height * 0.52;
 
-        if (isGoal) {
-          let calc = getGroupCalculations(parseInt(userGroup), totalPlayers);
-          let userName = document.getElementById('player-name').value.trim();
+      if (isGoal) {
+        let calc = getGroupCalculations(parseInt(userGroup), totalPlayers);
+        let userName = document.getElementById('player-name').value.trim();
 
-          await db.collection("winners_announced").doc("group_" + userGroup).set({
-            winnerName: userName,
-            prizeAmount: calc.winnerPrize.toLocaleString(),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-        }
-      }, 300);
+        await db.collection("winners_announced").doc("group_" + userGroup).set({
+          winnerName: userName,
+          prizeAmount: calc.winnerPrize.toLocaleString(),
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
     }
 
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       frameCount++;
 
-      let dx = player.targetX - player.x;
-      let dy = player.targetY - player.y;
-      let dist = Math.hypot(dx, dy);
-
-      if (dist > 3) {
-        player.x += (dx / dist) * player.speed;
-        player.y += (dy / dist) * player.speed;
-      }
-
-      if (player.isShooting) {
-        player.jumpOffset = Math.sin(frameCount * 0.2) * 15;
-      } else {
-        player.jumpOffset = 0;
-      }
-
-      ctx.beginPath();
-      ctx.ellipse(player.x, player.y + 10, 18, 6, 0, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
-      ctx.fill();
-
-      let py = player.y - player.jumpOffset;
-      
-      ctx.beginPath();
-      ctx.arc(player.x, py - 65, 9, 0, Math.PI * 2);
-      ctx.fillStyle = "#ffd700";
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.moveTo(player.x - 10, py - 52);
-      ctx.lineTo(player.x + 10, py - 52);
-      ctx.lineTo(player.x + 8, py - 25);
-      ctx.lineTo(player.x - 8, py - 25);
-      ctx.closePath();
-      ctx.fillStyle = "#0055ff";
-      ctx.fill();
-
-      ctx.strokeStyle = "#ffd700";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(player.x - 5, py - 25);
-      ctx.lineTo(player.x - 8, py);
-      ctx.moveTo(player.x + 5, py - 25);
-      ctx.lineTo(player.x + 8, py);
-      ctx.stroke();
-
-      ctx.beginPath();
-      if (player.isShooting) {
-        ctx.moveTo(player.x - 8, py - 50);
-        ctx.lineTo(player.x - 12, py - 70);
-        ctx.moveTo(player.x + 8, py - 50);
-        ctx.lineTo(player.x + 12, py - 70);
-      } else {
-        let handY = py - 35 + Math.sin(frameCount * 0.25) * 6;
-        ctx.moveTo(player.x - 8, py - 50);
-        ctx.lineTo(player.x - 14, py - 35);
-        ctx.moveTo(player.x + 8, py - 50);
-        ctx.lineTo(player.x + 16, handY);
-      }
-      ctx.stroke();
-
-      if (!ball.isShot) {
-        ball.dribbleOffset += 0.25 * ball.dribbleDir;
-        if (ball.dribbleOffset > 1 || ball.dribbleOffset < 0) ball.dribbleDir *= -1;
-
-        let bx = player.x + 18;
-        let by = py - 30 + (ball.dribbleOffset * 30);
-        
-        drawBasketball(bx, by, 10);
-      } else {
-        ball.progress += 0.03;
+      if (ball.isShot) {
+        ball.progress += 0.025;
 
         if (ball.progress <= 1) {
           let currX = ball.startX + (ball.targetX - ball.startX) * ball.progress;
-          let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 110);
-          let radius = 11 - (ball.progress * 5.5);
+          let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 120);
+          let radius = 12 - (ball.progress * 5);
 
           if (!ball.isGoal && ball.progress > 0.8) {
-            currX += (ball.progress - 0.8) * 60;
+            currX += (ball.progress - 0.8) * 50;
             currY += (ball.progress - 0.8) * 30;
           }
 
-          drawBasketball(currX, currY, Math.max(radius, 3));
+          drawBasketball(currX, currY, Math.max(radius, 4));
           
           if (ball.isGoal && ball.progress > 0.85) {
             netShake = Math.sin(frameCount * 0.8) * 6;
           }
-          drawNetForeground(canvas.width * 0.50, canvas.height * 0.30, netShake);
+          drawNetForeground(canvas.width * 0.58, canvas.height * 0.52, netShake);
 
         } else if (ball.isGoal && ball.progress <= 1.4) {
-          // EFÈ BOUL LA K AP GLISE AK TONBE SOTI NAN PANYE A POU AL ATÈ A
           let dropProgress = (ball.progress - 1) / 0.4;
-          let dropX = canvas.width * 0.50;
-          let dropY = (canvas.height * 0.30 + 15) + (dropProgress * (canvas.height * 0.35));
-          let bounceOffset = Math.abs(Math.sin(dropProgress * Math.PI * 3)) * (15 * (1 - dropProgress));
+          let dropX = canvas.width * 0.58;
+          let dropY = (canvas.height * 0.52 + 10) + (dropProgress * (canvas.height * 0.25));
+          let bounceOffset = Math.abs(Math.sin(dropProgress * Math.PI * 3)) * (12 * (1 - dropProgress));
           
-          drawBasketball(dropX, dropY - bounceOffset, 5.5 + (dropProgress * 2));
+          drawBasketball(dropX, dropY - bounceOffset, 6 + (dropProgress * 2));
           
           netShake = Math.sin(frameCount * 0.8) * (6 * (1 - dropProgress));
-          drawNetForeground(canvas.width * 0.50, canvas.height * 0.30, netShake);
+          drawNetForeground(canvas.width * 0.58, canvas.height * 0.52, netShake);
 
         } else {
           ball.isShot = false;
-          player.isShooting = false;
           netShake = 0;
           
           const shootBtn = document.getElementById('shoot-btn-3d');
 
           if (ball.isGoal) {
-            alert("BOUYEN! 🏀 Boul la rantre pafètman nan panye a epi li tonbe atè a! Ou genyen!");
+            alert("BOUYEN! 🏀 Boul la rantre pafètman nan panye a epi li tonbe atè a!");
           } else {
             if (chances > 0) {
-              alert("Oups! Boul la frape rim lan epi li pa antre. Ou rete " + chances + " chans!");
+              alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
               shootBtn.disabled = false;
             } else {
-              alert("Oups! 3 chans ou yo fini. Ou pèdi nan blòk sa a!");
+              alert("Oups! 3 chans ou yo fini pou sesyon sa a.");
             }
           }
         }
@@ -897,26 +843,23 @@
       requestAnimationFrame(gameLoop);
     }
 
-    // DESINE RIM METHAL AK FILÈ TRANSPARAN K AP SOUKE LÈ BOUL LA TRAVÈSE L
     function drawNetForeground(rimX, rimY, shake) {
       ctx.save();
       ctx.translate(shake, 0);
 
-      // Filè trame/filière
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.lineWidth = 1.2;
       ctx.beginPath();
-      ctx.moveTo(rimX - 16, rimY + 2); ctx.lineTo(rimX - 8, rimY + 25);
-      ctx.moveTo(rimX + 16, rimY + 2); ctx.lineTo(rimX + 8, rimY + 25);
-      ctx.moveTo(rimX - 8, rimY + 2);  ctx.lineTo(rimX + 4, rimY + 25);
-      ctx.moveTo(rimX + 8, rimY + 2);  ctx.lineTo(rimX - 4, rimY + 25);
+      ctx.moveTo(rimX - 14, rimY + 2); ctx.lineTo(rimX - 6, rimY + 22);
+      ctx.moveTo(rimX + 14, rimY + 2); ctx.lineTo(rimX + 6, rimY + 22);
+      ctx.moveTo(rimX - 6, rimY + 2);  ctx.lineTo(rimX + 4, rimY + 22);
+      ctx.moveTo(rimX + 6, rimY + 2);  ctx.lineTo(rimX - 4, rimY + 22);
       ctx.stroke();
 
-      // Rim sèk wouj anlè filè a
       ctx.beginPath();
-      ctx.ellipse(rimX, rimY, 18, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(rimX, rimY, 15, 4, 0, 0, Math.PI * 2);
       ctx.strokeStyle = '#ff3300';
-      ctx.lineWidth = 3;
+      ctx.lineWidth = 2.5;
       ctx.stroke();
 
       ctx.restore();
@@ -945,13 +888,43 @@
 
     requestAnimationFrame(gameLoop);
 
-    let timeLeft = 3600;
+    // SISTÈM KWSNOMÈT DWE KÒMANSE AK 1ÈDTAN, LÈ L FINI, LI PASE NAN 10 MINIT JWÈT
     setInterval(() => {
-      if (timeLeft > 0) {
-        timeLeft--;
-        let m = Math.floor(timeLeft / 60);
-        let s = timeLeft % 60;
-        document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+      if (sessionState === "collecting") {
+        if (blockSecondsLeft > 0) {
+          blockSecondsLeft--;
+          let m = Math.floor(blockSecondsLeft / 60);
+          let s = blockSecondsLeft % 60;
+          document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+        } else {
+          // Lè 1 èdtan an fini, chanje eta an sesyon jwèt (10 minit)
+          sessionState = "playing";
+          document.getElementById('timer-label').innerText = "Tan K ap Rete pou Jwe (10 minit):";
+          document.getElementById('game-status-indicator').innerText = "🟢 SESYON JWÈT LA LOUVRI!";
+          
+          if (isCodeValidated) {
+            const shootBtn = document.getElementById('shoot-btn-3d');
+            shootBtn.disabled = false;
+            shootBtn.innerText = "TIRE BOUL LA!";
+            alert("Tan rasanbleman an fini! Bouton tire yo aktive pou tout moun ansanm. Ou gen 10 minit pou w fè siksè!");
+          }
+        }
+      } else if (sessionState === "playing") {
+        if (gamePlaySecondsLeft > 0) {
+          gamePlaySecondsLeft--;
+          let m = Math.floor(gamePlaySecondsLeft / 60);
+          let s = gamePlaySecondsLeft % 60;
+          document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+        } else {
+          // Lè 10 minit yo fini tou
+          sessionState = "ended";
+          document.getElementById('timer').innerText = "00:00";
+          document.getElementById('game-status-indicator').innerText = "🔴 SESYON FINI";
+          const shootBtn = document.getElementById('shoot-btn-3d');
+          shootBtn.disabled = true;
+          shootBtn.innerText = "SESYON FINI";
+          alert("Sesyon 10 minit la fini nèt!");
+        }
       }
     }, 1000);
   </script>
