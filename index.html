@@ -366,8 +366,9 @@
       if (logoClickCount === 3) {
         logoClickCount = 0;
         const pin = prompt("Antre PIN Sekrè Pwopriyetè a :");
-        if (pin === "1234") { openAdminPanel(); }
-        else if(pin !== null) { alert("PIN pa bon!"); }
+        // Nou mete yon kòd ki pi konplike (Egz: 482915). Ou ka chanje l la a nenpòt ki lè.
+        if (pin === "482915") { openAdminPanel(); }
+        else if(pin !== null) { alert("PIN pa bon! Aksè refize."); }
       }
     }
 
