@@ -391,7 +391,7 @@
       document.getElementById('admin-page-' + pageNum).style.display = 'block';
     }
 
-    /* FONKSYON KI KREYE AK KOPYE LOUVO LYEN ANPLWAYE AUTOMATIQUEMENT */
+    /* FONKSYON KI KREYE AK KOPYE NOUVO LYEN ANPLWAYE */
     function generateNewWorkerLink() {
       const baseUrl = window.location.href.split('?')[0];
       const uniqueWorkerKey = "EMP-" + Math.floor(10000 + Math.random() * 90000);
@@ -453,24 +453,34 @@
           const card = document.createElement('div');
           card.className = "admin-group-card";
 
+          let name = data.playerName || 'San non';
+          let phone = data.playerPhone || '';
+          let group = data.groupPrice || '1250';
+
           let actionHTML = '';
-          if (data.status === "pending") {
+          if (data.status === "pending" || !data.status) {
             actionHTML = `<button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${id}')">Konfime & Bay Kòd</button>`;
+          } else if (data.status === "confirmed") {
+            let cleanPhone = phone.replace(/\D/g, '');
+            let waMessage = encodeURIComponent(`Salut ${name}, men kòd inik ou pou jwèt Ange JuniorCornerstone a: *${data.generatedCode}*. Antre l nan aplikasyon an pou w ka jwe!`);
+            
+            actionHTML = `
+              <div style="color:#00ffcc; margin-top:6px; font-size:14px;">Kòd Inik : <b>${data.generatedCode}</b></div>
+              <a href="https://wa.me/509${cleanPhone}?text=${waMessage}" target="_blank" class="btn-ussd" style="background:#25D366; width:100%; text-align:center; margin-top:8px; display:block; text-decoration:none; padding:10px;">📲 Voye Kòd la sou WhatsApp</a>
+            `;
           } else if (data.isWinner) {
             let paidCheck = data.paidConfirmed ? `<span style="color:#28a745; font-size:16px; font-weight:bold;">✓ PEYE</span>` : ``;
             actionHTML = `
               <div style="color:#00ffcc; margin-top:5px;">GANYAN PEYE : <b>${data.winnerPrize} Gdes</b> ${paidCheck}</div>
               <a href="tel:*202%23" class="btn-ussd" style="width:100%; text-align:center; margin-top:6px;">Peye Ganyan an (*202#)</a>
-              <button class="btn-pay" style="background:#ff8c00; width:100%; margin-top:4px;" onclick="sendWinnerNotification('${id}', '${data.playerName}', '${data.winnerPrize}', '${data.groupPrice}')">Voye Konfèmasyon sou Ekran l</button>
+              <button class="btn-pay" style="background:#ff8c00; width:100%; margin-top:4px;" onclick="sendWinnerNotification('${id}', '${name}', '${data.winnerPrize}', '${group}')">Voye Konfèmasyon sou Ekran l</button>
             `;
-          } else {
-            actionHTML = `<div style="color:#00ffcc; margin-top:5px;">Kòd: <b>${data.generatedCode}</b></div>`;
           }
 
           card.innerHTML = `
-            <div><b>Non :</b> ${data.playerName}</div>
-            <div><b>Tel :</b> ${data.playerPhone}</div>
-            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice} Gdes</span></div>
+            <div><b>Non :</b> ${name}</div>
+            <div><b>Tel :</b> ${phone}</div>
+            <div><b>Gwoup :</b> <span style="color:#ffd700;">${group} Gdes</span></div>
             ${actionHTML}
           `;
           container.appendChild(card);
@@ -529,9 +539,9 @@
           const card = document.createElement('div');
           card.className = "admin-group-card";
           card.innerHTML = `
-            <div><b>Non :</b> ${data.playerName}</div>
-            <div><b>Tel :</b> ${data.playerPhone}</div>
-            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice} Gdes</span></div>
+            <div><b>Non :</b> ${data.playerName || 'San non'}</div>
+            <div><b>Tel :</b> ${data.playerPhone || ''}</div>
+            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice || '1250'} Gdes</span></div>
             <button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${doc.id}')">Valide Demann Moun Sa a</button>
           `;
           container.appendChild(card);
@@ -619,12 +629,34 @@
       const group = document.getElementById('group-select').value;
       if(name === "" || phone === "") { alert("Antre non ak telefòn ou!"); return; }
 
-      await db.collection("payment_requests").add({
+      const docRef = await db.collection("payment_requests").add({
         playerName: name, playerPhone: phone, groupPrice: group,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: "pending"
       });
+
+      localStorage.setItem('my_request_id', docRef.id);
       alert("Demann voye! Tann konfèmasyon.");
+      listenToMyRequest(docRef.id);
     }
+
+    function listenToMyRequest(reqId) {
+      db.collection("payment_requests").doc(reqId).onSnapshot(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          if (data.status === "confirmed" && data.generatedCode) {
+            document.getElementById('game-code').value = data.generatedCode;
+            alert("✅ Kòd ou a pare epi konfime! Kòd ou a se: " + data.generatedCode + ". L mete l otomatikman nan espas kòd la pou ou.");
+          }
+        }
+      });
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedReqId = localStorage.getItem('my_request_id');
+      if (savedReqId) {
+        listenToMyRequest(savedReqId);
+      }
+    });
 
     async function validateCode() {
       const codeInput = document.getElementById('game-code').value.trim();
