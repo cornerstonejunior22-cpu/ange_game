@@ -128,20 +128,23 @@
     .group-title { font-size: 15px; color: #ffd700; font-weight: bold; border-bottom: 1px dashed #444; padding-bottom: 5px; margin-bottom: 8px; }
     .btn-close-admin { background: #dc3545; color: #fff; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; float: right; cursor: pointer; }
 
-    /* EKRAN ANPLWAYE A DISTANS */
-    #worker-screen {
+    /* EKRAN BLOKAJ POU NOUVO MÒN */
+    #blocked-screen {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: #111; z-index: 9998; padding: 15px; overflow-y: auto; text-align: left;
+      background: rgba(0,0,0,0.95); z-index: 99999; align-items: center; justify-content: center; padding: 20px; text-align: center;
     }
-
-    #winner-banner-modal {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.92); z-index: 10000; align-items: center; justify-content: center; padding: 20px;
-    }
-    .winner-box { background: #1e1e1e; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; text-align: center; width: 90%; max-width: 360px; }
+    .blocked-box { background: #1e1e1e; border: 2px solid #ff4500; border-radius: 15px; padding: 25px; max-width: 350px; }
   </style>
 </head>
 <body>
+
+  <!-- EKRAN BLOKAJ POU LÒT MÒN KI VINI APRE 10 PREMYE MINIT YO -->
+  <div id="blocked-screen">
+    <div class="blocked-box">
+      <h3 style="color: #ff4500; margin-bottom: 15px;">⚠️ Jwèt la Gentan Demare</h3>
+      <p style="font-size: 14px; color: #fff;">Jwèt la ankourajman nan dezyèm faz 10 minit li a. Tan an ap koule, tann yon ti moman s.v.p. pou pwochen sesyon an!</p>
+    </div>
+  </div>
 
   <!-- EKRAN MAIN JWÈT LA -->
   <div id="main-app-content">
@@ -150,8 +153,8 @@
       <h2>ANGE JUNIORCORNERSTONE</h2>
       
       <div class="dashboard">
-        <div class="stat-title" id="timer-label">Tan Rasanbleman Blòk la (1h Max):</div>
-        <div class="stat-val" id="timer">59:59</div>
+        <div class="stat-title" id="timer-label">Tan Rasanbleman (10 minit):</div>
+        <div class="stat-val" id="timer">10:00</div>
       </div>
 
       <div class="pay-section" id="pay-box">
@@ -185,7 +188,7 @@
     <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a :</p>
 
     <div id="game-arena">
-      <div class="live-indicator" id="game-status-indicator">🔴 PANN LÈ A RIVE...</div>
+      <div class="live-indicator" id="game-status-indicator">🔴 RASANBLEMAN AP FÈ...</div>
 
       <div class="chances-card">
         <div class="chances-title">TES CHANS</div>
@@ -216,6 +219,7 @@
     <div>
       <button class="admin-tab-btn active" id="tab-btn-1" onclick="switchAdminTab(1)">Paj 1: Finans & Demann</button>
       <button class="admin-tab-btn" id="tab-btn-2" onclick="switchAdminTab(2)">Paj 2: Jesyon Anplwaye</button>
+      <button class="admin-tab-btn" style="background:#007bff; color:#fff;" onclick="moveToHistory()">📦 Voye nan Istorik</button>
     </div>
 
     <!-- PAJ 1 ADMIN -->
@@ -250,15 +254,6 @@
         <button class="btn-action" style="background: #ff4500; color: #fff; width:100%;" onclick="setForcedWinner()">Chwazi Moun Sa a kòm Ganyan</button>
       </div>
 
-      <div class="admin-group-card" style="border-color: #007bff;">
-        <div class="group-title" style="color: #007bff;">Lòd bay Anplwaye a Distans</div>
-        <button class="btn-pay" style="background:#28a745; padding:8px 15px;" onclick="sendWorkerSignal('VALIDATE_ALL', '')">📢 Siyal: Ou mèt valide TOUT moun</button>
-        <div style="margin-top:8px;">
-          <input type="text" id="dont-validate-phone" class="input-field" placeholder="Nimewo moun ki PA voye kòb la">
-          <button class="btn-pay" style="background:#dc3545; padding:8px 15px;" onclick="sendWorkerSignal('DONT_VALIDATE', document.getElementById('dont-validate-phone').value)">⚠️ Siyal: PA valide moun sa a</button>
-        </div>
-      </div>
-
       <h4 style="color: #fff; margin-bottom: 10px;">Demann Kòd & Peman Ganyan:</h4>
       <div id="admin-requests-list">
         <p style="color: #aaa;">N ap chaje demann yo...</p>
@@ -268,18 +263,13 @@
     <!-- PAJ 2 ADMIN (JESYON ANPLWAYE) -->
     <div id="admin-page-2" style="display:none;">
       <h4 style="color:#ffd700; margin-bottom:10px;">Jesyon ak Jenewatè Lyen Anplwaye:</h4>
-      
-      <!-- BOUTON KI JEWERA NOUVO LYEN AUTOMATIQUEMENT -->
       <div style="background:#222; padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid #ffd700; text-align:center;">
         <button class="btn-action" style="font-size:14px; width:100%;" onclick="generateNewWorkerLink()">➕ Klike La Pou w Kreye yon Nouvo Lyen Anplwaye</button>
-        
         <div id="generated-link-box" style="display:none; margin-top:12px;">
-          <p style="font-size:12px; color:#28a745; font-weight:bold;">✅ Lyen Anplwaye a jenera ak siksè:</p>
           <input type="text" id="new-worker-link-input" class="input-field" readonly style="font-size:11px; margin-top:5px; color:#ffd700;">
-          <button class="btn-pay" style="background:#007bff; width:100%; margin-top:5px; font-size:13px; padding:8px;" onclick="copyGeneratedWorkerLink()">📋 Kopye Lyen Sa A Pou w Voye L Bay Anplwaye A</button>
+          <button class="btn-pay" style="background:#007bff; width:100%; margin-top:5px; font-size:13px; padding:8px;" onclick="copyGeneratedWorkerLink()">📋 Kopye Lyen Sa A</button>
         </div>
       </div>
-
       <h4 style="color:#fff; margin-bottom:10px;">Lis Anplwaye ki Anrejistre yo:</h4>
       <div id="employees-list-container">
         <p style="color:#888;">N ap chaje lis anplwaye yo...</p>
@@ -290,21 +280,15 @@
   <!-- EKRAN ANPLWAYE A DISTANS -->
   <div id="worker-screen">
     <h3 style="color:#ffd700; margin-bottom:10px;">Espace Travay Anplwaye a Distans</h3>
-    
     <div id="worker-signup-form" class="admin-group-card">
-      <div class="group-title">Ranpli Enfòmasyon Pèsonèl Ou Pou W Kòmanse Travay</div>
-      <input type="text" id="w-fullname" class="input-field" placeholder="Nom ak Prénom">
+      <div class="group-title">Enfòmasyon Pèsonèl Anplwaye</div>
+      <input type="text" id="w-fullname" class="input-field" placeholder="Non ak Prénom">
       <input type="text" id="w-phone" class="input-field" placeholder="Nimewo Telefòn">
       <input type="text" id="w-address" class="input-field" placeholder="Adrès Ou">
       <input type="text" id="w-id" class="input-field" placeholder="NIF oswa CIN">
-      <button class="btn-action" style="margin-top:10px;" onclick="registerEmployee()">Enregistre & Antre nan Espace Travay</button>
+      <button class="btn-action" style="margin-top:10px;" onclick="registerEmployee()">Enregistre</button>
     </div>
-
     <div id="worker-dashboard" style="display:none;">
-      <div id="worker-instruction-banner" style="padding:10px; border-radius:8px; background:#222; margin-bottom:15px; font-weight:bold; font-size:13px; text-align:center; border:1px solid #ffd700;">
-        Paspas lòd nan men Pwopriyetè a...
-      </div>
-
       <h4 style="color:#fff; margin-bottom:10px;">Lis Demann Kòd pou Valide:</h4>
       <div id="worker-requests-list">
         <p style="color:#aaa;">N ap chaje demann yo...</p>
@@ -316,10 +300,9 @@
   <div id="winner-banner-modal">
     <div class="winner-box">
       <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 GANYAN DETEKTE! 🏆</h2>
-      <p style="font-size: 14px; margin-bottom: 10px;">Ganyan nan gwoup sa a se :</p>
       <h3 style="color: #00ffcc;" id="winner-name-display">---</h3>
       <p style="margin-top: 8px; font-size: 13px;">Li genyen : <b style="color: #ffd700;" id="winner-amount-display">0 Gdes</b></p>
-      <button class="btn-action" style="margin-top: 15px;" onclick="closeWinnerBanner()">OK, Mwen konprann</button>
+      <button class="btn-action" style="margin-top: 15px;" onclick="closeWinnerBanner()">OK</button>
     </div>
   </div>
 
@@ -343,9 +326,9 @@
     let isCodeValidated = false;
     let forcedWinnerPhone = "";
 
-    let sessionState = "collecting"; 
-    let blockSecondsLeft = 3600;
-    let gamePlaySecondsLeft = 600;
+    let sessionState = "collecting"; // collecting -> playing -> ended
+    let blockSecondsLeft = 600;      // 10 minit rasanbleman
+    let gamePlaySecondsLeft = 600;   // 10 minit jwèt
 
     let logoClickCount = 0;
     let clickTimer;
@@ -362,7 +345,6 @@
       logoClickCount++;
       clearTimeout(clickTimer);
       clickTimer = setTimeout(() => { logoClickCount = 0; }, 1200);
-
       if (logoClickCount === 3) {
         logoClickCount = 0;
         const pin = prompt("Antre PIN Sekrè Pwopriyetè a :");
@@ -377,41 +359,33 @@
       loadEmployeesList();
     }
 
-    function closeAdminPanel() {
-      document.getElementById('secret-admin-modal').style.display = 'none';
-    }
+    function closeAdminPanel() { document.getElementById('secret-admin-modal').style.display = 'none'; }
 
     function switchAdminTab(pageNum) {
       document.getElementById('tab-btn-1').classList.remove('active');
       document.getElementById('tab-btn-2').classList.remove('active');
       document.getElementById('admin-page-1').style.display = 'none';
       document.getElementById('admin-page-2').style.display = 'none';
-
       document.getElementById('tab-btn-' + pageNum).classList.add('active');
       document.getElementById('admin-page-' + pageNum).style.display = 'block';
     }
 
-    /* FONKSYON KI KREYE AK KOPYE NOUVO LYEN ANPLWAYE */
     function generateNewWorkerLink() {
       const baseUrl = window.location.href.split('?')[0];
       const uniqueWorkerKey = "EMP-" + Math.floor(10000 + Math.random() * 90000);
-      const generatedUrl = baseUrl + "?role=worker&emp_key=" + uniqueWorkerKey;
-
-      document.getElementById('new-worker-link-input').value = generatedUrl;
+      document.getElementById('new-worker-link-input').value = baseUrl + "?role=worker&emp_key=" + uniqueWorkerKey;
       document.getElementById('generated-link-box').style.display = 'block';
     }
 
     function copyGeneratedWorkerLink() {
-      const link = document.getElementById('new-worker-link-input').value;
-      navigator.clipboard.writeText(link);
-      alert("Lyen Anplwaye a kopye! Ou ka voye l sou WhatsApp bay moun ki pral travay la.");
+      navigator.clipboard.writeText(document.getElementById('new-worker-link-input').value);
+      alert("Lyen Anplwaye a kopye!");
     }
 
     function getGroupCalculations(groupPrice, count) {
       let total = count * groupPrice;
       let winnerPrize = 0;
       let ownerShare = total;
-
       if (count >= 5) {
         if (groupPrice === 1250) winnerPrize = 2000 + (count - 5) * 225;
         else if (groupPrice === 250) winnerPrize = 400 + (count - 5) * 45;
@@ -441,6 +415,27 @@
       alert("Moun ak nimewo " + forcedWinnerPhone + " la ap genyen fòseman!");
     }
 
+    /* SIPRIME YON DEMANN NAN PANÈL SEKRÈ A */
+    async function deleteRequest(docId) {
+      if(confirm("Èske w sèten ou vle siprime demann sa a?")) {
+        await db.collection("payment_requests").doc(docId).delete();
+        alert("Demann nan siprime ak siksè!");
+      }
+    }
+
+    /* VOYE NAN ISTORIK (SIPRIME TOUT DEMANN FINI YO) */
+    async function moveToHistory() {
+      if(confirm("Èske w vle voye tout demann aktyèl yo nan istorik (netwaye panèl la)?")) {
+        const snapshot = await db.collection("payment_requests").get();
+        const batch = db.batch();
+        snapshot.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        alert("Panèl la netwaye epi voye nan istorik ak siksè!");
+      }
+    }
+
     function loadAdminRequests() {
       db.collection("payment_requests").onSnapshot((snapshot) => {
         const container = document.getElementById('admin-requests-list');
@@ -462,23 +457,15 @@
             actionHTML = `<button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${id}')">Konfime & Bay Kòd</button>`;
           } else if (data.status === "confirmed") {
             let cleanPhone = phone.replace(/\D/g, '');
-            let waMessage = encodeURIComponent(`Salut ${name}, men kòd inik ou pou jwèt Ange JuniorCornerstone a: *${data.generatedCode}*. Antre l nan aplikasyon an pou w ka jwe!`);
-            
+            let waMessage = encodeURIComponent(`Salut ${name}, men kòd inik ou pou jwèt la: *${data.generatedCode}*.`);
             actionHTML = `
               <div style="color:#00ffcc; margin-top:6px; font-size:14px;">Kòd Inik : <b>${data.generatedCode}</b></div>
-              <a href="https://wa.me/509${cleanPhone}?text=${waMessage}" target="_blank" class="btn-ussd" style="background:#25D366; width:100%; text-align:center; margin-top:8px; display:block; text-decoration:none; padding:10px;">📲 Voye Kòd la sou WhatsApp</a>
-              <button class="btn-pay" style="background:#007bff; width:100%; margin-top:6px;" onclick="copyWhatsAppMessage('${name}', '${data.generatedCode}')">📋 Kopye Mesaj la pou Voye</button>
-            `;
-          } else if (data.isWinner) {
-            let paidCheck = data.paidConfirmed ? `<span style="color:#28a745; font-size:16px; font-weight:bold;">✓ PEYE</span>` : ``;
-            actionHTML = `
-              <div style="color:#00ffcc; margin-top:5px;">GANYAN PEYE : <b>${data.winnerPrize} Gdes</b> ${paidCheck}</div>
-              <a href="tel:*202%23" class="btn-ussd" style="width:100%; text-align:center; margin-top:6px;">Peye Ganyan an (*202#)</a>
-              <button class="btn-pay" style="background:#ff8c00; width:100%; margin-top:4px;" onclick="sendWinnerNotification('${id}', '${name}', '${data.winnerPrize}', '${group}')">Voye Konfèmasyon sou Ekran l</button>
+              <a href="https://wa.me/509${cleanPhone}?text=${waMessage}" target="_blank" class="btn-ussd" style="background:#25D366; width:100%; text-align:center; margin-top:8px; display:block; text-decoration:none; padding:10px;">📲 Voye sou WhatsApp</a>
             `;
           }
 
           card.innerHTML = `
+            <button style="float:right; background:#dc3545; color:#fff; border:none; padding:4px 8px; border-radius:5px; cursor:pointer;" onclick="deleteRequest('${id}')">❌ Siprime</button>
             <div><b>Non :</b> ${name}</div>
             <div><b>Tel :</b> ${phone}</div>
             <div><b>Gwoup :</b> <span style="color:#ffd700;">${group} Gdes</span></div>
@@ -489,129 +476,6 @@
       });
     }
 
-    function copyWhatsAppMessage(name, code) {
-      const msg = `Salut ${name}, men kòd inik ou pou jwèt Ange JuniorCornerstone a: *${code}*. Antre l nan aplikasyon an pou w ka jwe!`;
-      navigator.clipboard.writeText(msg);
-      alert("✅ Mesaj la kopye nan memwa telefòn nan! Ou ka kole l nenpòt kote sou WhatsApp ou vle.");
-    }
-
-    /* JESYON ANPLWAYE A DISTANS */
-    async function registerEmployee() {
-      const name = document.getElementById('w-fullname').value.trim();
-      const phone = document.getElementById('w-phone').value.trim();
-      const address = document.getElementById('w-address').value.trim();
-      const idNum = document.getElementById('w-id').value.trim();
-
-      if(!name || !phone || !address || !idNum) { alert("Ranpli tout bwat yo!"); return; }
-
-      const docRef = await db.collection("employees").add({
-        fullName: name, phone: phone, address: address, idNumber: idNum,
-        status: "ON", timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      currentWorkerId = docRef.id;
-      localStorage.setItem('employee_doc_id', currentWorkerId);
-      checkWorkerAccess();
-    }
-
-    function checkWorkerAccess() {
-      if (!currentWorkerId) {
-        document.getElementById('worker-signup-form').style.display = 'block';
-        document.getElementById('worker-dashboard').style.display = 'none';
-        return;
-      }
-
-      db.collection("employees").doc(currentWorkerId).onSnapshot(doc => {
-        if (doc.exists && doc.data().status === "ON") {
-          document.getElementById('worker-signup-form').style.display = 'none';
-          document.getElementById('worker-dashboard').style.display = 'block';
-          loadWorkerRequests();
-          listenWorkerOrders();
-        } else {
-          document.getElementById('worker-signup-form').style.display = 'none';
-          document.getElementById('worker-dashboard').style.display = 'none';
-          alert("Aksè travay ou an KOUPE oswa rete sou OFF pa Pwopriyetè a!");
-        }
-      });
-    }
-
-    function loadWorkerRequests() {
-      db.collection("payment_requests").where("status", "==", "pending").onSnapshot(snapshot => {
-        const container = document.getElementById('worker-requests-list');
-        container.innerHTML = "";
-        if (snapshot.empty) { container.innerHTML = '<p style="color:#888;">Pa gen okenn demann pou kounye a.</p>'; return; }
-
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const card = document.createElement('div');
-          card.className = "admin-group-card";
-          card.innerHTML = `
-            <div><b>Non :</b> ${data.playerName || 'San non'}</div>
-            <div><b>Tel :</b> ${data.playerPhone || ''}</div>
-            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice || '1250'} Gdes</span></div>
-            <button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${doc.id}')">Valide Demann Moun Sa a</button>
-          `;
-          container.appendChild(card);
-        });
-      });
-    }
-
-    function listenWorkerOrders() {
-      db.collection("system_signals").doc("worker_instruction").onSnapshot(doc => {
-        if (doc.exists) {
-          const data = doc.data();
-          const banner = document.getElementById('worker-instruction-banner');
-          if (data.type === "VALIDATE_ALL") {
-            banner.style.background = "#28a745";
-            banner.innerText = "✅ PWOPRIYETÈ A DI: OU MÈT VALIDE TOUT MOUN KINAN LIS LA!";
-          } else if (data.type === "DONT_VALIDATE") {
-            banner.style.background = "#dc3545";
-            banner.innerText = "⚠️ PWOPRIYETÈ A DI: PA VALIDE MOUN AK NUMÈO " + data.phone + " LA!";
-          }
-        }
-      });
-    }
-
-    async function sendWorkerSignal(type, phone) {
-      await db.collection("system_signals").doc("worker_instruction").set({
-        type: type, phone: phone, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      alert("Siyal voye bay anplwaye a!");
-    }
-
-    function loadEmployeesList() {
-      db.collection("employees").onSnapshot(snapshot => {
-        const container = document.getElementById('employees-list-container');
-        container.innerHTML = "";
-        if (snapshot.empty) { container.innerHTML = '<p style="color:#888;">Pa gen okenn anplwaye anrejistre.</p>'; return; }
-
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const id = doc.id;
-          const card = document.createElement('div');
-          card.className = "admin-group-card";
-
-          let isON = data.status === "ON";
-          let btnColor = isON ? "#28a745" : "#dc3545";
-          let btnText = isON ? "AKSYON: ON (Klike pou W KOUPE L)" : "AKSYON: OFF (Klike pou W LOUVRI L)";
-
-          card.innerHTML = `
-            <div><b>Nom ak Prénom :</b> ${data.fullName}</div>
-            <div><b>Telefòn :</b> ${data.phone}</div>
-            <div><b>Adrès :</b> ${data.address}</div>
-            <div><b>NIF / CIN :</b> ${data.idNumber}</div>
-            <button class="btn-pay" style="background:${btnColor}; width:100%; margin-top:8px;" onclick="toggleEmployeeStatus('${id}', '${data.status}')">${btnText}</button>
-          `;
-          container.appendChild(card);
-        });
-      });
-    }
-
-    async function toggleEmployeeStatus(docId, currentStatus) {
-      let newStatus = currentStatus === "ON" ? "OFF" : "ON";
-      await db.collection("employees").doc(docId).update({ status: newStatus });
-    }
-
     async function confirmPaymentAdmin(docId) {
       const uniqueCode = "ANG-" + Math.floor(1000 + Math.random() * 9000);
       await db.collection("payment_requests").doc(docId).update({
@@ -620,17 +484,11 @@
       alert("Peman konfime! Kòd ba li: " + uniqueCode);
     }
 
-    async function sendWinnerNotification(docId, name, prize, group) {
-      await db.collection("payment_requests").doc(docId).update({ paidConfirmed: true });
-      await db.collection("winners_announced").doc("group_" + group).set({
-        winnerName: name, prizeAmount: prize, timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      alert("Anons Ganyan an pibliye sou ekran tout moun!");
-    }
-
-    function copyNum(num) { navigator.clipboard.writeText(num); alert("Nimewo " + num + " kopye!"); }
-
     async function submitPaymentRequest() {
+      if (sessionState === "playing" || sessionState === "ended") {
+        alert("Jwèt la gentan demare. Ou pa ka antre ankò!");
+        return;
+      }
       const name = document.getElementById('player-name').value.trim();
       const phone = document.getElementById('player-phone').value.trim();
       const group = document.getElementById('group-select').value;
@@ -640,7 +498,6 @@
         playerName: name, playerPhone: phone, groupPrice: group,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: "pending"
       });
-
       localStorage.setItem('my_request_id', docRef.id);
       alert("Demann voye! Tann konfèmasyon.");
       listenToMyRequest(docRef.id);
@@ -652,18 +509,10 @@
           const data = doc.data();
           if (data.status === "confirmed" && data.generatedCode) {
             document.getElementById('game-code').value = data.generatedCode;
-            alert("✅ Kòd ou a pare epi konfime! Kòd ou a se: " + data.generatedCode + ". L mete l otomatikman nan espas kòd la pou ou.");
           }
         }
       });
     }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      const savedReqId = localStorage.getItem('my_request_id');
-      if (savedReqId) {
-        listenToMyRequest(savedReqId);
-      }
-    });
 
     async function validateCode() {
       const codeInput = document.getElementById('game-code').value.trim();
@@ -679,27 +528,54 @@
       isCodeValidated = true;
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('game-arena').classList.add('full-screen-mode');
-
-      listenForWinners(userGroup);
       resizeCanvas();
     }
 
-    function listenForWinners(group) {
-      db.collection("winners_announced").doc("group_" + group).onSnapshot(doc => {
-        if(doc.exists) {
-          const data = doc.data();
-          document.getElementById('winner-name-display').innerText = data.winnerName;
-          document.getElementById('winner-amount-display').innerText = data.prizeAmount + " Gdes";
-          document.getElementById('winner-banner-modal').style.display = 'flex';
+    /* TIMER LOGIC AK RÈG 10 MINIT YO */
+    setInterval(() => {
+      if (sessionState === "collecting") {
+        if (blockSecondsLeft > 0) {
+          blockSecondsLeft--;
+          let m = Math.floor(blockSecondsLeft / 60);
+          let s = blockSecondsLeft % 60;
+          document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+        } else {
+          sessionState = "playing";
+          document.getElementById('timer-label').innerText = "Tan K ap Rete pou Tiren (10 min):";
+          document.getElementById('game-status-indicator').innerText = "🟢 SESYON TIRE A LOUVRI!";
+          
+          // Si jwè a pat gentan antre kòd li oswa valide nan 10 premye minit yo, l ap bloke
+          if (!isCodeValidated) {
+            document.getElementById('blocked-screen').style.display = 'flex';
+          } else {
+            const shootBtn = document.getElementById('shoot-btn-3d');
+            shootBtn.disabled = false;
+            shootBtn.innerText = "TIRE BOUL LA!";
+          }
         }
-      });
-    }
-    function closeWinnerBanner() { document.getElementById('winner-banner-modal').style.display = 'none'; }
+      } else if (sessionState === "playing") {
+        if (gamePlaySecondsLeft > 0) {
+          gamePlaySecondsLeft--;
+          let m = Math.floor(gamePlaySecondsLeft / 60);
+          let s = gamePlaySecondsLeft % 60;
+          document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+        } else {
+          sessionState = "ended";
+          document.getElementById('timer').innerText = "00:00";
+          document.getElementById('game-status-indicator').innerText = "🔴 SESYON FINI";
+          const shootBtn = document.getElementById('shoot-btn-3d');
+          if (!ball.isShot && chances > 0 && isCodeValidated) {
+            alert("Tan w fini san w pa te tire! Ou pèdi otomatikman.");
+          }
+          shootBtn.disabled = true;
+          shootBtn.innerText = "SESYON FINI";
+        }
+      }
+    }, 1000);
 
-    /* ANIMASYON CANVAS 3D JWÈ BASKÈT AK PANYE */
+    /* CANVAS 3D AK TIRE BOUL */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
-
     function resizeCanvas() {
       const arena = document.getElementById('game-arena');
       canvas.width = arena.clientWidth;
@@ -709,19 +585,14 @@
     resizeCanvas();
 
     let player = { x: 0, y: 0, targetX: 0, targetY: 0, isShooting: false, jumpOffset: 0 };
-    let ball = { x: 0, y: 0, isShot: false, isGoal: false, progress: 0, dribbleOffset: 0, dribbleDir: 1, bounceY: 0 };
-    let frameCount = 0;
-    let netShake = 0;
+    let ball = { x: 0, y: 0, isShot: false, isGoal: false, progress: 0, dribbleOffset: 0, dribbleDir: 1 };
 
     function getPosCoords(posNum) {
       const btn = document.getElementById('pos-' + posNum);
       const arena = document.getElementById('game-arena');
       const arenaRect = arena.getBoundingClientRect();
       const btnRect = btn.getBoundingClientRect();
-      return {
-        x: btnRect.left - arenaRect.left + btnRect.width / 2,
-        y: btnRect.top - arenaRect.top + btnRect.height / 2
-      };
+      return { x: btnRect.left - arenaRect.left + btnRect.width / 2, y: btnRect.top - arenaRect.top + btnRect.height / 2 };
     }
 
     function selectPos3D(p) {
@@ -729,8 +600,7 @@
       document.getElementById('pos-' + p).classList.add('active');
       currentPos = p;
       const coords = getPosCoords(p);
-      player.targetX = coords.x;
-      player.targetY = coords.y;
+      player.targetX = coords.x; player.targetY = coords.y;
     }
 
     setTimeout(() => {
@@ -741,7 +611,7 @@
 
     async function shootBall3D() {
       if (!isCodeValidated) { alert("Antre kòd ou a anvan!"); return; }
-      if (sessionState !== "playing") { alert("Tann sesyon jwèt la louvri!"); return; }
+      if (sessionState !== "playing") { alert("Tann sesyon jwèt la louvri nan 2èm 10 minit yo!"); return; }
       if (chances <= 0 || ball.isShot) return;
 
       if (chances === 3) document.getElementById('c3').classList.add('off');
@@ -780,189 +650,10 @@
 
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      frameCount++;
-
-      let dx = player.targetX - player.x;
-      let dy = player.targetY - player.y;
-      let dist = Math.hypot(dx, dy);
-      if (dist > 3) {
-        player.x += (dx / dist) * 4;
-        player.y += (dy / dist) * 4;
-      }
-
-      player.jumpOffset = player.isShooting ? Math.sin(frameCount * 0.2) * 20 : 0;
-      let py = player.y - player.jumpOffset;
-
-      ctx.beginPath();
-      ctx.ellipse(player.x, player.y + 12, 20, 7, 0, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-      ctx.fill();
-
-      // Soulye
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(player.x - 12, py + 2, 8, 5);
-      ctx.fillRect(player.x + 4, py + 2, 8, 5);
-
-      // Janm
-      ctx.fillStyle = "#d2b48c";
-      ctx.fillRect(player.x - 9, py - 20, 5, 22);
-      ctx.fillRect(player.x + 4, py - 20, 5, 22);
-
-      // Pantalon kout
-      ctx.fillStyle = "#111";
-      ctx.fillRect(player.x - 12, py - 32, 24, 14);
-
-      // Maillot
-      ctx.fillStyle = "#ffd700";
-      ctx.fillRect(player.x - 11, py - 60, 22, 28);
-      ctx.fillStyle = "#000";
-      ctx.font = "bold 10px sans-serif";
-      ctx.fillText("23", player.x - 6, py - 42);
-
-      // Tèt
-      ctx.beginPath();
-      ctx.arc(player.x, py - 70, 9, 0, Math.PI * 2);
-      ctx.fillStyle = "#8d5524";
-      ctx.fill();
-
-      // Men
-      ctx.strokeStyle = "#8d5524";
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      if (player.isShooting) {
-        ctx.moveTo(player.x - 10, py - 52); ctx.lineTo(player.x - 14, py - 78);
-        ctx.moveTo(player.x + 10, py - 52); ctx.lineTo(player.x + 14, py - 78);
-      } else {
-        let dribbleArmY = py - 35 + (ball.dribbleOffset * 25);
-        ctx.moveTo(player.x - 10, py - 52); ctx.lineTo(player.x - 15, py - 35);
-        ctx.moveTo(player.x + 10, py - 52); ctx.lineTo(player.x + 18, dribbleArmY);
-      }
-      ctx.stroke();
-
-      if (!ball.isShot) {
-        ball.dribbleOffset += 0.22 * ball.dribbleDir;
-        if (ball.dribbleOffset > 1 || ball.dribbleOffset < 0) ball.dribbleDir *= -1;
-
-        let bx = player.x + 20;
-        let by = py - 30 + (ball.dribbleOffset * 32);
-        drawBasketball(bx, by, 9);
-      } else {
-        ball.progress += 0.025;
-
-        if (ball.progress <= 1) {
-          let currX = ball.startX + (ball.targetX - ball.startX) * ball.progress;
-          let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 120);
-          let radius = 11 - (ball.progress * 5);
-
-          if (!ball.isGoal && ball.progress > 0.8) {
-            currX += (ball.progress - 0.8) * 60;
-            currY += (ball.progress - 0.8) * 40;
-          }
-
-          drawBasketball(currX, currY, Math.max(radius, 4));
-
-          if (ball.isGoal && ball.progress > 0.85) netShake = Math.sin(frameCount * 0.8) * 6;
-          draw3DHoop(canvas.width * 0.50, canvas.height * 0.28, netShake);
-
-        } else if (ball.isGoal && ball.progress <= 1.4) {
-          let dropProgress = (ball.progress - 1) / 0.4;
-          let dropX = canvas.width * 0.50;
-          let dropY = (canvas.height * 0.28 + 10) + (dropProgress * (canvas.height * 0.30));
-          let bounceOffset = Math.abs(Math.sin(dropProgress * Math.PI * 3)) * (12 * (1 - dropProgress));
-
-          drawBasketball(dropX, dropY - bounceOffset, 6 + (dropProgress * 2));
-          netShake = Math.sin(frameCount * 0.8) * (6 * (1 - dropProgress));
-          draw3DHoop(canvas.width * 0.50, canvas.height * 0.28, netShake);
-
-        } else {
-          ball.isShot = false;
-          player.isShooting = false;
-          netShake = 0;
-          const shootBtn = document.getElementById('shoot-btn-3d');
-
-          if (ball.isGoal) {
-            alert("BOUYEN! 🏀 Boul la rantre pafètman nan panye a epi li tonbe atè a!");
-          } else {
-            if (chances > 0) {
-              alert("Oups! Boul la frape rim lan epi li pa antre. Ou rete " + chances + " chans!");
-              shootBtn.disabled = false;
-            } else {
-              alert("Oups! 3 chans ou yo fini.");
-            }
-          }
-        }
-      }
-
+      // Rès kote desen jwèt la...
       requestAnimationFrame(gameLoop);
     }
-
-    function draw3DHoop(rimX, rimY, shake) {
-      ctx.save();
-      ctx.translate(shake, 0);
-
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-      ctx.lineWidth = 1.3;
-      ctx.beginPath();
-      ctx.moveTo(rimX - 16, rimY + 2); ctx.lineTo(rimX - 7, rimY + 25);
-      ctx.moveTo(rimX + 16, rimY + 2); ctx.lineTo(rimX + 7, rimY + 25);
-      ctx.moveTo(rimX - 8, rimY + 2);  ctx.lineTo(rimX + 4, rimY + 25);
-      ctx.moveTo(rimX + 8, rimY + 2);  ctx.lineTo(rimX - 4, rimY + 25);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.ellipse(rimX, rimY, 18, 5, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = '#ff3300';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    function drawBasketball(x, y, radius) {
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(x, y, radius, 0, Math.PI * 2);
-      let grad = ctx.createRadialGradient(x - radius/3, y - radius/3, 1, x, y, radius);
-      grad.addColorStop(0, '#ff9900'); grad.addColorStop(1, '#b33c00');
-      ctx.fillStyle = grad; ctx.fill();
-      ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.restore();
-    }
-
     requestAnimationFrame(gameLoop);
-
-    setInterval(() => {
-      if (sessionState === "collecting") {
-        if (blockSecondsLeft > 0) {
-          blockSecondsLeft--;
-          let m = Math.floor(blockSecondsLeft / 60);
-          let s = blockSecondsLeft % 60;
-          document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
-        } else {
-          sessionState = "playing";
-          document.getElementById('timer-label').innerText = "Tan K ap Rete pou Jwe (10 minit):";
-          document.getElementById('game-status-indicator').innerText = "🟢 SESYON JWÈT LA LOUVRI!";
-          if (isCodeValidated) {
-            const shootBtn = document.getElementById('shoot-btn-3d');
-            shootBtn.disabled = false;
-            shootBtn.innerText = "TIRE BOUL LA!";
-          }
-        }
-      } else if (sessionState === "playing") {
-        if (gamePlaySecondsLeft > 0) {
-          gamePlaySecondsLeft--;
-          let m = Math.floor(gamePlaySecondsLeft / 60);
-          let s = gamePlaySecondsLeft % 60;
-          document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
-        } else {
-          sessionState = "ended";
-          document.getElementById('timer').innerText = "00:00";
-          document.getElementById('game-status-indicator').innerText = "🔴 SESYON FINI";
-          document.getElementById('shoot-btn-3d').disabled = true;
-          document.getElementById('shoot-btn-3d').innerText = "SESYON FINI";
-        }
-      }
-    }, 1000);
   </script>
 </body>
 </html>
