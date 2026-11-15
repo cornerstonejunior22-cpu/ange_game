@@ -467,6 +467,7 @@
             actionHTML = `
               <div style="color:#00ffcc; margin-top:6px; font-size:14px;">Kòd Inik : <b>${data.generatedCode}</b></div>
               <a href="https://wa.me/509${cleanPhone}?text=${waMessage}" target="_blank" class="btn-ussd" style="background:#25D366; width:100%; text-align:center; margin-top:8px; display:block; text-decoration:none; padding:10px;">📲 Voye Kòd la sou WhatsApp</a>
+              <button class="btn-pay" style="background:#007bff; width:100%; margin-top:6px;" onclick="copyWhatsAppMessage('${name}', '${data.generatedCode}')">📋 Kopye Mesaj la pou Voye</button>
             `;
           } else if (data.isWinner) {
             let paidCheck = data.paidConfirmed ? `<span style="color:#28a745; font-size:16px; font-weight:bold;">✓ PEYE</span>` : ``;
@@ -486,6 +487,12 @@
           container.appendChild(card);
         });
       });
+    }
+
+    function copyWhatsAppMessage(name, code) {
+      const msg = `Salut ${name}, men kòd inik ou pou jwèt Ange JuniorCornerstone a: *${code}*. Antre l nan aplikasyon an pou w ka jwe!`;
+      navigator.clipboard.writeText(msg);
+      alert("✅ Mesaj la kopye nan memwa telefòn nan! Ou ka kole l nenpòt kote sou WhatsApp ou vle.");
     }
 
     /* JESYON ANPLWAYE A DISTANS */
