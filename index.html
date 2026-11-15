@@ -442,7 +442,7 @@
     }
 
     function loadAdminRequests() {
-      db.collection("payment_requests").orderBy("timestamp", "desc").onSnapshot((snapshot) => {
+      db.collection("payment_requests").onSnapshot((snapshot) => {
         const container = document.getElementById('admin-requests-list');
         container.innerHTML = "";
         if (snapshot.empty) { container.innerHTML = '<p style="color: #888;">Pa gen okenn demann.</p>'; return; }
