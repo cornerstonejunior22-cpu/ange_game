@@ -110,9 +110,8 @@
     #pos-6 { top: 64%; right: 32%; }
     #pos-7 { top: 82%; left: 48%; }
 
-    /* BOUTON TIRE A FÒK LÈ TOUJOU VIZIB ANBA KÒM YON GWO PWOJE */
     .shoot-btn-3d {
-      position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
+      position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
       width: 85%; max-width: 280px; padding: 14px; background: linear-gradient(135deg, #555, #333);
       color: #aaa; font-weight: bold; font-size: 17px; border: 2px solid #777; border-radius: 30px; cursor: not-allowed; z-index: 30;
       box-shadow: 0 5px 15px rgba(0,0,0,0.6);
@@ -247,7 +246,6 @@
       <div class="pos-btn-3d" id="pos-6" onclick="selectPos3D(6)">6</div>
       <div class="pos-btn-3d" id="pos-7" onclick="selectPos3D(7)">7</div>
 
-      <!-- BOUTON TIRE A FÒK LÈ KANPE KLÈ ANBA -->
       <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()" disabled>TANN LÈ A RIVE...</button>
     </div>
   </div>
@@ -264,27 +262,27 @@
 
     <div id="admin-page-1">
       <div class="admin-group-card">
-        <div class="group-title">Gwoup 1,250 Gdes</div>
+        <div class="group-title">Gwoup 1,250 Gdes (Apati 5 jiska 220 Moun)</div>
         <div>Kantite Moun (X): <b><span id="p1250-count">0</span> / 220</b></div>
         <div>Gran Total: <b><span id="p1250-total">0</span> Gdes</b></div>
-        <div>Maksimòm Avantaj Pwopriyetè: <b style="color:#28a745;"><span id="p1250-owner">0</span> Gdes</b></div>
-        <div>Minimòm Avantaj Ganyan: <b style="color:#ffd700;"><span id="p1250-winner">0</span> Gdes</b></div>
+        <div>Avantaj Pwopriyetè (Maks): <b style="color:#28a745;"><span id="p1250-owner">0</span> Gdes</b></div>
+        <div>Avantaj Ganyan (Min): <b style="color:#ffd700;"><span id="p1250-winner">0</span> Gdes</b></div>
       </div>
 
       <div class="admin-group-card">
-        <div class="group-title">Gwoup 250 Gdes</div>
+        <div class="group-title">Gwoup 250 Gdes (Apati 5 jiska 220 Moun)</div>
         <div>Kantite Moun (X): <b><span id="p250-count">0</span> / 220</b></div>
         <div>Gran Total: <b><span id="p250-total">0</span> Gdes</b></div>
-        <div>Maksimòm Avantaj Pwopriyetè: <b style="color:#28a745;"><span id="p250-owner">0</span> Gdes</b></div>
-        <div>Minimòm Avantaj Ganyan: <b style="color:#ffd700;"><span id="p250-winner">0</span> Gdes</b></div>
+        <div>Avantaj Pwopriyetè (Maks): <b style="color:#28a745;"><span id="p250-owner">0</span> Gdes</b></div>
+        <div>Avantaj Ganyan (Min): <b style="color:#ffd700;"><span id="p250-winner">0</span> Gdes</b></div>
       </div>
 
       <div class="admin-group-card">
-        <div class="group-title">Gwoup 100 Gdes</div>
+        <div class="group-title">Gwoup 100 Gdes (Apati 5 jiska 220 Moun)</div>
         <div>Kantite Moun (X): <b><span id="p100-count">0</span> / 220</b></div>
         <div>Gran Total: <b><span id="p100-total">0</span> Gdes</b></div>
-        <div>Maksimòm Avantaj Pwopriyetè: <b style="color:#28a745;"><span id="p100-owner">0</span> Gdes</b></div>
-        <div>Minimòm Avantaj Ganyan: <b style="color:#ffd700;"><span id="p100-winner">0</span> Gdes</b></div>
+        <div>Avantaj Pwopriyetè (Maks): <b style="color:#28a745;"><span id="p100-owner">0</span> Gdes</b></div>
+        <div>Avantaj Ganyan (Min): <b style="color:#ffd700;"><span id="p100-winner">0</span> Gdes</b></div>
       </div>
 
       <div class="admin-group-card" style="border-color: #ff4500;">
@@ -400,14 +398,20 @@
       alert("Lyen Anplwaye a kopye!");
     }
 
+    /* KALKIL FINANSYÈ NOUVO RÈG YO (1-4 moun pèdi tout, apati 5 moun pwopriyetè pran maksimòm) */
     function getGroupCalculations(groupPrice, count) {
       let total = count * groupPrice;
       let winnerPrize = 0;
       let ownerShare = total;
-      if (count >= 5) {
-        if (groupPrice === 1250) winnerPrize = 2000 + (count - 5) * 225;
-        else if (groupPrice === 250) winnerPrize = 400 + (count - 5) * 45;
-        else if (groupPrice === 100) winnerPrize = 150 + (count - 5) * 18;
+
+      if (count >= 5 && count <= 220) {
+        if (groupPrice === 1250) {
+          winnerPrize = 2000 + (count - 5) * 225;
+        } else if (groupPrice === 250) {
+          winnerPrize = 400 + (count - 5) * 45;
+        } else if (groupPrice === 100) {
+          winnerPrize = 150 + (count - 5) * 18;
+        }
         ownerShare = total - winnerPrize;
       }
       return { total, ownerShare, winnerPrize };
@@ -603,6 +607,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       const savedReqId = localStorage.getItem('my_request_id');
       if (savedReqId) { listenToMyRequest(savedReqId); }
+      listenToWinnersAnnouncements();
     });
 
     async function validateCode() {
@@ -619,12 +624,28 @@
       isCodeValidated = true;
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('game-arena').classList.add('full-screen-mode');
-      
       document.getElementById('arena-timer-display').style.display = 'block';
       resizeCanvas();
     }
 
-    /* KONTWÒL MINIT YO AK AKTIVASYON BOUTON TIRE A */
+    /* KONTWÒL GANYAN AN POU PARÈT SOU EKRAN TOUT TELEGIDÈ YO */
+    function listenToWinnersAnnouncements() {
+      ["1250", "250", "100"].forEach(grp => {
+        db.collection("winners_announced").doc("group_" + grp).onSnapshot(doc => {
+          if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('winner-name-display').innerText = data.winnerName;
+            document.getElementById('winner-amount-display').innerText = data.prizeAmount + " Gdes";
+            document.getElementById('winner-banner-modal').style.display = 'flex';
+          }
+        });
+      });
+    }
+
+    function closeWinnerBanner() {
+      document.getElementById('winner-banner-modal').style.display = 'none';
+    }
+
     setInterval(() => {
       let timeText = "10:00";
       const shootBtn = document.getElementById('shoot-btn-3d');
@@ -677,7 +698,7 @@
       document.getElementById('arena-timer-display').innerText = timeText;
     }, 1000);
 
-    /* --- ANIMASYON JWÈT 3D AK ATLET --- */
+    /* --- ANIMASYON JWÈT 3D AK PANYE FILÈ KI AN MOUVMAN --- */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     function resizeCanvas() {
@@ -730,6 +751,7 @@
       let userPhone = document.getElementById('player-phone').value.trim();
 
       let isGoal = false;
+      // Nouvo règ: Ant 1 ak 4 moun = tout moun pèdi. Apati de 5 moun sèlman genyen posib.
       if (totalPlayers >= 5) {
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
         else isGoal = Math.random() < 0.35;
@@ -809,6 +831,9 @@
       }
       ctx.stroke();
 
+      // Dessin panye a ak filè an mouvman fò nwa/blan ki kouvri ansyen imaj la pèmanan
+      draw3DHoopWithSolidNet(canvas.width * 0.50, canvas.height * 0.28, netShake);
+
       if (!ball.isShot) {
         ball.dribbleOffset += 0.25 * ball.dribbleDir;
         if (ball.dribbleOffset > 1 || ball.dribbleOffset < 0) ball.dribbleDir *= -1;
@@ -822,23 +847,20 @@
           let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 110);
           let radius = 10 - (ball.progress * 4);
           drawBasketball(currX, currY, Math.max(radius, 4));
-          if (ball.isGoal && ball.progress > 0.85) netShake = Math.sin(frameCount * 0.8) * 5;
-          draw3DHoop(canvas.width * 0.50, canvas.height * 0.28, netShake);
+          if (ball.isGoal && ball.progress > 0.85) netShake = Math.sin(frameCount * 0.8) * 6;
         } else if (ball.isGoal && ball.progress <= 1.4) {
           let dropProgress = (ball.progress - 1) / 0.4;
           let dropX = canvas.width * 0.50;
-          let dropY = (canvas.height * 0.28 + 10) + (dropProgress * (canvas.height * 0.25));
-          let bounceOffset = Math.abs(Math.sin(dropProgress * Math.PI * 3)) * (10 * (1 - dropProgress));
-          drawBasketball(dropX, dropY - bounceOffset, 6);
-          netShake = Math.sin(frameCount * 0.8) * (5 * (1 - dropProgress));
-          draw3DHoop(canvas.width * 0.50, canvas.height * 0.28, netShake);
+          let dropY = (canvas.height * 0.28 + 12) + (dropProgress * 35);
+          drawBasketball(dropX, dropY, 6);
+          netShake = Math.sin(frameCount * 0.8) * (6 * (1 - dropProgress));
         } else {
           ball.isShot = false;
           player.isShooting = false;
           netShake = 0;
           const shootBtn = document.getElementById('shoot-btn-3d');
           if (ball.isGoal) {
-            alert("BOUYEN! 🏀 Boul la rantre pafètman nan panye a!");
+            alert("BOUYEN! 🏀 Boul la rantre nan filè a pafètman!");
           } else {
             if (chances > 0) {
               alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
@@ -854,21 +876,50 @@
       requestAnimationFrame(gameLoop);
     }
 
-    function draw3DHoop(rimX, rimY, shake) {
+    /* PANYE AK FILÈ SOLID KI BLOKE ANCIEN IMAJ LA PÈMANAN AK MOUVMAN ANIMASYON */
+    function draw3DHoopWithSolidNet(rimX, rimY, shake) {
       ctx.save();
       ctx.translate(shake, 0);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-      ctx.lineWidth = 1.2;
+
+      // Pentire yon gwo bwat nwa solid dèyè panye a pou kache ansyen filè imaj la nèt
+      ctx.fillStyle = "#0c0c0c";
+      ctx.fillRect(rimX - 22, rimY - 5, 44, 45);
+
+      // Support poto tou pre panye a
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(rimX - 15, rimY + 2); ctx.lineTo(rimX - 6, rimY + 22);
-      ctx.moveTo(rimX + 15, rimY + 2); ctx.lineTo(rimX + 6, rimY + 22);
+      ctx.moveTo(rimX - 16, rimY); ctx.lineTo(rimX - 8, rimY + 25);
+      ctx.moveTo(rimX + 16, rimY); ctx.lineTo(rimX + 8, rimY + 25);
       ctx.stroke();
 
+      // Filè trè fonse ak liy an mouvman tout bon an
+      ctx.strokeStyle = '#e0e0e0';
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      ctx.ellipse(rimX, rimY, 16, 4.5, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = '#ff3300';
-      ctx.lineWidth = 2.5;
+      let netW = 28;
+      let netH = 32;
+      for (let i = 0; i <= 4; i++) {
+        let x1 = (rimX - netW/2) + (i * (netW/4));
+        let x2 = (rimX - netW/2 + 4) + (i * (netW/5)) + Math.sin(frameCount * 0.1 + i) * 3;
+        ctx.moveTo(x1, rimY);
+        ctx.lineTo(x2, rimY + netH);
+      }
+      // Lyen kwa filè a
+      for (let j = 0; j < 3; j++) {
+        let y = rimY + (j * 10);
+        ctx.moveTo(rimX - netW/2 + j*3, y);
+        ctx.lineTo(rimX + netW/2 - j*3, y + 5);
+      }
       ctx.stroke();
+
+      // Rim panye a (koulè wouj klere)
+      ctx.beginPath();
+      ctx.ellipse(rimX, rimY, 16, 5, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ff2200';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
       ctx.restore();
     }
 
