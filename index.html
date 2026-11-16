@@ -134,6 +134,18 @@
       background: rgba(0,0,0,0.95); z-index: 99999; align-items: center; justify-content: center; padding: 20px; text-align: center;
     }
     .blocked-box { background: #1e1e1e; border: 2px solid #ff4500; border-radius: 15px; padding: 25px; max-width: 350px; }
+
+    /* EKRAN ANPLWAYE A DISTANS (KAPACHE POU KLIDYAN OUVÈ SÈLMAN SI W VOYE LYEN AN) */
+    #worker-screen {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #111; z-index: 99998; padding: 15px; overflow-y: auto; text-align: left;
+    }
+
+    #winner-banner-modal {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.92); z-index: 10000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .winner-box { background: #1e1e1e; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; text-align: center; width: 90%; max-width: 360px; }
   </style>
 </head>
 <body>
@@ -146,7 +158,26 @@
     </div>
   </div>
 
-  <!-- EKRAN MAIN JWÈT LA -->
+  <!-- EKRAN ANPLWAYE A DISTANS (APARÈT SÈLMAN SI W VOYE LYEN ?role=worker) -->
+  <div id="worker-screen">
+    <h3 style="color:#ffd700; margin-bottom:10px;">Espace Travay Anplwaye a Distans</h3>
+    <div id="worker-signup-form" class="admin-group-card">
+      <div class="group-title">Enfòmasyon Pèsonèl Anplwaye</div>
+      <input type="text" id="w-fullname" class="input-field" placeholder="Non ak Prénom">
+      <input type="text" id="w-phone" class="input-field" placeholder="Nimewo Telefòn">
+      <input type="text" id="w-address" class="input-field" placeholder="Adrès Ou">
+      <input type="text" id="w-id" class="input-field" placeholder="NIF oswa CIN">
+      <button class="btn-action" style="margin-top:10px;" onclick="registerEmployee()">Enregistre</button>
+    </div>
+    <div id="worker-dashboard" style="display:none;">
+      <h4 style="color:#fff; margin-bottom:10px;">Lis Demann Kòd pou Valide:</h4>
+      <div id="worker-requests-list">
+        <p style="color:#aaa;">N ap chaje demann yo...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- EKRAN MAIN JWÈT LA (KLIYAN ÒDINÈ) -->
   <div id="main-app-content">
     <div id="setup-screen">
       <img src="logo.png" onerror="this.src='https://placehold.co/90x90/ffd700/000?text=ANG';" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
@@ -222,7 +253,6 @@
       <button class="admin-tab-btn" style="background:#007bff; color:#fff;" onclick="moveToHistory()">📦 Voye nan Istorik</button>
     </div>
 
-    <!-- PAJ 1 ADMIN -->
     <div id="admin-page-1">
       <div class="admin-group-card">
         <div class="group-title">Gwoup 1,250 Gdes</div>
@@ -260,7 +290,6 @@
       </div>
     </div>
 
-    <!-- PAJ 2 ADMIN (JESYON ANPLWAYE) -->
     <div id="admin-page-2" style="display:none;">
       <h4 style="color:#ffd700; margin-bottom:10px;">Jesyon ak Jenewatè Lyen Anplwaye:</h4>
       <div style="background:#222; padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid #ffd700; text-align:center;">
@@ -273,25 +302,6 @@
       <h4 style="color:#fff; margin-bottom:10px;">Lis Anplwaye ki Anrejistre yo:</h4>
       <div id="employees-list-container">
         <p style="color:#888;">N ap chaje lis anplwaye yo...</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- EKRAN ANPLWAYE A DISTANS -->
-  <div id="worker-screen">
-    <h3 style="color:#ffd700; margin-bottom:10px;">Espace Travay Anplwaye a Distans</h3>
-    <div id="worker-signup-form" class="admin-group-card">
-      <div class="group-title">Enfòmasyon Pèsonèl Anplwaye</div>
-      <input type="text" id="w-fullname" class="input-field" placeholder="Non ak Prénom">
-      <input type="text" id="w-phone" class="input-field" placeholder="Nimewo Telefòn">
-      <input type="text" id="w-address" class="input-field" placeholder="Adrès Ou">
-      <input type="text" id="w-id" class="input-field" placeholder="NIF oswa CIN">
-      <button class="btn-action" style="margin-top:10px;" onclick="registerEmployee()">Enregistre</button>
-    </div>
-    <div id="worker-dashboard" style="display:none;">
-      <h4 style="color:#fff; margin-bottom:10px;">Lis Demann Kòd pou Valide:</h4>
-      <div id="worker-requests-list">
-        <p style="color:#aaa;">N ap chaje demann yo...</p>
       </div>
     </div>
   </div>
@@ -326,9 +336,9 @@
     let isCodeValidated = false;
     let forcedWinnerPhone = "";
 
-    let sessionState = "collecting"; // collecting -> playing -> ended
-    let blockSecondsLeft = 600;      // 10 minit rasanbleman
-    let gamePlaySecondsLeft = 600;   // 10 minit jwèt
+    let sessionState = "collecting"; 
+    let blockSecondsLeft = 600;      
+    let gamePlaySecondsLeft = 600;   
 
     let logoClickCount = 0;
     let clickTimer;
@@ -415,7 +425,6 @@
       alert("Moun ak nimewo " + forcedWinnerPhone + " la ap genyen fòseman!");
     }
 
-    /* SIPRIME YON DEMANN NAN PANÈL SEKRÈ A */
     async function deleteRequest(docId) {
       if(confirm("Èske w sèten ou vle siprime demann sa a?")) {
         await db.collection("payment_requests").doc(docId).delete();
@@ -423,14 +432,11 @@
       }
     }
 
-    /* VOYE NAN ISTORIK (SIPRIME TOUT DEMANN FINI YO) */
     async function moveToHistory() {
       if(confirm("Èske w vle voye tout demann aktyèl yo nan istorik (netwaye panèl la)?")) {
         const snapshot = await db.collection("payment_requests").get();
         const batch = db.batch();
-        snapshot.forEach(doc => {
-          batch.delete(doc.ref);
-        });
+        snapshot.forEach(doc => { batch.delete(doc.ref); });
         await batch.commit();
         alert("Panèl la netwaye epi voye nan istorik ak siksè!");
       }
@@ -484,6 +490,78 @@
       alert("Peman konfime! Kòd ba li: " + uniqueCode);
     }
 
+    async function registerEmployee() {
+      const name = document.getElementById('w-fullname').value.trim();
+      const phone = document.getElementById('w-phone').value.trim();
+      const address = document.getElementById('w-address').value.trim();
+      const idNum = document.getElementById('w-id').value.trim();
+      if(!name || !phone || !address || !idNum) { alert("Ranpli tout bwat yo!"); return; }
+      const docRef = await db.collection("employees").add({
+        fullName: name, phone: phone, address: address, idNumber: idNum,
+        status: "ON", timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      currentWorkerId = docRef.id;
+      localStorage.setItem('employee_doc_id', currentWorkerId);
+      checkWorkerAccess();
+    }
+
+    function checkWorkerAccess() {
+      if (!currentWorkerId) {
+        document.getElementById('worker-signup-form').style.display = 'block';
+        document.getElementById('worker-dashboard').style.display = 'none';
+        return;
+      }
+      db.collection("employees").doc(currentWorkerId).onSnapshot(doc => {
+        if (doc.exists && doc.data().status === "ON") {
+          document.getElementById('worker-signup-form').style.display = 'none';
+          document.getElementById('worker-dashboard').style.display = 'block';
+          loadWorkerRequests();
+        } else {
+          document.getElementById('worker-signup-form').style.display = 'block';
+          document.getElementById('worker-dashboard').style.display = 'none';
+        }
+      });
+    }
+
+    function loadWorkerRequests() {
+      db.collection("payment_requests").where("status", "==", "pending").onSnapshot(snapshot => {
+        const container = document.getElementById('worker-requests-list');
+        container.innerHTML = "";
+        if (snapshot.empty) { container.innerHTML = '<p style="color:#888;">Pa gen demann.</p>'; return; }
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = "admin-group-card";
+          card.innerHTML = `
+            <div><b>Non :</b> ${data.playerName || 'San non'}</div>
+            <div><b>Tel :</b> ${data.playerPhone || ''}</div>
+            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice || '1250'} Gdes</span></div>
+            <button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${doc.id}')">Valide Demann Moun Sa a</button>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
+    function loadEmployeesList() {
+      db.collection("employees").onSnapshot(snapshot => {
+        const container = document.getElementById('employees-list-container');
+        container.innerHTML = "";
+        if (snapshot.empty) { container.innerHTML = '<p style="color:#888;">Pa gen anplwaye.</p>'; return; }
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = "admin-group-card";
+          card.innerHTML = `
+            <div><b>Non :</b> ${data.fullName}</div>
+            <div><b>Telefòn :</b> ${data.phone}</div>
+            <button class="btn-pay" style="background:#dc3545; width:100%; margin-top:8px;" onclick="db.collection('employees').doc('${doc.id}').delete()">❌ Retire anplwaye</button>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
     async function submitPaymentRequest() {
       if (sessionState === "playing" || sessionState === "ended") {
         alert("Jwèt la gentan demare. Ou pa ka antre ankò!");
@@ -514,6 +592,11 @@
       });
     }
 
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedReqId = localStorage.getItem('my_request_id');
+      if (savedReqId) { listenToMyRequest(savedReqId); }
+    });
+
     async function validateCode() {
       const codeInput = document.getElementById('game-code').value.trim();
       userGroup = document.getElementById('group-select').value;
@@ -531,7 +614,6 @@
       resizeCanvas();
     }
 
-    /* TIMER LOGIC AK RÈG 10 MINIT YO */
     setInterval(() => {
       if (sessionState === "collecting") {
         if (blockSecondsLeft > 0) {
@@ -543,8 +625,6 @@
           sessionState = "playing";
           document.getElementById('timer-label').innerText = "Tan K ap Rete pou Tiren (10 min):";
           document.getElementById('game-status-indicator').innerText = "🟢 SESYON TIRE A LOUVRI!";
-          
-          // Si jwè a pat gentan antre kòd li oswa valide nan 10 premye minit yo, l ap bloke
           if (!isCodeValidated) {
             document.getElementById('blocked-screen').style.display = 'flex';
           } else {
@@ -573,7 +653,7 @@
       }
     }, 1000);
 
-    /* CANVAS 3D AK TIRE BOUL */
+    /* --- ANIMASYON JWÈT 3D AK JWÈ VIRTYÈL KI SANBLE AK YON ATLE --- */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     function resizeCanvas() {
@@ -586,6 +666,8 @@
 
     let player = { x: 0, y: 0, targetX: 0, targetY: 0, isShooting: false, jumpOffset: 0 };
     let ball = { x: 0, y: 0, isShot: false, isGoal: false, progress: 0, dribbleOffset: 0, dribbleDir: 1 };
+    let frameCount = 0;
+    let netShake = 0;
 
     function getPosCoords(posNum) {
       const btn = document.getElementById('pos-' + posNum);
@@ -650,9 +732,139 @@
 
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      // Rès kote desen jwèt la...
+      frameCount++;
+
+      let dx = player.targetX - player.x;
+      let dy = player.targetY - player.y;
+      let dist = Math.hypot(dx, dy);
+      if (dist > 2) {
+        player.x += (dx / dist) * 4;
+        player.y += (dy / dist) * 4;
+      }
+
+      player.jumpOffset = player.isShooting ? Math.sin(frameCount * 0.25) * 25 : 0;
+      let py = player.y - player.jumpOffset;
+
+      // Ombra jwè a
+      ctx.beginPath();
+      ctx.ellipse(player.x, player.y + 12, 18, 6, 0, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+      ctx.fill();
+
+      // Soulye atlèt
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(player.x - 10, py + 2, 7, 5);
+      ctx.fillRect(player.x + 3, py + 2, 7, 5);
+
+      // Janm
+      ctx.fillStyle = "#8d5524";
+      ctx.fillRect(player.x - 8, py - 18, 5, 20);
+      ctx.fillRect(player.x + 3, py - 18, 5, 20);
+
+      // Pantalon kout
+      ctx.fillStyle = "#0056b3";
+      ctx.fillRect(player.x - 11, py - 30, 22, 14);
+
+      // Maillot kò (Ble klere ak jòn)
+      ctx.fillStyle = "#007bff";
+      ctx.fillRect(player.x - 10, py - 58, 20, 28);
+      ctx.fillStyle = "#ffd700";
+      ctx.font = "bold 11px sans-serif";
+      ctx.fillText("10", player.x - 6, py - 40);
+
+      // Tèt atlèt la
+      ctx.beginPath();
+      ctx.arc(player.x, py - 68, 8, 0, Math.PI * 2);
+      ctx.fillStyle = "#8d5524";
+      ctx.fill();
+
+      // Men ak bra
+      ctx.strokeStyle = "#8d5524";
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      if (player.isShooting) {
+        ctx.moveTo(player.x - 8, py - 50); ctx.lineTo(player.x - 14, py - 75);
+        ctx.moveTo(player.x + 8, py - 50); ctx.lineTo(player.x + 14, py - 75);
+      } else {
+        let dribbleArmY = py - 32 + (ball.dribbleOffset * 22);
+        ctx.moveTo(player.x - 8, py - 50); ctx.lineTo(player.x - 13, py - 32);
+        ctx.moveTo(player.x + 8, py - 50); ctx.lineTo(player.x + 15, dribbleArmY);
+      }
+      ctx.stroke();
+
+      if (!ball.isShot) {
+        ball.dribbleOffset += 0.25 * ball.dribbleDir;
+        if (ball.dribbleOffset > 1 || ball.dribbleOffset < 0) ball.dribbleDir *= -1;
+        let bx = player.x + 16;
+        let by = py - 28 + (ball.dribbleOffset * 28);
+        drawBasketball(bx, by, 8);
+      } else {
+        ball.progress += 0.025;
+        if (ball.progress <= 1) {
+          let currX = ball.startX + (ball.targetX - ball.startX) * ball.progress;
+          let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 110);
+          let radius = 10 - (ball.progress * 4);
+          drawBasketball(currX, currY, Math.max(radius, 4));
+          if (ball.isGoal && ball.progress > 0.85) netShake = Math.sin(frameCount * 0.8) * 5;
+          draw3DHoop(canvas.width * 0.50, canvas.height * 0.28, netShake);
+        } else if (ball.isGoal && ball.progress <= 1.4) {
+          let dropProgress = (ball.progress - 1) / 0.4;
+          let dropX = canvas.width * 0.50;
+          let dropY = (canvas.height * 0.28 + 10) + (dropProgress * (canvas.height * 0.25));
+          let bounceOffset = Math.abs(Math.sin(dropProgress * Math.PI * 3)) * (10 * (1 - dropProgress));
+          drawBasketball(dropX, dropY - bounceOffset, 6);
+          netShake = Math.sin(frameCount * 0.8) * (5 * (1 - dropProgress));
+          draw3DHoop(canvas.width * 0.50, canvas.height * 0.28, netShake);
+        } else {
+          ball.isShot = false;
+          player.isShooting = false;
+          netShake = 0;
+          const shootBtn = document.getElementById('shoot-btn-3d');
+          if (ball.isGoal) {
+            alert("BOUYEN! 🏀 Boul la rantre pafètman nan panye a!");
+          } else {
+            if (chances > 0) {
+              alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
+              shootBtn.disabled = false;
+            } else {
+              alert("Oups! 3 chans ou yo fini.");
+            }
+          }
+        }
+      }
+
       requestAnimationFrame(gameLoop);
     }
+
+    function draw3DHoop(rimX, rimY, shake) {
+      ctx.save();
+      ctx.translate(shake, 0);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(rimX - 15, rimY + 2); ctx.lineTo(rimX - 6, rimY + 22);
+      ctx.moveTo(rimX + 15, rimY + 2); ctx.lineTo(rimX + 6, rimY + 22);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.ellipse(rimX, rimY, 16, 4.5, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ff3300';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawBasketball(x, y, radius) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      let grad = ctx.createRadialGradient(x - radius/3, y - radius/3, 1, x, y, radius);
+      grad.addColorStop(0, '#ff9900'); grad.addColorStop(1, '#b33c00');
+      ctx.fillStyle = grad; ctx.fill();
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.restore();
+    }
+
     requestAnimationFrame(gameLoop);
   </script>
 </body>
