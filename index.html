@@ -700,7 +700,7 @@
       document.getElementById('arena-timer-display').innerText = timeText;
     }, 1000);
 
-    /* --- ANIMASYON JWÈT 3D AK PANYE EGZAKÈMAN NAN ZÒN WÒZ LA --- */
+    /* --- ANIMASYON JWÈT 3D AK PANYE TOUT WOTÈ PI WO --- */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     function resizeCanvas() {
@@ -765,9 +765,9 @@
       ball.startX = player.x;
       ball.startY = player.y - 45;
       
-      // Kowòdone egzak zòn wòz la sou teren an (anwo nan mitan)
+      // Vize pi wo a nan mitan zòn kouvèti a
       ball.targetX = canvas.width * 0.585;
-      ball.targetY = canvas.height * 0.22;
+      ball.targetY = canvas.height * 0.205;
 
       if (isGoal) {
         let price = parseInt(userGroup);
@@ -839,10 +839,10 @@
       }
       ctx.stroke();
 
-      // Panye ak filè an mouvman ki mete egzakteman nan zòn wòz la anwo a
+      // Panye ak filè an mouvman ki monte pi wo nèt pou kouvri l nèt
       let hoopX = canvas.width * 0.585;
-      let hoopY = canvas.height * 0.22;
-      drawPinkCircleTargetHoop(hoopX, hoopY, netShake);
+      let hoopY = canvas.height * 0.205;
+      drawHighestCoverHoop(hoopX, hoopY, netShake);
 
       if (!ball.isShot) {
         ball.dribbleOffset += 0.25 * ball.dribbleDir;
@@ -886,14 +886,14 @@
       requestAnimationFrame(gameLoop);
     }
 
-    /* KOUVRI ZÒN WÒZ LA NÈT AK YON BÒK SOLID POU KACHE ANSYEN PANYE A EPI METE FILÈ ANIMASYON AN LAGE L */
-    function drawPinkCircleTargetHoop(rimX, rimY, shake) {
+    /* GWO BLOK SOLID KI KACHE ANSYEN PANYE A 100% AK FILÈ ANIME A PI WO TOUJOU */
+    function drawHighestCoverHoop(rimX, rimY, shake) {
       ctx.save();
       ctx.translate(shake, 0);
 
-      // Kouvèti solid ki matche ak background nan (syèl ble / panno a) pou kache ansyen panye a 100%
+      // Gwo bwat solid ki kouvri pi wo nèt pou retire tout tras panye orijinal la
       ctx.fillStyle = "#2c4c70"; 
-      ctx.fillRect(rimX - 22, rimY - 8, 44, 42);
+      ctx.fillRect(rimX - 24, rimY - 14, 48, 50);
 
       // Rim panye a (wouj klere)
       ctx.beginPath();
@@ -904,7 +904,7 @@
       ctx.fill();
       ctx.stroke();
 
-      // Filè anime a ki ap souke nan bon plas la
+      // Filè anime a ki klè e ki ap souke nan pozisyon egzak la
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1.8;
       ctx.beginPath();
