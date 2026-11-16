@@ -392,7 +392,6 @@
       alert("Lyen Anplwaye a kopye!");
     }
 
-    /* AKIMILASYON AK KONTWÒL KÒB */
     function listenAllGroups() {
       ["1250", "250", "100"].forEach(grp => {
         db.collection("game_blocks").doc("block_" + grp).onSnapshot(doc => {
@@ -411,9 +410,7 @@
 
           document.getElementById('p' + grp + '-winner-curr').innerText = winnerPrize.toLocaleString();
 
-          // Pwopriyetè a ap ajoute sou total rezèv la pou tout sesyon
           let currentAcc = parseFloat(localStorage.getItem('owner_acc_' + grp) || "0");
-          // Si sesyon an chanje nou mete l nan akimilasyon an
           document.getElementById('p' + grp + '-owner-acc').innerText = (currentAcc + sessionOwnerShare).toLocaleString();
         });
       });
@@ -630,7 +627,6 @@
       });
     }
 
-    /* LÈ M FIN PEYE GAYAN AN, NOU RESET KÒB GAYAN AN A 0 EPI AKIMILE L SOU REZEV Pwopriyetè A */
     async function payWinnerAndReset() {
       let currentAcc = parseFloat(localStorage.getItem('owner_acc_' + userGroup) || "0");
       let currentPrizeText = document.getElementById('winner-amount-display').innerText.replace(/,/g, '').replace(' Gdes', '');
@@ -638,7 +634,6 @@
       let countElem = document.getElementById('p' + userGroup + '-winner-curr');
       let sessionTotal = parseFloat(countElem.innerText.replace(/,/g, '')) || 0;
       
-      // Ajoute rès sesyon an nan rezev pwopriyetè a
       let blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
       let count = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
       let totalMoney = count * parseInt(userGroup);
@@ -647,7 +642,6 @@
 
       localStorage.setItem('owner_acc_' + userGroup, (currentAcc + ownerShareThisSession).toString());
 
-      // Efase gayan an nan firebase pou l retounen a 0
       await db.collection("winners_announced").doc("group_" + userGroup).delete();
       document.getElementById('winner-banner-modal').style.display = 'none';
       alert("Felisitasyon! Gayan an peye. Sesyon an retounen a 0, avantaj pwopriyetè a akimile nèt.");
@@ -706,7 +700,7 @@
       document.getElementById('arena-timer-display').innerText = timeText;
     }, 1000);
 
-    /* --- ANIMASYON JWÈT 3D AK PANYE FILÈ KOVU KÒRÈT --- */
+    /* --- ANIMASYON JWÈT 3D AK PANYE EGZAKÈMAN NAN ZÒN WÒZ LA --- */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     function resizeCanvas() {
@@ -771,9 +765,9 @@
       ball.startX = player.x;
       ball.startY = player.y - 45;
       
-      // Egzakteman nan mitan panye a (koòdone korije pou kouvri l nèt)
-      ball.targetX = canvas.width * 0.58;
-      ball.targetY = canvas.height * 0.33;
+      // Kowòdone egzak zòn wòz la sou teren an (anwo nan mitan)
+      ball.targetX = canvas.width * 0.585;
+      ball.targetY = canvas.height * 0.22;
 
       if (isGoal) {
         let price = parseInt(userGroup);
@@ -845,10 +839,10 @@
       }
       ctx.stroke();
 
-      // Panye a ak filè an mouvman ki kouvri ansyen an nèt nan egzakteman bon plas la
-      let hoopX = canvas.width * 0.58;
-      let hoopY = canvas.height * 0.33;
-      drawPerfectCoverHoop(hoopX, hoopY, netShake);
+      // Panye ak filè an mouvman ki mete egzakteman nan zòn wòz la anwo a
+      let hoopX = canvas.width * 0.585;
+      let hoopY = canvas.height * 0.22;
+      drawPinkCircleTargetHoop(hoopX, hoopY, netShake);
 
       if (!ball.isShot) {
         ball.dribbleOffset += 0.25 * ball.dribbleDir;
@@ -867,7 +861,7 @@
         } else if (ball.isGoal && ball.progress <= 1.4) {
           let dropProgress = (ball.progress - 1) / 0.4;
           let dropX = hoopX;
-          let dropY = (hoopY + 6) + (dropProgress * 30);
+          let dropY = (hoopY + 5) + (dropProgress * 25);
           drawBasketball(dropX, dropY, 6);
           netShake = Math.sin(frameCount * 0.8) * (6 * (1 - dropProgress));
         } else {
@@ -892,40 +886,40 @@
       requestAnimationFrame(gameLoop);
     }
 
-    /* KOUVRI ANSYEN PANYE A 100% AK YON GWO BLOK SOLID EPI METE FILÈ ANIMASYON AN EGZAKÈMAN SOU LI */
-    function drawPerfectCoverHoop(rimX, rimY, shake) {
+    /* KOUVRI ZÒN WÒZ LA NÈT AK YON BÒK SOLID POU KACHE ANSYEN PANYE A EPI METE FILÈ ANIMASYON AN LAGE L */
+    function drawPinkCircleTargetHoop(rimX, rimY, shake) {
       ctx.save();
       ctx.translate(shake, 0);
 
-      // Bwat solid pou kache tout ansyen imaj la nan background nan san okenn tras
-      ctx.fillStyle = "#1e3a5f"; 
-      ctx.fillRect(rimX - 22, rimY - 8, 44, 48);
+      // Kouvèti solid ki matche ak background nan (syèl ble / panno a) pou kache ansyen panye a 100%
+      ctx.fillStyle = "#2c4c70"; 
+      ctx.fillRect(rimX - 22, rimY - 8, 44, 42);
 
       // Rim panye a (wouj klere)
       ctx.beginPath();
-      ctx.ellipse(rimX, rimY, 15, 5, 0, 0, Math.PI * 2);
+      ctx.ellipse(rimX, rimY, 14, 4.5, 0, 0, Math.PI * 2);
       ctx.strokeStyle = '#ff2200';
-      ctx.lineWidth = 3.5;
-      ctx.fillStyle = 'rgba(255, 34, 0, 0.25)';
+      ctx.lineWidth = 3;
+      ctx.fillStyle = 'rgba(255, 34, 0, 0.3)';
       ctx.fill();
       ctx.stroke();
 
-      // Filè anime klè e vizib anpil
+      // Filè anime a ki ap souke nan bon plas la
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 1.8;
       ctx.beginPath();
-      let netW = 26;
-      let netH = 34;
+      let netW = 24;
+      let netH = 30;
       for (let i = 0; i <= 4; i++) {
         let x1 = (rimX - netW/2) + (i * (netW/4));
-        let x2 = (rimX - netW/2 + 4) + (i * (netW/5)) + Math.sin(frameCount * 0.15 + i) * 3;
+        let x2 = (rimX - netW/2 + 3) + (i * (netW/5)) + Math.sin(frameCount * 0.15 + i) * 3;
         ctx.moveTo(x1, rimY + 2);
         ctx.lineTo(x2, rimY + netH);
       }
       for (let j = 1; j < 3; j++) {
-        let y = rimY + (j * 10);
+        let y = rimY + (j * 9);
         ctx.moveTo(rimX - netW/2 + j*2, y);
-        ctx.lineTo(rimX + netW/2 - j*2, y + 5);
+        ctx.lineTo(rimX + netW/2 - j*2, y + 4);
       }
       ctx.stroke();
 
