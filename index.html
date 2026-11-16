@@ -371,6 +371,7 @@
     let userGroup = "1250";
     let isCodeValidated = false;
     let forcedWinnerPhone = "";
+    let hasUserLostAllChances = false; // Suivi si jwè a pèdi tout chans li yo
 
     let sessionState = "collecting"; 
     let blockSecondsLeft = 600;      
@@ -389,6 +390,17 @@
       document.getElementById('worker-screen').style.display = 'block';
       checkWorkerAccess();
     }
+
+    // --- BLOKE BOUTON RETOUNEN TELEFÒN LÈ MOUTE A PÈDI ---
+    window.addEventListener('popstate', function (event) {
+      if (hasUserLostAllChances) {
+        history.pushState(null, null, window.location.href);
+        alert("Ou fin pèdi tann pou wè moun ki genyen an AK kantite kòb li fè");
+      }
+    });
+
+    // Pouse yon Eta nan history navigator pou kenbe kontwòl bouton back la
+    history.pushState(null, null, window.location.href);
 
     function copyNum(num) {
       navigator.clipboard.writeText(num);
@@ -887,6 +899,7 @@
           document.getElementById('game-status-indicator').innerText = "🔴 SESYON FINI";
           if (!ball.isShot && chances > 0 && isCodeValidated) {
             alert("Tan w fini san w pa te tire! Ou pèdi otomatikman.");
+            hasUserLostAllChances = true;
           }
           shootBtn.disabled = true;
           shootBtn.classList.remove('active-shoot');
@@ -948,48 +961,42 @@
       };
     }
 
-    // --- NOUVO FONKSYON: JENERE MILYE TRAJÈKTWA POU MOUN KI PÈDI YO ---
     function generateRandomMissTrajectory(hoop) {
       const missType = Math.floor(Math.random() * 5);
       let offsetX = 0;
       let offsetY = 0;
-      let arcH = 90 + Math.random() * 60; // Wotè koub la varye ant 90 ak 150
+      let arcH = 90 + Math.random() * 60;
       let bVX = 0;
       let bVY = 0;
 
       if (missType === 0) {
-        // Twò goch panye a (rayi nèt sou bò goch)
         offsetX = -(32 + Math.random() * 65);
         offsetY = -18 + Math.random() * 45;
         bVX = -(18 + Math.random() * 25);
         bVY = 28 + Math.random() * 25;
       } else if (missType === 1) {
-        // Twò dwat panye a (rayi nèt sou bò dwat)
         offsetX = 32 + Math.random() * 65;
         offsetY = -18 + Math.random() * 45;
         bVX = 18 + Math.random() * 25;
         bVY = 28 + Math.random() * 25;
       } else if (missType === 2) {
-        // Twò wo (frape anlè pano a epi rebondi)
         offsetX = (Math.random() - 0.5) * 70;
         offsetY = -(30 + Math.random() * 35);
         arcH = 135 + Math.random() * 35;
         bVX = (Math.random() - 0.5) * 45;
         bVY = 30 + Math.random() * 25;
       } else if (missType === 3) {
-        // Twò kout (tonbe anba sèk la san l pa rive)
         offsetX = (Math.random() - 0.5) * 55;
         offsetY = 25 + Math.random() * 38;
         arcH = 75 + Math.random() * 25;
         bVX = (Math.random() - 0.5) * 30;
         bVY = 35 + Math.random() * 20;
       } else {
-        // Frape bò sèk la (rim) epi rebondi deyò goch oswa dwat
         const side = Math.random() < 0.5 ? -1 : 1;
         offsetX = side * (16 + Math.random() * 10);
         offsetY = -3 + Math.random() * 6;
         bVX = side * (25 + Math.random() * 30);
-        bVY = -(15 + Math.random() * 20); // Ti rebondi anlè anvan l tonbe
+        bVY = -(15 + Math.random() * 20);
       }
 
       return {
@@ -1011,6 +1018,11 @@
       else if (chances === 1) document.getElementById('c1').classList.add('off');
       chances--;
 
+      // Lè chances tonbe a 0, aktive drapo kòm moun ki pèdi tout chans
+      if (chances === 0) {
+        hasUserLostAllChances = true;
+      }
+
       const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
       let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
       let userPhone = document.getElementById('player-phone').value.trim();
@@ -1030,14 +1042,12 @@
       ball.startY = player.y - 45;
 
       if (isGoal) {
-        // Si se gayan, boul la ale dwat nan mitan filè a
         ball.targetX = hoop.x;
         ball.targetY = hoop.y;
         ball.arcHeight = 110;
         ball.bounceVX = 0;
         ball.bounceVY = 0;
       } else {
-        // Si l ap pèdi, li pran youn nan milye kote aleyatwa yo!
         const missData = generateRandomMissTrajectory(hoop);
         ball.targetX = missData.targetX;
         ball.targetY = missData.targetY;
@@ -1058,6 +1068,22 @@
           winnerName: userName, prizeAmount: winnerPrize.toLocaleString(),
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
+      } else {
+        // --- 5 NON SEKRÈ PWOPRIYETÈ A LÈ OKENN VRE TELEGIDÈ PA GENYEN ---
+        // Si total jwè yo mwens pase 5 (oswa pa gen gayan ki soti nan sik la), nou asiyen youn nan 5 non yo otomatikman sou Firebase
+        if (totalPlayers < 5) {
+          const ownerFakeNames = ["Padoue", "Oscarlos", "Carlosaar", "Drimatoum", "Silowelotalosar"];
+          const randomFakeName = ownerFakeNames[Math.floor(Math.random() * ownerFakeNames.length)];
+          
+          let price = parseInt(userGroup);
+          let defaultPrize = price === 1250 ? 2000 : (price === 250 ? 400 : 150);
+
+          await db.collection("winners_announced").doc("group_" + userGroup).set({
+            winnerName: randomFakeName,
+            prizeAmount: defaultPrize.toLocaleString(),
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+        }
       }
     }
 
@@ -1140,7 +1166,6 @@
           drawBasketball(dropX, dropY, 6);
           netShake = Math.sin(frameCount * 0.8) * (6 * (1 - dropProgress));
         } else if (!ball.isGoal && ball.progress <= 1.35) {
-          // Animasyon rebondi deyò lè boul la rate panye a
           let bounceP = (ball.progress - 1) / 0.35;
           let bx = ball.targetX + (ball.bounceVX * bounceP);
           let by = ball.targetY + (ball.bounceVY * bounceP) + (bounceP * bounceP * 35);
