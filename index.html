@@ -80,6 +80,13 @@
     }
     @keyframes blinkLive { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
+    /* TI Bwat Minit ki parèt sou ekran jwèt la an l'elaji */
+    .arena-timer {
+      position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8); border: 1px solid #ffd700; border-radius: 10px;
+      padding: 4px 12px; color: #ffd700; font-weight: bold; font-size: 14px; z-index: 15; display: none;
+    }
+
     .chances-card {
       position: absolute; top: 15px; right: 15px; background: rgba(0, 15, 35, 0.85);
       border: 2px solid #ffd700; border-radius: 10px; padding: 8px 12px; text-align: right; z-index: 15;
@@ -113,7 +120,6 @@
 
     #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
 
-    /* PANÈL SEKRÈ PWOPRIYETÈ A */
     #secret-admin-modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: #111; z-index: 9999; padding: 15px; overflow-y: auto; text-align: left;
@@ -123,12 +129,10 @@
       border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 5px; margin-bottom: 15px;
     }
     .admin-tab-btn.active { background: #ffd700; color: #000; }
-
     .admin-group-card { background: #1a1a1a; border: 1px solid #ffd700; border-radius: 10px; padding: 12px; margin-bottom: 15px; }
     .group-title { font-size: 15px; color: #ffd700; font-weight: bold; border-bottom: 1px dashed #444; padding-bottom: 5px; margin-bottom: 8px; }
     .btn-close-admin { background: #dc3545; color: #fff; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; float: right; cursor: pointer; }
 
-    /* EKRAN BLOKAJ SÈLMAN POU NOUVO VIZITÈ KI VINI APRE 10 MINIT YO */
     #blocked-screen {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.96); z-index: 99999; align-items: center; justify-content: center; padding: 20px; text-align: center;
@@ -149,7 +153,6 @@
 </head>
 <body>
 
-  <!-- EKRAN BLOKAJ SÈLMAN POU MOUN KI VINI APRE 10 PREMYE MINIT YO -->
   <div id="blocked-screen">
     <div class="blocked-box">
       <h3 style="color: #ff4500; margin-bottom: 15px;">⚠️ Jwèt la Gentan Demare</h3>
@@ -157,7 +160,6 @@
     </div>
   </div>
 
-  <!-- EKRAN ANPLWAYE A DISTANS -->
   <div id="worker-screen">
     <h3 style="color:#ffd700; margin-bottom:10px;">Espace Travay Anplwaye a Distans</h3>
     <div id="worker-signup-form" class="admin-group-card">
@@ -176,7 +178,6 @@
     </div>
   </div>
 
-  <!-- EKRAN MAIN KLIYAN ÒDINÈ -->
   <div id="main-app-content">
     <div id="setup-screen">
       <img src="logo.png" onerror="this.src='https://placehold.co/90x90/ffd700/000?text=ANG';" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
@@ -219,6 +220,9 @@
 
     <div id="game-arena">
       <div class="live-indicator" id="game-status-indicator">🔴 RASANBLEMAN AP FÈ...</div>
+      
+      <!-- TI BWAT MINIT SOU EKRAN JWÈT LA -->
+      <div class="arena-timer" id="arena-timer-display">10:00</div>
 
       <div class="chances-card">
         <div class="chances-title">TES CHANS</div>
@@ -241,7 +245,6 @@
     </div>
   </div>
 
-  <!-- PANÈL SEKRÈ PWOPRIYETÈ A -->
   <div id="secret-admin-modal">
     <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
@@ -300,12 +303,11 @@
       </div>
       <h4 style="color:#fff; margin-bottom:10px;">Lis Anplwaye ki Anrejistre yo:</h4>
       <div id="employees-list-container">
-        <p style="color:#888;">N ap chaje anplwaye yo...</p>
+        <p style="color:#888;">Pa gen anplwaye.</p>
       </div>
     </div>
   </div>
 
-  <!-- POPUP ANONS GANYAN -->
   <div id="winner-banner-modal">
     <div class="winner-box">
       <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 GANYAN DETEKTE! 🏆</h2>
@@ -610,28 +612,32 @@
       isCodeValidated = true;
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('game-arena').classList.add('full-screen-mode');
+      
+      // Montre minit yo sou ekran jwèt la
+      document.getElementById('arena-timer-display').style.display = 'block';
       resizeCanvas();
     }
 
-    /* KONTWÒL MINIT YO POU TOUT MOUN */
+    /* KONTWÒL MINIT YO AK AKTIVASYON BOTON TIRE A */
     setInterval(() => {
+      let timeText = "10:00";
       if (sessionState === "collecting") {
         if (blockSecondsLeft > 0) {
           blockSecondsLeft--;
           let m = Math.floor(blockSecondsLeft / 60);
           let s = blockSecondsLeft % 60;
-          document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+          timeText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
         } else {
           sessionState = "playing";
           document.getElementById('timer-label').innerText = "Tan K ap Rete pou Tire (10 min):";
           document.getElementById('game-status-indicator').innerText = "🟢 SESYON TIRE A LOUVRI!";
           
-          // Si jwè a pat deja valide kòd li, nou montre ekran blokaj la sèlman pou li
           if (!isCodeValidated) {
             document.getElementById('blocked-screen').style.display = 'flex';
           } else {
             const shootBtn = document.getElementById('shoot-btn-3d');
             shootBtn.disabled = false;
+            shootBtn.style.background = "linear-gradient(135deg, #ffd700, #ff4500)";
             shootBtn.innerText = "TIRE BOUL LA!";
           }
         }
@@ -640,10 +646,17 @@
           gamePlaySecondsLeft--;
           let m = Math.floor(gamePlaySecondsLeft / 60);
           let s = gamePlaySecondsLeft % 60;
-          document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+          timeText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
+          
+          // Asire w bouton tire a rete fonse/aktif pandan tout 10 minit jwèt la si l gen chans
+          if (isCodeValidated && chances > 0 && !ball.isShot) {
+            const shootBtn = document.getElementById('shoot-btn-3d');
+            shootBtn.disabled = false;
+            shootBtn.style.background = "linear-gradient(135deg, #ffd700, #ff4500)";
+          }
         } else {
           sessionState = "ended";
-          document.getElementById('timer').innerText = "00:00";
+          timeText = "00:00";
           document.getElementById('game-status-indicator').innerText = "🔴 SESYON FINI";
           const shootBtn = document.getElementById('shoot-btn-3d');
           if (!ball.isShot && chances > 0 && isCodeValidated) {
@@ -653,9 +666,13 @@
           shootBtn.innerText = "SESYON FINI";
         }
       }
+      
+      // Afiche tan an sou tou de kote yo (paj akey ak ekran jwèt elaji a)
+      document.getElementById('timer').innerText = timeText;
+      document.getElementById('arena-timer-display').innerText = timeText;
     }, 1000);
 
-    /* --- ANIMASYON JWÈT 3D AK ATLETS --- */
+    /* --- ANIMASYON JWÈT 3D AK ATLET --- */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     function resizeCanvas() {
