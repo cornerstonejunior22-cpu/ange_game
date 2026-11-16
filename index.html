@@ -128,14 +128,13 @@
     .group-title { font-size: 15px; color: #ffd700; font-weight: bold; border-bottom: 1px dashed #444; padding-bottom: 5px; margin-bottom: 8px; }
     .btn-close-admin { background: #dc3545; color: #fff; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; float: right; cursor: pointer; }
 
-    /* EKRAN BLOKAJ POU NOUVO MÒN */
+    /* EKRAN BLOKAJ SÈLMAN POU NOUVO VIZITÈ KI VINI APRE 10 MINIT YO */
     #blocked-screen {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.95); z-index: 99999; align-items: center; justify-content: center; padding: 20px; text-align: center;
+      background: rgba(0,0,0,0.96); z-index: 99999; align-items: center; justify-content: center; padding: 20px; text-align: center;
     }
     .blocked-box { background: #1e1e1e; border: 2px solid #ff4500; border-radius: 15px; padding: 25px; max-width: 350px; }
 
-    /* EKRAN ANPLWAYE A DISTANS (KAPACHE POU KLIDYAN OUVÈ SÈLMAN SI W VOYE LYEN AN) */
     #worker-screen {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: #111; z-index: 99998; padding: 15px; overflow-y: auto; text-align: left;
@@ -150,15 +149,15 @@
 </head>
 <body>
 
-  <!-- EKRAN BLOKAJ POU LÒT MÒN KI VINI APRE 10 PREMYE MINIT YO -->
+  <!-- EKRAN BLOKAJ SÈLMAN POU MOUN KI VINI APRE 10 PREMYE MINIT YO -->
   <div id="blocked-screen">
     <div class="blocked-box">
       <h3 style="color: #ff4500; margin-bottom: 15px;">⚠️ Jwèt la Gentan Demare</h3>
-      <p style="font-size: 14px; color: #fff;">Jwèt la ankourajman nan dezyèm faz 10 minit li a. Tan an ap koule, tann yon ti moman s.v.p. pou pwochen sesyon an!</p>
+      <p style="font-size: 14px; color: #fff;">Rasanbleman an fini. Jwèt la ap dewoule kounye a nan dezyèm faz la. Tann pwochen sesyon an s.v.p.!</p>
     </div>
   </div>
 
-  <!-- EKRAN ANPLWAYE A DISTANS (APARÈT SÈLMAN SI W VOYE LYEN ?role=worker) -->
+  <!-- EKRAN ANPLWAYE A DISTANS -->
   <div id="worker-screen">
     <h3 style="color:#ffd700; margin-bottom:10px;">Espace Travay Anplwaye a Distans</h3>
     <div id="worker-signup-form" class="admin-group-card">
@@ -177,7 +176,7 @@
     </div>
   </div>
 
-  <!-- EKRAN MAIN JWÈT LA (KLIYAN ÒDINÈ) -->
+  <!-- EKRAN MAIN KLIYAN ÒDINÈ -->
   <div id="main-app-content">
     <div id="setup-screen">
       <img src="logo.png" onerror="this.src='https://placehold.co/90x90/ffd700/000?text=ANG';" alt="Logo" class="header-logo" id="app-logo" onclick="handleSecretClick()">
@@ -301,7 +300,7 @@
       </div>
       <h4 style="color:#fff; margin-bottom:10px;">Lis Anplwaye ki Anrejistre yo:</h4>
       <div id="employees-list-container">
-        <p style="color:#888;">N ap chaje lis anplwaye yo...</p>
+        <p style="color:#888;">N ap chaje anplwaye yo...</p>
       </div>
     </div>
   </div>
@@ -564,7 +563,7 @@
 
     async function submitPaymentRequest() {
       if (sessionState === "playing" || sessionState === "ended") {
-        alert("Jwèt la gentan demare. Ou pa ka antre ankò!");
+        alert("Rasanbleman an fini, ou pa ka fè demann kounye a!");
         return;
       }
       const name = document.getElementById('player-name').value.trim();
@@ -614,6 +613,7 @@
       resizeCanvas();
     }
 
+    /* KONTWÒL MINIT YO POU TOUT MOUN */
     setInterval(() => {
       if (sessionState === "collecting") {
         if (blockSecondsLeft > 0) {
@@ -623,8 +623,10 @@
           document.getElementById('timer').innerText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
         } else {
           sessionState = "playing";
-          document.getElementById('timer-label').innerText = "Tan K ap Rete pou Tiren (10 min):";
+          document.getElementById('timer-label').innerText = "Tan K ap Rete pou Tire (10 min):";
           document.getElementById('game-status-indicator').innerText = "🟢 SESYON TIRE A LOUVRI!";
+          
+          // Si jwè a pat deja valide kòd li, nou montre ekran blokaj la sèlman pou li
           if (!isCodeValidated) {
             document.getElementById('blocked-screen').style.display = 'flex';
           } else {
@@ -653,7 +655,7 @@
       }
     }, 1000);
 
-    /* --- ANIMASYON JWÈT 3D AK JWÈ VIRTYÈL KI SANBLE AK YON ATLE --- */
+    /* --- ANIMASYON JWÈT 3D AK ATLETS --- */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     function resizeCanvas() {
@@ -693,7 +695,7 @@
 
     async function shootBall3D() {
       if (!isCodeValidated) { alert("Antre kòd ou a anvan!"); return; }
-      if (sessionState !== "playing") { alert("Tann sesyon jwèt la louvri nan 2èm 10 minit yo!"); return; }
+      if (sessionState !== "playing") { alert("Tann sesyon tire a louvri!"); return; }
       if (chances <= 0 || ball.isShot) return;
 
       if (chances === 3) document.getElementById('c3').classList.add('off');
@@ -745,40 +747,33 @@
       player.jumpOffset = player.isShooting ? Math.sin(frameCount * 0.25) * 25 : 0;
       let py = player.y - player.jumpOffset;
 
-      // Ombra jwè a
       ctx.beginPath();
       ctx.ellipse(player.x, player.y + 12, 18, 6, 0, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
       ctx.fill();
 
-      // Soulye atlèt
       ctx.fillStyle = "#fff";
       ctx.fillRect(player.x - 10, py + 2, 7, 5);
       ctx.fillRect(player.x + 3, py + 2, 7, 5);
 
-      // Janm
       ctx.fillStyle = "#8d5524";
       ctx.fillRect(player.x - 8, py - 18, 5, 20);
       ctx.fillRect(player.x + 3, py - 18, 5, 20);
 
-      // Pantalon kout
       ctx.fillStyle = "#0056b3";
       ctx.fillRect(player.x - 11, py - 30, 22, 14);
 
-      // Maillot kò (Ble klere ak jòn)
       ctx.fillStyle = "#007bff";
       ctx.fillRect(player.x - 10, py - 58, 20, 28);
       ctx.fillStyle = "#ffd700";
       ctx.font = "bold 11px sans-serif";
       ctx.fillText("10", player.x - 6, py - 40);
 
-      // Tèt atlèt la
       ctx.beginPath();
       ctx.arc(player.x, py - 68, 8, 0, Math.PI * 2);
       ctx.fillStyle = "#8d5524";
       ctx.fill();
 
-      // Men ak bra
       ctx.strokeStyle = "#8d5524";
       ctx.lineWidth = 3.5;
       ctx.beginPath();
