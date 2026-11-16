@@ -74,22 +74,21 @@
     }
 
     .live-indicator {
-      position: absolute; top: 15px; left: 15px; background: rgba(255, 69, 0, 0.9);
-      color: #fff; font-size: 10px; font-weight: bold; padding: 5px 10px;
-      border-radius: 12px; z-index: 15; animation: blinkLive 1.2s infinite;
+      position: absolute; top: 12px; left: 12px; background: rgba(255, 69, 0, 0.95);
+      color: #fff; font-size: 11px; font-weight: bold; padding: 6px 12px;
+      border-radius: 12px; z-index: 25; animation: blinkLive 1.2s infinite;
     }
     @keyframes blinkLive { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-    /* TI Bwat Minit ki parèt sou ekran jwèt la an l'elaji */
     .arena-timer {
-      position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.8); border: 1px solid #ffd700; border-radius: 10px;
-      padding: 4px 12px; color: #ffd700; font-weight: bold; font-size: 14px; z-index: 15; display: none;
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.85); border: 2px solid #ffd700; border-radius: 12px;
+      padding: 5px 14px; color: #ffd700; font-weight: bold; font-size: 15px; z-index: 25; display: none;
     }
 
     .chances-card {
-      position: absolute; top: 15px; right: 15px; background: rgba(0, 15, 35, 0.85);
-      border: 2px solid #ffd700; border-radius: 10px; padding: 8px 12px; text-align: right; z-index: 15;
+      position: absolute; top: 12px; right: 12px; background: rgba(0, 15, 35, 0.9);
+      border: 2px solid #ffd700; border-radius: 10px; padding: 8px 12px; text-align: right; z-index: 25;
     }
     .chances-title { color: #fff; font-weight: bold; font-size: 11px; letter-spacing: 1px; margin-bottom: 4px; }
     .chance-item { display: flex; align-items: center; justify-content: flex-end; gap: 6px; color: #fff; font-size: 12px; margin-top: 3px; }
@@ -99,7 +98,7 @@
     .pos-btn-3d {
       position: absolute; width: 38px; height: 28px; border-radius: 50%;
       background: radial-gradient(circle, #ffd700, #ff8c00); color: #000; font-weight: bold;
-      border: 2px solid #fff; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; font-size: 14px;
+      border: 2px solid #fff; cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center; font-size: 14px;
     }
     .pos-btn-3d.active { background: radial-gradient(circle, #ff4500, #dc3545); color: #fff; transform: scale(1.3); }
 
@@ -111,12 +110,20 @@
     #pos-6 { top: 64%; right: 32%; }
     #pos-7 { top: 82%; left: 48%; }
 
+    /* BOUTON TIRE A FÒK LÈ TOUJOU VIZIB ANBA KÒM YON GWO PWOJE */
     .shoot-btn-3d {
-      position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-      width: 75%; max-width: 250px; padding: 12px; background: linear-gradient(135deg, #ffd700, #ff8c00);
-      color: #000; font-weight: bold; font-size: 16px; border: none; border-radius: 30px; cursor: pointer; z-index: 15;
+      position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%);
+      width: 85%; max-width: 280px; padding: 14px; background: linear-gradient(135deg, #555, #333);
+      color: #aaa; font-weight: bold; font-size: 17px; border: 2px solid #777; border-radius: 30px; cursor: not-allowed; z-index: 30;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.6);
     }
-    .shoot-btn-3d:disabled { background: #555; color: #888; cursor: not-allowed; }
+    .shoot-btn-3d.active-shoot {
+      background: linear-gradient(135deg, #ffd700, #ff4500);
+      color: #000; border: 2px solid #fff; cursor: pointer;
+      box-shadow: 0 6px 20px rgba(255, 69, 0, 0.6);
+      animation: pulseBtn 1s infinite alternate;
+    }
+    @keyframes pulseBtn { 0% { transform: translateX(-50%) scale(1); } 100% { transform: translateX(-50%) scale(1.05); } }
 
     #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
 
@@ -221,7 +228,6 @@
     <div id="game-arena">
       <div class="live-indicator" id="game-status-indicator">🔴 RASANBLEMAN AP FÈ...</div>
       
-      <!-- TI BWAT MINIT SOU EKRAN JWÈT LA -->
       <div class="arena-timer" id="arena-timer-display">10:00</div>
 
       <div class="chances-card">
@@ -241,6 +247,7 @@
       <div class="pos-btn-3d" id="pos-6" onclick="selectPos3D(6)">6</div>
       <div class="pos-btn-3d" id="pos-7" onclick="selectPos3D(7)">7</div>
 
+      <!-- BOUTON TIRE A FÒK LÈ KANPE KLÈ ANBA -->
       <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()" disabled>TANN LÈ A RIVE...</button>
     </div>
   </div>
@@ -613,14 +620,15 @@
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('game-arena').classList.add('full-screen-mode');
       
-      // Montre minit yo sou ekran jwèt la
       document.getElementById('arena-timer-display').style.display = 'block';
       resizeCanvas();
     }
 
-    /* KONTWÒL MINIT YO AK AKTIVASYON BOTON TIRE A */
+    /* KONTWÒL MINIT YO AK AKTIVASYON BOUTON TIRE A */
     setInterval(() => {
       let timeText = "10:00";
+      const shootBtn = document.getElementById('shoot-btn-3d');
+
       if (sessionState === "collecting") {
         if (blockSecondsLeft > 0) {
           blockSecondsLeft--;
@@ -635,9 +643,8 @@
           if (!isCodeValidated) {
             document.getElementById('blocked-screen').style.display = 'flex';
           } else {
-            const shootBtn = document.getElementById('shoot-btn-3d');
             shootBtn.disabled = false;
-            shootBtn.style.background = "linear-gradient(135deg, #ffd700, #ff4500)";
+            shootBtn.classList.add('active-shoot');
             shootBtn.innerText = "TIRE BOUL LA!";
           }
         }
@@ -648,26 +655,24 @@
           let s = gamePlaySecondsLeft % 60;
           timeText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
           
-          // Asire w bouton tire a rete fonse/aktif pandan tout 10 minit jwèt la si l gen chans
           if (isCodeValidated && chances > 0 && !ball.isShot) {
-            const shootBtn = document.getElementById('shoot-btn-3d');
             shootBtn.disabled = false;
-            shootBtn.style.background = "linear-gradient(135deg, #ffd700, #ff4500)";
+            shootBtn.classList.add('active-shoot');
+            shootBtn.innerText = "TIRE BOUL LA!";
           }
         } else {
           sessionState = "ended";
           timeText = "00:00";
           document.getElementById('game-status-indicator').innerText = "🔴 SESYON FINI";
-          const shootBtn = document.getElementById('shoot-btn-3d');
           if (!ball.isShot && chances > 0 && isCodeValidated) {
             alert("Tan w fini san w pa te tire! Ou pèdi otomatikman.");
           }
           shootBtn.disabled = true;
+          shootBtn.classList.remove('active-shoot');
           shootBtn.innerText = "SESYON FINI";
         }
       }
       
-      // Afiche tan an sou tou de kote yo (paj akey ak ekran jwèt elaji a)
       document.getElementById('timer').innerText = timeText;
       document.getElementById('arena-timer-display').innerText = timeText;
     }, 1000);
@@ -838,6 +843,7 @@
             if (chances > 0) {
               alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
               shootBtn.disabled = false;
+              shootBtn.classList.add('active-shoot');
             } else {
               alert("Oups! 3 chans ou yo fini.");
             }
