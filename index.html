@@ -50,8 +50,8 @@
       border: none; border-radius: 15px; font-size: 12px; cursor: pointer; margin: 2px;
     }
     .btn-clear-group {
-      background: #dc3545; color: #fff; font-weight: bold; padding: 4px 10px;
-      border: none; border-radius: 8px; font-size: 11px; cursor: pointer; float: right;
+      background: #dc3545; color: #fff; font-weight: bold; padding: 4px 8px;
+      border: none; border-radius: 8px; font-size: 10px; cursor: pointer; float: right; margin-left: 4px;
     }
     .btn-ussd {
       background: #007bff; color: #fff; font-weight: bold; padding: 6px 10px;
@@ -266,23 +266,26 @@
 
     <div id="admin-page-1">
       <div class="admin-group-card">
-        <button class="btn-clear-group" onclick="clearGroupSession('1250')">Clear 🔄</button>
+        <button class="btn-clear-group" onclick="clearGroupSession('1250')">Clear Sesyon 🔄</button>
+        <button class="btn-clear-group" style="background:#ff8c00;" onclick="clearOwnerAcc('1250')">Clear Rezèv 💰</button>
         <div class="group-title">Gwoup 1,250 Gdes</div>
-        <div>Total Pwopriyetè Akimile (Rezev): <b style="color:#28a745;"><span id="p1250-owner-acc">0</span> Gdes</b></div>
+        <div style="margin-top: 6px;">Total Pwopriyetè Akimile (Rezèv): <b style="color:#28a745;"><span id="p1250-owner-acc">0</span> Gdes</b></div>
         <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p1250-winner-curr">0</span> Gdes</b></div>
       </div>
 
       <div class="admin-group-card">
-        <button class="btn-clear-group" onclick="clearGroupSession('250')">Clear 🔄</button>
+        <button class="btn-clear-group" onclick="clearGroupSession('250')">Clear Sesyon 🔄</button>
+        <button class="btn-clear-group" style="background:#ff8c00;" onclick="clearOwnerAcc('250')">Clear Rezèv 💰</button>
         <div class="group-title">Gwoup 250 Gdes</div>
-        <div>Total Pwopriyetè Akimile (Rezev): <b style="color:#28a745;"><span id="p250-owner-acc">0</span> Gdes</b></div>
+        <div style="margin-top: 6px;">Total Pwopriyetè Akimile (Rezèv): <b style="color:#28a745;"><span id="p250-owner-acc">0</span> Gdes</b></div>
         <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p250-winner-curr">0</span> Gdes</b></div>
       </div>
 
       <div class="admin-group-card">
-        <button class="btn-clear-group" onclick="clearGroupSession('100')">Clear 🔄</button>
+        <button class="btn-clear-group" onclick="clearGroupSession('100')">Clear Sesyon 🔄</button>
+        <button class="btn-clear-group" style="background:#ff8c00;" onclick="clearOwnerAcc('100')">Clear Rezèv 💰</button>
         <div class="group-title">Gwoup 100 Gdes</div>
-        <div>Total Pwopriyetè Akimile (Rezev): <b style="color:#28a745;"><span id="p100-owner-acc">0</span> Gdes</b></div>
+        <div style="margin-top: 6px;">Total Pwopriyetè Akimile (Rezèv): <b style="color:#28a745;"><span id="p100-owner-acc">0</span> Gdes</b></div>
         <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p100-winner-curr">0</span> Gdes</b></div>
       </div>
 
@@ -424,10 +427,9 @@
     }
     listenAllGroups();
 
-    /* --- FONKSYON CLEAR / RESET MANYTÈL POU TÈS OSINON NENPÒT LÈ --- */
+    /* --- CLEAR SESYON AKTIYÈL (KÒB GAYAN) --- */
     async function clearGroupSession(grp) {
-      if(confirm("Èske w sèten ou vle Clear (Reset) Gwoup " + grp + " Gdes la a zewo pou sesyon k ap vini an?")) {
-        // Pran kòb sesyon aktyèl la epi mete l nan rezèv pwopriyetè a anvan w reset
+      if(confirm("Èske w sèten ou vle Clear Sesyon Gwoup " + grp + " Gdes la a zewo?")) {
         let countElem = document.getElementById('p' + grp + '-winner-curr');
         let sessionTotal = parseFloat(countElem.innerText.replace(/,/g, '')) || 0;
         
@@ -440,13 +442,19 @@
         let currentAcc = parseFloat(localStorage.getItem('owner_acc_' + grp) || "0");
         localStorage.setItem('owner_acc_' + grp, (currentAcc + ownerShareThisSession).toString());
 
-        // Reset kantite jwè yo a 0 nan Firestore
         await db.collection("game_blocks").doc("block_" + grp).set({ playersCount: "0", status: "collecting" }, { merge: true });
-        
-        // Efase gayan an si te genyen
         await db.collection("winners_announced").doc("group_" + grp).delete();
 
-        alert("Gwoup " + grp + " Gdes la netwaye (Clear) a 0 avèk siksè!");
+        alert("Sesyon Gwoup " + grp + " Gdes la netwaye a 0!");
+        location.reload();
+      }
+    }
+
+    /* --- CLEAR REZÈV AKIMILE PWOPRIYETÈ A --- */
+    function clearOwnerAcc(grp) {
+      if(confirm("Èske w sèten ou vle Clear (Reset) Total Rezèv Pwopriyetè a pou Gwoup " + grp + " Gdes la a 0?")) {
+        localStorage.setItem('owner_acc_' + grp, "0");
+        alert("Rezèv pwopriyetè a pou Gwoup " + grp + " Gdes la retounen a 0 siksè!");
         location.reload();
       }
     }
@@ -735,7 +743,6 @@
       document.getElementById('arena-timer-display').innerText = timeText;
     }, 1000);
 
-    /* --- ANIMASYON JWÈT 3D AK PANYE TOUT WOTÈ PI WO --- */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     function resizeCanvas() {
