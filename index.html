@@ -135,8 +135,8 @@
       background: #111; z-index: 9999; padding: 15px; overflow-y: auto; text-align: left;
     }
     .admin-tab-btn {
-      background: #222; color: #ffd700; border: 1px solid #ffd700; padding: 8px 15px;
-      border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 5px; margin-bottom: 15px;
+      background: #222; color: #ffd700; border: 1px solid #ffd700; padding: 8px 12px;
+      border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 4px; margin-bottom: 10px; font-size: 12px;
     }
     .admin-tab-btn.active { background: #ffd700; color: #000; }
     .admin-group-card { background: #1a1a1a; border: 1px solid #ffd700; border-radius: 10px; padding: 12px; margin-bottom: 15px; }
@@ -208,14 +208,15 @@
         <a href="tel:*202%23" class="btn-ussd">*202# MonCash</a>
         <a href="tel:*202%23" class="btn-ussd" style="background:#dc3545;">*202# Natcash</a>
 
-        <select id="group-select" class="select-field">
+        <select id="group-select" class="select-field" onchange="checkAppAvailability()">
           <option value="1250">Gwoup 1 - Code 1,250 Gdes</option>
           <option value="250">Gwoup 2 - Code 250 Gdes</option>
           <option value="100">Gwoup 3 - Code 100 Gdes</option>
         </select>
 
-        <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou">
-        <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la">
+        <!-- AJISTEMAN 3: Bloke epi afiche mesaj si app la pa disponib -->
+        <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou" onfocus="checkAppAvailability(this)" onclick="checkAppAvailability(this)">
+        <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la" onfocus="checkAppAvailability(this)" onclick="checkAppAvailability(this)">
         
         <button class="btn-action" style="font-size: 13px; padding: 8px;" onclick="submitPaymentRequest()">Mande Kòd Inik Mwen</button>
         
@@ -254,16 +255,32 @@
     </div>
   </div>
 
+  <!-- PANÈL SEKRÈ PWOPRIYETÈ -->
   <div id="secret-admin-modal">
     <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
 
-    <div>
-      <button class="admin-tab-btn active" id="tab-btn-1" onclick="switchAdminTab(1)">Paj 1: Finans & Demann</button>
-      <button class="admin-tab-btn" id="tab-btn-2" onclick="switchAdminTab(2)">Paj 2: Jesyon Anplwaye</button>
-      <button class="admin-tab-btn" style="background:#007bff; color:#fff;" onclick="moveToHistory()">📦 Voye nan Istorik</button>
+    <!-- AJISTEMAN 3: Bwat Kontwòl Disponibilite App la -->
+    <div class="admin-group-card" style="border-color: #00ffcc; background: #142222;">
+      <div class="group-title" style="color: #00ffcc;">⚙️ Kontwòl Disponibilite App la</div>
+      <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px;">
+        <input type="text" id="admin-next-hour" class="input-field" style="margin:0; flex:1;" placeholder="Mete lè a (ex: 18:30)">
+        <button class="btn-pay" style="background:#007bff; padding: 9px 12px; margin:0;" onclick="publishNextHour()">Pibliye Lè</button>
+      </div>
+      <button id="toggle-app-status-btn" class="btn-action" style="width:100%; font-size:13px; background:#28a745; color:#fff;" onclick="toggleAppAvailability()">
+        ✅ App Disponib (Klike pou w Mete l an Poz)
+      </button>
     </div>
 
+    <!-- ONGLÈ NAVIGASYON & AJISTEMAN 1: BOUTON PAJ ISTORIK -->
+    <div style="margin-bottom: 10px;">
+      <button class="admin-tab-btn active" id="tab-btn-1" onclick="switchAdminTab(1)">Paj 1: Finans & Demann</button>
+      <button class="admin-tab-btn" id="tab-btn-2" onclick="switchAdminTab(2)">Paj 2: Jesyon Anplwaye</button>
+      <button class="admin-tab-btn" id="tab-btn-3" style="border-color:#00ffcc; color:#00ffcc;" onclick="switchAdminTab(3)">📜 Gade Istorik</button>
+      <button class="admin-tab-btn" style="background:#007bff; color:#fff; border-color:#007bff;" onclick="moveToHistory()">📦 Voye nan Istorik</button>
+    </div>
+
+    <!-- PAJ 1: FINANS & DEMANN -->
     <div id="admin-page-1">
       <div class="admin-group-card">
         <button class="btn-clear-group" onclick="clearGroupSession('1250')">Clear Sesyon 🔄</button>
@@ -301,6 +318,7 @@
       </div>
     </div>
 
+    <!-- PAJ 2: JESYON ANPLWAYE -->
     <div id="admin-page-2" style="display:none;">
       <h4 style="color:#ffd700; margin-bottom:10px;">Jesyon ak Jenewatè Lyen Anplwaye:</h4>
       <div style="background:#222; padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid #ffd700; text-align:center;">
@@ -313,6 +331,17 @@
       <h4 style="color:#fff; margin-bottom:10px;">Lis Anplwaye ki Anrejistre yo:</h4>
       <div id="employees-list-container">
         <p style="color:#888;">Pa gen anplwaye.</p>
+      </div>
+    </div>
+
+    <!-- AJISTEMAN 1: PAJ 3 - PAJ ESPESYAL POU ISTORIK LA -->
+    <div id="admin-page-3" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h4 style="color:#00ffcc;">📜 Achiv Done Istorik yo:</h4>
+        <button class="btn-clear-group" style="padding:6px 10px; font-size:11px;" onclick="clearAllHistory()">🗑️ Efase Tout Istorik</button>
+      </div>
+      <div id="admin-history-list">
+        <p style="color:#aaa;">N ap chaje istorik la...</p>
       </div>
     </div>
   </div>
@@ -350,6 +379,10 @@
     let blockSecondsLeft = 600;      
     let gamePlaySecondsLeft = 600;   
 
+    // Eta disponibilite app la
+    let isAppAvailable = true;
+    let nextAvailableHour = "---";
+
     let logoClickCount = 0;
     let clickTimer;
     let currentWorkerId = localStorage.getItem('employee_doc_id') || "";
@@ -359,6 +392,82 @@
       document.getElementById('main-app-content').style.display = 'none';
       document.getElementById('worker-screen').style.display = 'block';
       checkWorkerAccess();
+    }
+
+    function copyNum(num) {
+      navigator.clipboard.writeText(num);
+      alert("Nimewo " + num + " kopye!");
+    }
+
+    // --- KOUTE DISPONIBILITE APP LA AN TAN REYÈL ---
+    function listenAppAvailability() {
+      db.collection("app_settings").doc("availability").onSnapshot(doc => {
+        if (doc.exists) {
+          const data = doc.data();
+          isAppAvailable = data.isAvailable !== false;
+          nextAvailableHour = data.nextHour || "---";
+        } else {
+          isAppAvailable = true;
+          nextAvailableHour = "---";
+        }
+        updateAvailabilityUI();
+      });
+    }
+    listenAppAvailability();
+
+    function updateAvailabilityUI() {
+      const btn = document.getElementById('toggle-app-status-btn');
+      const hourInput = document.getElementById('admin-next-hour');
+      const nameInput = document.getElementById('player-name');
+      const phoneInput = document.getElementById('player-phone');
+
+      if (hourInput && nextAvailableHour !== "---" && document.activeElement !== hourInput) {
+        hourInput.value = nextAvailableHour;
+      }
+
+      if (isAppAvailable) {
+        if (btn) {
+          btn.style.background = "#28a745";
+          btn.innerText = "✅ App Disponib (Klike pou w Mete l an Poz)";
+        }
+        nameInput.readOnly = false;
+        phoneInput.readOnly = false;
+      } else {
+        if (btn) {
+          btn.style.background = "#dc3545";
+          btn.innerText = "⛔ App Pa Disponib (Klike pou w Bay Aksè)";
+        }
+        nameInput.readOnly = true;
+        phoneInput.readOnly = true;
+      }
+    }
+
+    async function publishNextHour() {
+      const hr = document.getElementById('admin-next-hour').value.trim();
+      if (!hr) { alert("Antre lè jwèt la ap disponib la anvan!"); return; }
+      await db.collection("app_settings").doc("availability").set({
+        nextHour: hr
+      }, { merge: true });
+      alert("Lè a (" + hr + ") pibliye ak siksè!");
+    }
+
+    async function toggleAppAvailability() {
+      const newStatus = !isAppAvailable;
+      const hr = document.getElementById('admin-next-hour').value.trim() || nextAvailableHour;
+      await db.collection("app_settings").doc("availability").set({
+        isAvailable: newStatus,
+        nextHour: hr
+      }, { merge: true });
+      alert(newStatus ? "✅ App la kounye a DISPONIB pou tout jwè!" : "⛔ App la mete an POZ (Pa Disponib).");
+    }
+
+    function checkAppAvailability(inputEl) {
+      if (!isAppAvailable) {
+        if (inputEl) inputEl.blur();
+        alert(`Jwèt la pa actif kounye a. Tann nan lè sa (${nextAvailableHour}).`);
+        return false;
+      }
+      return true;
     }
 
     function handleSecretClick() {
@@ -377,15 +486,18 @@
       document.getElementById('secret-admin-modal').style.display = 'block';
       loadAdminRequests();
       loadEmployeesList();
+      loadHistoryList();
     }
 
     function closeAdminPanel() { document.getElementById('secret-admin-modal').style.display = 'none'; }
 
     function switchAdminTab(pageNum) {
-      document.getElementById('tab-btn-1').classList.remove('active');
-      document.getElementById('tab-btn-2').classList.remove('active');
-      document.getElementById('admin-page-1').style.display = 'none';
-      document.getElementById('admin-page-2').style.display = 'none';
+      [1, 2, 3].forEach(num => {
+        const btn = document.getElementById('tab-btn-' + num);
+        const page = document.getElementById('admin-page-' + num);
+        if (btn) btn.classList.remove('active');
+        if (page) page.style.display = 'none';
+      });
       document.getElementById('tab-btn-' + pageNum).classList.add('active');
       document.getElementById('admin-page-' + pageNum).style.display = 'block';
     }
@@ -427,7 +539,6 @@
     }
     listenAllGroups();
 
-    /* --- CLEAR SESYON AKTIYÈL (KÒB GAYAN) --- */
     async function clearGroupSession(grp) {
       if(confirm("Èske w sèten ou vle Clear Sesyon Gwoup " + grp + " Gdes la a zewo?")) {
         let countElem = document.getElementById('p' + grp + '-winner-curr');
@@ -450,7 +561,6 @@
       }
     }
 
-    /* --- CLEAR REZÈV AKIMILE PWOPRIYETÈ A --- */
     function clearOwnerAcc(grp) {
       if(confirm("Èske w sèten ou vle Clear (Reset) Total Rezèv Pwopriyetè a pou Gwoup " + grp + " Gdes la a 0?")) {
         localStorage.setItem('owner_acc_' + grp, "0");
@@ -472,13 +582,63 @@
       }
     }
 
+    // --- AJISTEMAN 1: SOVE NAN KOLEKSYON ISTORIK ANVAN NETWAYE PANÈL LA ---
     async function moveToHistory() {
-      if(confirm("Èske w vle voye tout demann aktyèl yo nan istorik (netwaye panèl la)?")) {
-        const snapshot = await db.collection("payment_requests").get();
+      const snapshot = await db.collection("payment_requests").get();
+      if (snapshot.empty) {
+        alert("Pa gen okenn demann aktif pou voye nan istorik!");
+        return;
+      }
+      if(confirm("Èske w vle voye tout demann aktyèl yo nan paj istorik la?")) {
         const batch = db.batch();
-        snapshot.forEach(doc => { batch.delete(doc.ref); });
+        snapshot.forEach(doc => {
+          const histRef = db.collection("payment_history").doc(doc.id);
+          batch.set(histRef, {
+            ...doc.data(),
+            archivedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          batch.delete(doc.ref);
+        });
         await batch.commit();
-        alert("Panèl la netwaye epi voye nan istorik ak siksè!");
+        alert("Done yo sove nan Paj Istorik la ak siksè!");
+      }
+    }
+
+    function loadHistoryList() {
+      db.collection("payment_history").orderBy("archivedAt", "desc").onSnapshot(snapshot => {
+        const container = document.getElementById('admin-history-list');
+        container.innerHTML = "";
+        if (snapshot.empty) {
+          container.innerHTML = '<p style="color:#888;">Pa gen okenn done nan istorik la pou kounye a.</p>';
+          return;
+        }
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const dateStr = data.archivedAt ? data.archivedAt.toDate().toLocaleString('fr-HT') : 'Dat pa disponib';
+          const card = document.createElement('div');
+          card.className = "admin-group-card";
+          card.style.borderColor = "#00ffcc";
+          card.innerHTML = `
+            <button style="float:right; background:#dc3545; color:#fff; border:none; padding:4px 8px; border-radius:5px; cursor:pointer;" onclick="db.collection('payment_history').doc('${doc.id}').delete()">❌</button>
+            <div style="font-size:11px; color:#aaa; margin-bottom:4px;">📅 Achive le : ${dateStr}</div>
+            <div><b>Non :</b> ${data.playerName || 'San non'}</div>
+            <div><b>Tel :</b> ${data.playerPhone || ''}</div>
+            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice || '1250'} Gdes</span></div>
+            <div><b>Kòd Inik :</b> <span style="color:#00ffcc;">${data.generatedCode || 'Pa te bay kòd'}</span></div>
+            <div><b>Estati :</b> ${data.status === 'confirmed' ? '✅ Konfime' : '⏳ An atant'}</div>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
+    async function clearAllHistory() {
+      if (confirm("Atansyon! Èske w sèten ou vle efase TOUT achiv ki nan istorik la nèt?")) {
+        const snapshot = await db.collection("payment_history").get();
+        const batch = db.batch();
+        snapshot.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+        alert("Tout istorik la efase!");
       }
     }
 
@@ -603,6 +763,8 @@
     }
 
     async function submitPaymentRequest() {
+      if (!checkAppAvailability()) return;
+
       if (sessionState === "playing" || sessionState === "ended") {
         alert("Rasanbleman an fini, ou pa ka fè demann kounye a!");
         return;
@@ -654,6 +816,7 @@
       document.getElementById('game-arena').classList.add('full-screen-mode');
       document.getElementById('arena-timer-display').style.display = 'block';
       resizeCanvas();
+      setTimeout(() => selectPos3D(currentPos), 100);
     }
 
     function listenToWinnersAnnouncements() {
@@ -671,8 +834,6 @@
 
     async function payWinnerAndReset() {
       let currentAcc = parseFloat(localStorage.getItem('owner_acc_' + userGroup) || "0");
-      let currentPrizeText = document.getElementById('winner-amount-display').innerText.replace(/,/g, '').replace(' Gdes', '');
-      let prizeNum = parseFloat(currentPrizeText) || 0;
       let countElem = document.getElementById('p' + userGroup + '-winner-curr');
       let sessionTotal = parseFloat(countElem.innerText.replace(/,/g, '')) || 0;
       
@@ -780,6 +941,16 @@
       player.targetX = initialCoords.x; player.targetY = initialCoords.y;
     }, 300);
 
+    // Kalkil pozisyon panye a selon gwosè ekran an (pou kouvri panye imaj fon an nèt)
+    function getHoopPosition() {
+      const isFullScreen = document.getElementById('game-arena').classList.contains('full-screen-mode');
+      return {
+        x: isFullScreen ? canvas.width * 0.625 : canvas.width * 0.585,
+        y: isFullScreen ? canvas.height * 0.228 : canvas.height * 0.205,
+        scale: isFullScreen ? 1.55 : 1.0
+      };
+    }
+
     async function shootBall3D() {
       if (!isCodeValidated) { alert("Antre kòd ou a anvan!"); return; }
       if (sessionState !== "playing") { alert("Tann sesyon tire a louvri!"); return; }
@@ -800,6 +971,7 @@
         else isGoal = Math.random() < 0.35;
       }
 
+      const hoop = getHoopPosition();
       player.isShooting = true;
       ball.isShot = true;
       ball.isGoal = isGoal;
@@ -807,8 +979,8 @@
       ball.startX = player.x;
       ball.startY = player.y - 45;
       
-      ball.targetX = canvas.width * 0.585;
-      ball.targetY = canvas.height * 0.205;
+      ball.targetX = hoop.x;
+      ball.targetY = hoop.y;
 
       if (isGoal) {
         let price = parseInt(userGroup);
@@ -880,9 +1052,8 @@
       }
       ctx.stroke();
 
-      let hoopX = canvas.width * 0.585;
-      let hoopY = canvas.height * 0.205;
-      drawHighestCoverHoop(hoopX, hoopY, netShake);
+      const hoop = getHoopPosition();
+      drawHighestCoverHoop(hoop.x, hoop.y, netShake, hoop.scale);
 
       if (!ball.isShot) {
         ball.dribbleOffset += 0.25 * ball.dribbleDir;
@@ -900,8 +1071,8 @@
           if (ball.isGoal && ball.progress > 0.85) netShake = Math.sin(frameCount * 0.8) * 6;
         } else if (ball.isGoal && ball.progress <= 1.4) {
           let dropProgress = (ball.progress - 1) / 0.4;
-          let dropX = hoopX;
-          let dropY = (hoopY + 5) + (dropProgress * 25);
+          let dropX = hoop.x;
+          let dropY = (hoop.y + 5) + (dropProgress * 25);
           drawBasketball(dropX, dropY, 6);
           netShake = Math.sin(frameCount * 0.8) * (6 * (1 - dropProgress));
         } else {
@@ -926,36 +1097,42 @@
       requestAnimationFrame(gameLoop);
     }
 
-    function drawHighestCoverHoop(rimX, rimY, shake) {
+    // AJISTEMAN 2: Kouvri premye panye filè a nèt menm lè ekran elaji
+    function drawHighestCoverHoop(rimX, rimY, shake, scale = 1.0) {
       ctx.save();
+      ctx.translate(rimX, rimY);
+      ctx.scale(scale, scale);
+
+      // Kouvèti solid ki kache panye ki sou imaj fon an nètale (san tranble pou pa kite bò parèt)
+      ctx.fillStyle = "#2c4c70"; 
+      ctx.fillRect(-38, -22, 82, 74);
+
+      // Pati filè ak sèk ki anime lè boul la frape
       ctx.translate(shake, 0);
 
-      ctx.fillStyle = "#2c4c70"; 
-      ctx.fillRect(rimX - 24, rimY - 14, 48, 50);
-
       ctx.beginPath();
-      ctx.ellipse(rimX, rimY, 14, 4.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 18, 5.5, 0, 0, Math.PI * 2);
       ctx.strokeStyle = '#ff2200';
-      ctx.lineWidth = 3;
-      ctx.fillStyle = 'rgba(255, 34, 0, 0.3)';
+      ctx.lineWidth = 3.2;
+      ctx.fillStyle = 'rgba(255, 34, 0, 0.35)';
       ctx.fill();
       ctx.stroke();
 
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      let netW = 24;
-      let netH = 30;
+      let netW = 30;
+      let netH = 38;
       for (let i = 0; i <= 4; i++) {
-        let x1 = (rimX - netW/2) + (i * (netW/4));
-        let x2 = (rimX - netW/2 + 3) + (i * (netW/5)) + Math.sin(frameCount * 0.15 + i) * 3;
-        ctx.moveTo(x1, rimY + 2);
-        ctx.lineTo(x2, rimY + netH);
+        let x1 = (-netW/2) + (i * (netW/4));
+        let x2 = (-netW/2 + 4) + (i * (netW/5)) + Math.sin(frameCount * 0.15 + i) * 3;
+        ctx.moveTo(x1, 2);
+        ctx.lineTo(x2, netH);
       }
-      for (let j = 1; j < 3; j++) {
-        let y = rimY + (j * 9);
-        ctx.moveTo(rimX - netW/2 + j*2, y);
-        ctx.lineTo(rimX + netW/2 - j*2, y + 4);
+      for (let j = 1; j < 4; j++) {
+        let y = (j * 9);
+        ctx.moveTo(-netW/2 + j*2, y);
+        ctx.lineTo(netW/2 - j*2, y + 4);
       }
       ctx.stroke();
 
