@@ -398,7 +398,6 @@
       alert("Lyen Anplwaye a kopye!");
     }
 
-    /* KALKIL FINANSYÈ NOUVO RÈG YO (1-4 moun pèdi tout, apati 5 moun pwopriyetè pran maksimòm) */
     function getGroupCalculations(groupPrice, count) {
       let total = count * groupPrice;
       let winnerPrize = 0;
@@ -628,7 +627,6 @@
       resizeCanvas();
     }
 
-    /* KONTWÒL GANYAN AN POU PARÈT SOU EKRAN TOUT TELEGIDÈ YO */
     function listenToWinnersAnnouncements() {
       ["1250", "250", "100"].forEach(grp => {
         db.collection("winners_announced").doc("group_" + grp).onSnapshot(doc => {
@@ -698,7 +696,7 @@
       document.getElementById('arena-timer-display').innerText = timeText;
     }, 1000);
 
-    /* --- ANIMASYON JWÈT 3D AK PANYE FILÈ KI AN MOUVMAN --- */
+    /* --- ANIMASYON JWÈT 3D AK PANYE FILÈ EGZAKÈMAN NAN PLAS LI --- */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
     function resizeCanvas() {
@@ -751,7 +749,6 @@
       let userPhone = document.getElementById('player-phone').value.trim();
 
       let isGoal = false;
-      // Nouvo règ: Ant 1 ak 4 moun = tout moun pèdi. Apati de 5 moun sèlman genyen posib.
       if (totalPlayers >= 5) {
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
         else isGoal = Math.random() < 0.35;
@@ -763,8 +760,9 @@
       ball.progress = 0;
       ball.startX = player.x;
       ball.startY = player.y - 45;
-      ball.targetX = canvas.width * 0.50;
-      ball.targetY = canvas.height * 0.28;
+      // Vize egzakteman nan mitan panye a
+      ball.targetX = canvas.width * 0.585;
+      ball.targetY = canvas.height * 0.35;
 
       if (isGoal) {
         let calc = getGroupCalculations(parseInt(userGroup), totalPlayers);
@@ -831,8 +829,10 @@
       }
       ctx.stroke();
 
-      // Dessin panye a ak filè an mouvman fò nwa/blan ki kouvri ansyen imaj la pèmanan
-      draw3DHoopWithSolidNet(canvas.width * 0.50, canvas.height * 0.28, netShake);
+      // Dessin panye a ak filè an mouvman egzakteman kote panye imaj la ye (X: 58.5%, Y: 35%)
+      let hoopX = canvas.width * 0.585;
+      let hoopY = canvas.height * 0.35;
+      drawExactCoverHoop(hoopX, hoopY, netShake);
 
       if (!ball.isShot) {
         ball.dribbleOffset += 0.25 * ball.dribbleDir;
@@ -850,8 +850,8 @@
           if (ball.isGoal && ball.progress > 0.85) netShake = Math.sin(frameCount * 0.8) * 6;
         } else if (ball.isGoal && ball.progress <= 1.4) {
           let dropProgress = (ball.progress - 1) / 0.4;
-          let dropX = canvas.width * 0.50;
-          let dropY = (canvas.height * 0.28 + 12) + (dropProgress * 35);
+          let dropX = hoopX;
+          let dropY = (hoopY + 8) + (dropProgress * 30);
           drawBasketball(dropX, dropY, 6);
           netShake = Math.sin(frameCount * 0.8) * (6 * (1 - dropProgress));
         } else {
@@ -876,48 +876,42 @@
       requestAnimationFrame(gameLoop);
     }
 
-    /* PANYE AK FILÈ SOLID KI BLOKE ANCIEN IMAJ LA PÈMANAN AK MOUVMAN ANIMASYON */
-    function draw3DHoopWithSolidNet(rimX, rimY, shake) {
+    /* KOUVRI ANSYEN PANYE A NÈT AK YON KÒD SOLID EPI METE FILÈ ANIMASYON AN EGZAKÈMAN SOU LI */
+    function drawExactCoverHoop(rimX, rimY, shake) {
       ctx.save();
       ctx.translate(shake, 0);
 
-      // Pentire yon gwo bwat nwa solid dèyè panye a pou kache ansyen filè imaj la nèt
-      ctx.fillStyle = "#0c0c0c";
-      ctx.fillRect(rimX - 22, rimY - 5, 44, 45);
+      // Bwat solid pou kache ansyen imaj panye a nèt sou background nan
+      ctx.fillStyle = "#2c4a6f"; // Koulè ki melanje ak background teren an tou pre panye a
+      ctx.fillRect(rimX - 25, rimY - 12, 50, 55);
 
-      // Support poto tou pre panye a
+      // Rim panye a (wouj klere)
+      ctx.beginPath();
+      ctx.ellipse(rimX, rimY, 18, 6, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = '#ff2200';
+      ctx.lineWidth = 3.5;
+      ctx.fillStyle = 'rgba(255, 34, 0, 0.2)';
+      ctx.fill();
+      ctx.stroke();
+
+      // Filè anime ki klè anpil
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(rimX - 16, rimY); ctx.lineTo(rimX - 8, rimY + 25);
-      ctx.moveTo(rimX + 16, rimY); ctx.lineTo(rimX + 8, rimY + 25);
-      ctx.stroke();
-
-      // Filè trè fonse ak liy an mouvman tout bon an
-      ctx.strokeStyle = '#e0e0e0';
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      let netW = 28;
-      let netH = 32;
-      for (let i = 0; i <= 4; i++) {
-        let x1 = (rimX - netW/2) + (i * (netW/4));
-        let x2 = (rimX - netW/2 + 4) + (i * (netW/5)) + Math.sin(frameCount * 0.1 + i) * 3;
-        ctx.moveTo(x1, rimY);
+      let netW = 30;
+      let netH = 38;
+      for (let i = 0; i <= 5; i++) {
+        let x1 = (rimX - netW/2) + (i * (netW/5));
+        let x2 = (rimX - netW/2 + 5) + (i * (netW/6)) + Math.sin(frameCount * 0.12 + i) * 4;
+        ctx.moveTo(x1, rimY + 3);
         ctx.lineTo(x2, rimY + netH);
       }
-      // Lyen kwa filè a
-      for (let j = 0; j < 3; j++) {
-        let y = rimY + (j * 10);
-        ctx.moveTo(rimX - netW/2 + j*3, y);
-        ctx.lineTo(rimX + netW/2 - j*3, y + 5);
+      // Trè cross nan filè a
+      for (let j = 1; j < 4; j++) {
+        let y = rimY + (j * 9);
+        ctx.moveTo(rimX - netW/2 + j*2, y);
+        ctx.lineTo(rimX + netW/2 - j*2, y + 6);
       }
-      ctx.stroke();
-
-      // Rim panye a (koulè wouj klere)
-      ctx.beginPath();
-      ctx.ellipse(rimX, rimY, 16, 5, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = '#ff2200';
-      ctx.lineWidth = 3;
       ctx.stroke();
 
       ctx.restore();
