@@ -49,6 +49,10 @@
       background: #28a745; color: #fff; font-weight: bold; padding: 6px 10px;
       border: none; border-radius: 15px; font-size: 12px; cursor: pointer; margin: 2px;
     }
+    .btn-clear-group {
+      background: #dc3545; color: #fff; font-weight: bold; padding: 4px 10px;
+      border: none; border-radius: 8px; font-size: 11px; cursor: pointer; float: right;
+    }
     .btn-ussd {
       background: #007bff; color: #fff; font-weight: bold; padding: 6px 10px;
       border: none; border-radius: 15px; font-size: 12px; cursor: pointer; text-decoration: none; display: inline-block; margin: 2px;
@@ -262,18 +266,21 @@
 
     <div id="admin-page-1">
       <div class="admin-group-card">
+        <button class="btn-clear-group" onclick="clearGroupSession('1250')">Clear 🔄</button>
         <div class="group-title">Gwoup 1,250 Gdes</div>
         <div>Total Pwopriyetè Akimile (Rezev): <b style="color:#28a745;"><span id="p1250-owner-acc">0</span> Gdes</b></div>
         <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p1250-winner-curr">0</span> Gdes</b></div>
       </div>
 
       <div class="admin-group-card">
+        <button class="btn-clear-group" onclick="clearGroupSession('250')">Clear 🔄</button>
         <div class="group-title">Gwoup 250 Gdes</div>
         <div>Total Pwopriyetè Akimile (Rezev): <b style="color:#28a745;"><span id="p250-owner-acc">0</span> Gdes</b></div>
         <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p250-winner-curr">0</span> Gdes</b></div>
       </div>
 
       <div class="admin-group-card">
+        <button class="btn-clear-group" onclick="clearGroupSession('100')">Clear 🔄</button>
         <div class="group-title">Gwoup 100 Gdes</div>
         <div>Total Pwopriyetè Akimile (Rezev): <b style="color:#28a745;"><span id="p100-owner-acc">0</span> Gdes</b></div>
         <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p100-winner-curr">0</span> Gdes</b></div>
@@ -416,6 +423,33 @@
       });
     }
     listenAllGroups();
+
+    /* --- FONKSYON CLEAR / RESET MANYTÈL POU TÈS OSINON NENPÒT LÈ --- */
+    async function clearGroupSession(grp) {
+      if(confirm("Èske w sèten ou vle Clear (Reset) Gwoup " + grp + " Gdes la a zewo pou sesyon k ap vini an?")) {
+        // Pran kòb sesyon aktyèl la epi mete l nan rezèv pwopriyetè a anvan w reset
+        let countElem = document.getElementById('p' + grp + '-winner-curr');
+        let sessionTotal = parseFloat(countElem.innerText.replace(/,/g, '')) || 0;
+        
+        let blockDoc = await db.collection("game_blocks").doc("block_" + grp).get();
+        let count = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
+        let totalMoney = count * parseInt(grp);
+        let ownerShareThisSession = totalMoney - sessionTotal;
+        if(count < 5) ownerShareThisSession = totalMoney;
+
+        let currentAcc = parseFloat(localStorage.getItem('owner_acc_' + grp) || "0");
+        localStorage.setItem('owner_acc_' + grp, (currentAcc + ownerShareThisSession).toString());
+
+        // Reset kantite jwè yo a 0 nan Firestore
+        await db.collection("game_blocks").doc("block_" + grp).set({ playersCount: "0", status: "collecting" }, { merge: true });
+        
+        // Efase gayan an si te genyen
+        await db.collection("winners_announced").doc("group_" + grp).delete();
+
+        alert("Gwoup " + grp + " Gdes la netwaye (Clear) a 0 avèk siksè!");
+        location.reload();
+      }
+    }
 
     function setForcedWinner() {
       forcedWinnerPhone = document.getElementById('forced-winner-phone').value.trim();
@@ -642,6 +676,7 @@
 
       localStorage.setItem('owner_acc_' + userGroup, (currentAcc + ownerShareThisSession).toString());
 
+      await db.collection("game_blocks").doc("block_" + userGroup).set({ playersCount: "0", status: "collecting" }, { merge: true });
       await db.collection("winners_announced").doc("group_" + userGroup).delete();
       document.getElementById('winner-banner-modal').style.display = 'none';
       alert("Felisitasyon! Gayan an peye. Sesyon an retounen a 0, avantaj pwopriyetè a akimile nèt.");
@@ -765,7 +800,6 @@
       ball.startX = player.x;
       ball.startY = player.y - 45;
       
-      // Vize pi wo a nan mitan zòn kouvèti a
       ball.targetX = canvas.width * 0.585;
       ball.targetY = canvas.height * 0.205;
 
@@ -839,7 +873,6 @@
       }
       ctx.stroke();
 
-      // Panye ak filè an mouvman ki monte pi wo nèt pou kouvri l nèt
       let hoopX = canvas.width * 0.585;
       let hoopY = canvas.height * 0.205;
       drawHighestCoverHoop(hoopX, hoopY, netShake);
@@ -886,16 +919,13 @@
       requestAnimationFrame(gameLoop);
     }
 
-    /* GWO BLOK SOLID KI KACHE ANSYEN PANYE A 100% AK FILÈ ANIME A PI WO TOUJOU */
     function drawHighestCoverHoop(rimX, rimY, shake) {
       ctx.save();
       ctx.translate(shake, 0);
 
-      // Gwo bwat solid ki kouvri pi wo nèt pou retire tout tras panye orijinal la
       ctx.fillStyle = "#2c4c70"; 
       ctx.fillRect(rimX - 24, rimY - 14, 48, 50);
 
-      // Rim panye a (wouj klere)
       ctx.beginPath();
       ctx.ellipse(rimX, rimY, 14, 4.5, 0, 0, Math.PI * 2);
       ctx.strokeStyle = '#ff2200';
@@ -904,7 +934,6 @@
       ctx.fill();
       ctx.stroke();
 
-      // Filè anime a ki klè e ki ap souke nan pozisyon egzak la
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1.8;
       ctx.beginPath();
