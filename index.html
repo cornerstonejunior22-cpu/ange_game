@@ -214,7 +214,6 @@
           <option value="100">Gwoup 3 - Code 100 Gdes</option>
         </select>
 
-        <!-- AJISTEMAN 3: Bloke epi afiche mesaj si app la pa disponib -->
         <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou" onfocus="checkAppAvailability(this)" onclick="checkAppAvailability(this)">
         <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la" onfocus="checkAppAvailability(this)" onclick="checkAppAvailability(this)">
         
@@ -260,7 +259,6 @@
     <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
 
-    <!-- AJISTEMAN 3: Bwat Kontwòl Disponibilite App la -->
     <div class="admin-group-card" style="border-color: #00ffcc; background: #142222;">
       <div class="group-title" style="color: #00ffcc;">⚙️ Kontwòl Disponibilite App la</div>
       <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px;">
@@ -272,7 +270,6 @@
       </button>
     </div>
 
-    <!-- ONGLÈ NAVIGASYON & AJISTEMAN 1: BOUTON PAJ ISTORIK -->
     <div style="margin-bottom: 10px;">
       <button class="admin-tab-btn active" id="tab-btn-1" onclick="switchAdminTab(1)">Paj 1: Finans & Demann</button>
       <button class="admin-tab-btn" id="tab-btn-2" onclick="switchAdminTab(2)">Paj 2: Jesyon Anplwaye</button>
@@ -334,7 +331,7 @@
       </div>
     </div>
 
-    <!-- AJISTEMAN 1: PAJ 3 - PAJ ESPESYAL POU ISTORIK LA -->
+    <!-- PAJ 3: PAJ ESPESYAL POU ISTORIK LA -->
     <div id="admin-page-3" style="display:none;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <h4 style="color:#00ffcc;">📜 Achiv Done Istorik yo:</h4>
@@ -379,7 +376,6 @@
     let blockSecondsLeft = 600;      
     let gamePlaySecondsLeft = 600;   
 
-    // Eta disponibilite app la
     let isAppAvailable = true;
     let nextAvailableHour = "---";
 
@@ -399,7 +395,6 @@
       alert("Nimewo " + num + " kopye!");
     }
 
-    // --- KOUTE DISPONIBILITE APP LA AN TAN REYÈL ---
     function listenAppAvailability() {
       db.collection("app_settings").doc("availability").onSnapshot(doc => {
         if (doc.exists) {
@@ -582,7 +577,6 @@
       }
     }
 
-    // --- AJISTEMAN 1: SOVE NAN KOLEKSYON ISTORIK ANVAN NETWAYE PANÈL LA ---
     async function moveToHistory() {
       const snapshot = await db.collection("payment_requests").get();
       if (snapshot.empty) {
@@ -915,7 +909,11 @@
     resizeCanvas();
 
     let player = { x: 0, y: 0, targetX: 0, targetY: 0, isShooting: false, jumpOffset: 0 };
-    let ball = { x: 0, y: 0, isShot: false, isGoal: false, progress: 0, dribbleOffset: 0, dribbleDir: 1 };
+    let ball = {
+      x: 0, y: 0, isShot: false, isGoal: false, progress: 0,
+      dribbleOffset: 0, dribbleDir: 1,
+      arcHeight: 110, bounceVX: 0, bounceVY: 0
+    };
     let frameCount = 0;
     let netShake = 0;
 
@@ -941,13 +939,65 @@
       player.targetX = initialCoords.x; player.targetY = initialCoords.y;
     }, 300);
 
-    // Kalkil pozisyon panye a selon gwosè ekran an (pou kouvri panye imaj fon an nèt)
     function getHoopPosition() {
       const isFullScreen = document.getElementById('game-arena').classList.contains('full-screen-mode');
       return {
         x: isFullScreen ? canvas.width * 0.625 : canvas.width * 0.585,
         y: isFullScreen ? canvas.height * 0.228 : canvas.height * 0.205,
         scale: isFullScreen ? 1.55 : 1.0
+      };
+    }
+
+    // --- NOUVO FONKSYON: JENERE MILYE TRAJÈKTWA POU MOUN KI PÈDI YO ---
+    function generateRandomMissTrajectory(hoop) {
+      const missType = Math.floor(Math.random() * 5);
+      let offsetX = 0;
+      let offsetY = 0;
+      let arcH = 90 + Math.random() * 60; // Wotè koub la varye ant 90 ak 150
+      let bVX = 0;
+      let bVY = 0;
+
+      if (missType === 0) {
+        // Twò goch panye a (rayi nèt sou bò goch)
+        offsetX = -(32 + Math.random() * 65);
+        offsetY = -18 + Math.random() * 45;
+        bVX = -(18 + Math.random() * 25);
+        bVY = 28 + Math.random() * 25;
+      } else if (missType === 1) {
+        // Twò dwat panye a (rayi nèt sou bò dwat)
+        offsetX = 32 + Math.random() * 65;
+        offsetY = -18 + Math.random() * 45;
+        bVX = 18 + Math.random() * 25;
+        bVY = 28 + Math.random() * 25;
+      } else if (missType === 2) {
+        // Twò wo (frape anlè pano a epi rebondi)
+        offsetX = (Math.random() - 0.5) * 70;
+        offsetY = -(30 + Math.random() * 35);
+        arcH = 135 + Math.random() * 35;
+        bVX = (Math.random() - 0.5) * 45;
+        bVY = 30 + Math.random() * 25;
+      } else if (missType === 3) {
+        // Twò kout (tonbe anba sèk la san l pa rive)
+        offsetX = (Math.random() - 0.5) * 55;
+        offsetY = 25 + Math.random() * 38;
+        arcH = 75 + Math.random() * 25;
+        bVX = (Math.random() - 0.5) * 30;
+        bVY = 35 + Math.random() * 20;
+      } else {
+        // Frape bò sèk la (rim) epi rebondi deyò goch oswa dwat
+        const side = Math.random() < 0.5 ? -1 : 1;
+        offsetX = side * (16 + Math.random() * 10);
+        offsetY = -3 + Math.random() * 6;
+        bVX = side * (25 + Math.random() * 30);
+        bVY = -(15 + Math.random() * 20); // Ti rebondi anlè anvan l tonbe
+      }
+
+      return {
+        targetX: hoop.x + offsetX,
+        targetY: hoop.y + offsetY,
+        arcHeight: arcH,
+        bounceVX: bVX,
+        bounceVY: bVY
       };
     }
 
@@ -978,9 +1028,23 @@
       ball.progress = 0;
       ball.startX = player.x;
       ball.startY = player.y - 45;
-      
-      ball.targetX = hoop.x;
-      ball.targetY = hoop.y;
+
+      if (isGoal) {
+        // Si se gayan, boul la ale dwat nan mitan filè a
+        ball.targetX = hoop.x;
+        ball.targetY = hoop.y;
+        ball.arcHeight = 110;
+        ball.bounceVX = 0;
+        ball.bounceVY = 0;
+      } else {
+        // Si l ap pèdi, li pran youn nan milye kote aleyatwa yo!
+        const missData = generateRandomMissTrajectory(hoop);
+        ball.targetX = missData.targetX;
+        ball.targetY = missData.targetY;
+        ball.arcHeight = missData.arcHeight;
+        ball.bounceVX = missData.bounceVX;
+        ball.bounceVY = missData.bounceVY;
+      }
 
       if (isGoal) {
         let price = parseInt(userGroup);
@@ -1065,7 +1129,7 @@
         ball.progress += 0.025;
         if (ball.progress <= 1) {
           let currX = ball.startX + (ball.targetX - ball.startX) * ball.progress;
-          let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * 110);
+          let currY = ball.startY + (ball.targetY - ball.startY) * ball.progress - (Math.sin(ball.progress * Math.PI) * ball.arcHeight);
           let radius = 10 - (ball.progress * 4);
           drawBasketball(currX, currY, Math.max(radius, 4));
           if (ball.isGoal && ball.progress > 0.85) netShake = Math.sin(frameCount * 0.8) * 6;
@@ -1075,6 +1139,12 @@
           let dropY = (hoop.y + 5) + (dropProgress * 25);
           drawBasketball(dropX, dropY, 6);
           netShake = Math.sin(frameCount * 0.8) * (6 * (1 - dropProgress));
+        } else if (!ball.isGoal && ball.progress <= 1.35) {
+          // Animasyon rebondi deyò lè boul la rate panye a
+          let bounceP = (ball.progress - 1) / 0.35;
+          let bx = ball.targetX + (ball.bounceVX * bounceP);
+          let by = ball.targetY + (ball.bounceVY * bounceP) + (bounceP * bounceP * 35);
+          drawBasketball(bx, by, 6);
         } else {
           ball.isShot = false;
           player.isShooting = false;
@@ -1097,17 +1167,14 @@
       requestAnimationFrame(gameLoop);
     }
 
-    // AJISTEMAN 2: Kouvri premye panye filè a nèt menm lè ekran elaji
     function drawHighestCoverHoop(rimX, rimY, shake, scale = 1.0) {
       ctx.save();
       ctx.translate(rimX, rimY);
       ctx.scale(scale, scale);
 
-      // Kouvèti solid ki kache panye ki sou imaj fon an nètale (san tranble pou pa kite bò parèt)
       ctx.fillStyle = "#2c4c70"; 
       ctx.fillRect(-38, -22, 82, 74);
 
-      // Pati filè ak sèk ki anime lè boul la frape
       ctx.translate(shake, 0);
 
       ctx.beginPath();
