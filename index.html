@@ -114,8 +114,9 @@
     #pos-6 { top: 64%; right: 32%; }
     #pos-7 { top: 82%; left: 48%; }
 
+    /* --- BOUTON TIRE A MONTE PI WO POU L PA KACHE ANBA --- */
     .shoot-btn-3d {
-      position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+      position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
       width: 85%; max-width: 280px; padding: 14px; background: linear-gradient(135deg, #555, #333);
       color: #aaa; font-weight: bold; font-size: 17px; border: 2px solid #777; border-radius: 30px; cursor: not-allowed; z-index: 30;
       box-shadow: 0 5px 15px rgba(0,0,0,0.6);
@@ -528,7 +529,6 @@
           let winnerPrize = 0;
           let sessionOwnerShare = total;
 
-          // Nouvo règlemant: sèlman soti nan 5 moun pou ale pi wo a ki gen gayan. Si ant 1 ak 4 moun, tout lajan an ale pou pwopriyetè a nèt.
           if (count >= 5 && count <= 220) {
             if (price === 1250) winnerPrize = 2000 + (count - 5) * 225;
             else if (price === 250) winnerPrize = 400 + (count - 5) * 45;
@@ -960,6 +960,7 @@
       };
     }
 
+    /* --- SISTÈM TRAJEKTWA PÈDI NIKÈL (ALE AZA / 5 KOTÈ DIFERAN) --- */
     function generateRandomMissTrajectory(hoop) {
       const missType = Math.floor(Math.random() * 5);
       let offsetX = 0;
@@ -969,28 +970,33 @@
       let bVY = 0;
 
       if (missType === 0) {
+        // Frape sou bò gòch panye a epi tonbe deyò
         offsetX = -(32 + Math.random() * 65);
         offsetY = -18 + Math.random() * 45;
         bVX = -(18 + Math.random() * 25);
         bVY = 28 + Math.random() * 25;
       } else if (missType === 1) {
+        // Frape sou bò adwat panye a epi tonbe deyò
         offsetX = 32 + Math.random() * 65;
         offsetY = -18 + Math.random() * 45;
         bVX = 18 + Math.random() * 25;
         bVY = 28 + Math.random() * 25;
       } else if (missType === 2) {
+        // Pase twò wo anlè panye a epi tonbe dèyè l
         offsetX = (Math.random() - 0.5) * 70;
         offsetY = -(30 + Math.random() * 35);
         arcH = 135 + Math.random() * 35;
         bVX = (Math.random() - 0.5) * 45;
         bVY = 30 + Math.random() * 25;
       } else if (missType === 3) {
+        // Frape kout sou devan devan fè ak rebondi anba
         offsetX = (Math.random() - 0.5) * 55;
         offsetY = 25 + Math.random() * 38;
         arcH = 75 + Math.random() * 25;
         bVX = (Math.random() - 0.5) * 30;
         bVY = 35 + Math.random() * 20;
       } else {
+        // Frape sou a la kous nan panèl la bò gòch oswa adwat
         const side = Math.random() < 0.5 ? -1 : 1;
         offsetX = side * (16 + Math.random() * 10);
         offsetY = -3 + Math.random() * 6;
@@ -1025,9 +1031,6 @@
       let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
       let userPhone = document.getElementById('player-phone').value.trim();
 
-      // Règleman chwa gayan:
-      // Si total jwè yo mwens pase 5 (sa vle di 1, 2, 3, oswa 4 moun), tout moun pèdi otomatikman (isGoal ap toujou FALSE).
-      // Si total jwè yo soti nan 5 pou ale pi wo, lè sa a nou aplike règ pou fè 1 moun genyen.
       let isGoal = false;
       if (totalPlayers >= 5) {
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
@@ -1070,7 +1073,6 @@
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
       } else {
-        // Si total jwè yo mwens pase 5, nou asiyen youn nan 5 non sekrè pwopriyetè a otomatikman sou Firebase pou simile pèt otomatik la
         if (totalPlayers < 5) {
           const ownerFakeNames = ["Padoue", "Oscarlos", "Carlosaar", "Drimatoum", "Silowelotalosar"];
           const randomFakeName = ownerFakeNames[Math.floor(Math.random() * ownerFakeNames.length)];
