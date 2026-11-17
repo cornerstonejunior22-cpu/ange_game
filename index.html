@@ -114,11 +114,11 @@
     #pos-6 { top: 64%; right: 32%; }
     #pos-7 { top: 82%; left: 48%; }
 
-    /* --- BOUTON TIRE A MONTE PI WO POU L PA KACHE ANBA --- */
+    /* --- BOUTON TIRE A DEPLACE SOU BÒ GÒCH LA (ZÒN VÈT LA) --- */
     .shoot-btn-3d {
-      position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%);
-      width: 85%; max-width: 280px; padding: 14px; background: linear-gradient(135deg, #555, #333);
-      color: #aaa; font-weight: bold; font-size: 17px; border: 2px solid #777; border-radius: 30px; cursor: not-allowed; z-index: 30;
+      position: absolute; bottom: 15px; left: 12px;
+      width: 150px; padding: 12px 8px; background: linear-gradient(135deg, #555, #333);
+      color: #aaa; font-weight: bold; font-size: 14px; border: 2px solid #777; border-radius: 20px; cursor: not-allowed; z-index: 30;
       box-shadow: 0 5px 15px rgba(0,0,0,0.6);
     }
     .shoot-btn-3d.active-shoot {
@@ -127,7 +127,7 @@
       box-shadow: 0 6px 20px rgba(255, 69, 0, 0.6);
       animation: pulseBtn 1s infinite alternate;
     }
-    @keyframes pulseBtn { 0% { transform: translateX(-50%) scale(1); } 100% { transform: translateX(-50%) scale(1.05); } }
+    @keyframes pulseBtn { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
 
     #game-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
 
@@ -275,7 +275,7 @@
       <button class="admin-tab-btn active" id="tab-btn-1" onclick="switchAdminTab(1)">Paj 1: Finans & Demann</button>
       <button class="admin-tab-btn" id="tab-btn-2" onclick="switchAdminTab(2)">Paj 2: Jesyon Anplwaye</button>
       <button class="admin-tab-btn" id="tab-btn-3" style="border-color:#00ffcc; color:#00ffcc;" onclick="switchAdminTab(3)">📜 Gade Istorik</button>
-      <button class="admin-tab-btn" style="background:#007bff; color:#fff; border-color:#007bff;" onclick="moveToHistory()">📦 Voye nan Istorik</button>
+      <button class="admin-tab-btn" style="background:#007bff; color:#fff; border-color:#00ffcc;" onclick="moveToHistory()">📦 Voye nan Istorik</button>
     </div>
 
     <!-- PAJ 1: FINANS & DEMANN -->
@@ -960,7 +960,6 @@
       };
     }
 
-    /* --- SISTÈM TRAJEKTWA PÈDI NIKÈL (ALE AZA / 5 KOTÈ DIFERAN) --- */
     function generateRandomMissTrajectory(hoop) {
       const missType = Math.floor(Math.random() * 5);
       let offsetX = 0;
@@ -970,33 +969,28 @@
       let bVY = 0;
 
       if (missType === 0) {
-        // Frape sou bò gòch panye a epi tonbe deyò
         offsetX = -(32 + Math.random() * 65);
         offsetY = -18 + Math.random() * 45;
         bVX = -(18 + Math.random() * 25);
         bVY = 28 + Math.random() * 25;
       } else if (missType === 1) {
-        // Frape sou bò adwat panye a epi tonbe deyò
         offsetX = 32 + Math.random() * 65;
         offsetY = -18 + Math.random() * 45;
         bVX = 18 + Math.random() * 25;
         bVY = 28 + Math.random() * 25;
       } else if (missType === 2) {
-        // Pase twò wo anlè panye a epi tonbe dèyè l
         offsetX = (Math.random() - 0.5) * 70;
         offsetY = -(30 + Math.random() * 35);
         arcH = 135 + Math.random() * 35;
         bVX = (Math.random() - 0.5) * 45;
         bVY = 30 + Math.random() * 25;
       } else if (missType === 3) {
-        // Frape kout sou devan devan fè ak rebondi anba
         offsetX = (Math.random() - 0.5) * 55;
         offsetY = 25 + Math.random() * 38;
         arcH = 75 + Math.random() * 25;
         bVX = (Math.random() - 0.5) * 30;
         bVY = 35 + Math.random() * 20;
       } else {
-        // Frape sou a la kous nan panèl la bò gòch oswa adwat
         const side = Math.random() < 0.5 ? -1 : 1;
         offsetX = side * (16 + Math.random() * 10);
         offsetY = -3 + Math.random() * 6;
