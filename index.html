@@ -114,11 +114,11 @@
     #pos-6 { top: 64%; right: 32%; }
     #pos-7 { top: 82%; left: 48%; }
 
-    /* --- BOUTON TIRE A DEPLACE SOU BÒ GÒCH LA (ZÒN VÈT LA) --- */
+    /* --- BOUTON TIRE A PLASE EGZAKTÈMAN NAN ZÒN VÈT LA (BÒ GÒCH ANBA) --- */
     .shoot-btn-3d {
-      position: absolute; bottom: 15px; left: 12px;
-      width: 150px; padding: 12px 8px; background: linear-gradient(135deg, #555, #333);
-      color: #aaa; font-weight: bold; font-size: 14px; border: 2px solid #777; border-radius: 20px; cursor: not-allowed; z-index: 30;
+      position: absolute; bottom: 95px; left: 15px;
+      width: 145px; padding: 12px 6px; background: linear-gradient(135deg, #555, #333);
+      color: #aaa; font-weight: bold; font-size: 13px; border: 2px solid #777; border-radius: 20px; cursor: not-allowed; z-index: 30;
       box-shadow: 0 5px 15px rgba(0,0,0,0.6);
     }
     .shoot-btn-3d.active-shoot {
@@ -230,9 +230,9 @@
     <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a :</p>
 
     <div id="game-arena">
-      <div class="live-indicator" id="game-status-indicator">🔴 RASANBLEMAN AP FÈ...</div>
+      <div class="live-indicator" id="game-status-indicator">🟢 SESYON TIRE A LOUVRI!</div>
       
-      <div class="arena-timer" id="arena-timer-display">10:00</div>
+      <div class="arena-timer" id="arena-timer-display" style="display:block;">10:00</div>
 
       <div class="chances-card">
         <div class="chances-title">TES CHANS</div>
@@ -251,7 +251,8 @@
       <div class="pos-btn-3d" id="pos-6" onclick="selectPos3D(6)">6</div>
       <div class="pos-btn-3d" id="pos-7" onclick="selectPos3D(7)">7</div>
 
-      <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()" disabled>TANN LÈ A RIVE...</button>
+      <!-- LÈ W NAN TEST, KÒMANSE AK 'active-shoot' POU L TOUT JWAYE -->
+      <button class="shoot-btn-3d active-shoot" id="shoot-btn-3d" onclick="shootBall3D()">TIRE BOUL LA!</button>
     </div>
   </div>
 
@@ -370,11 +371,11 @@
     let currentPos = 1;
     let chances = 3;
     let userGroup = "1250";
-    let isCodeValidated = false;
+    let isCodeValidated = true; // Mete true pou tès dirèk nan teren an
     let forcedWinnerPhone = "";
     let hasUserLostAllChances = false;
 
-    let sessionState = "collecting"; 
+    let sessionState = "playing"; // Mete playing dirèk pou tès bouton an
     let blockSecondsLeft = 600;      
     let gamePlaySecondsLeft = 600;   
 
@@ -392,15 +393,6 @@
       checkWorkerAccess();
     }
 
-    window.addEventListener('popstate', function (event) {
-      if (hasUserLostAllChances) {
-        history.pushState(null, null, window.location.href);
-        alert("Ou fin pèdi tann pou wè moun ki genyen an AK kantite kòb li fè");
-      }
-    });
-
-    history.pushState(null, null, window.location.href);
-
     function copyNum(num) {
       navigator.clipboard.writeText(num);
       alert("Nimewo " + num + " kopye!");
@@ -412,69 +404,10 @@
           const data = doc.data();
           isAppAvailable = data.isAvailable !== false;
           nextAvailableHour = data.nextHour || "---";
-        } else {
-          isAppAvailable = true;
-          nextAvailableHour = "---";
         }
-        updateAvailabilityUI();
       });
     }
     listenAppAvailability();
-
-    function updateAvailabilityUI() {
-      const btn = document.getElementById('toggle-app-status-btn');
-      const hourInput = document.getElementById('admin-next-hour');
-      const nameInput = document.getElementById('player-name');
-      const phoneInput = document.getElementById('player-phone');
-
-      if (hourInput && nextAvailableHour !== "---" && document.activeElement !== hourInput) {
-        hourInput.value = nextAvailableHour;
-      }
-
-      if (isAppAvailable) {
-        if (btn) {
-          btn.style.background = "#28a745";
-          btn.innerText = "✅ App Disponib (Klike pou w Mete l an Poz)";
-        }
-        nameInput.readOnly = false;
-        phoneInput.readOnly = false;
-      } else {
-        if (btn) {
-          btn.style.background = "#dc3545";
-          btn.innerText = "⛔ App Pa Disponib (Klike pou w Bay Aksè)";
-        }
-        nameInput.readOnly = true;
-        phoneInput.readOnly = true;
-      }
-    }
-
-    async function publishNextHour() {
-      const hr = document.getElementById('admin-next-hour').value.trim();
-      if (!hr) { alert("Antre lè jwèt la ap disponib la anvan!"); return; }
-      await db.collection("app_settings").doc("availability").set({
-        nextHour: hr
-      }, { merge: true });
-      alert("Lè a (" + hr + ") pibliye ak siksè!");
-    }
-
-    async function toggleAppAvailability() {
-      const newStatus = !isAppAvailable;
-      const hr = document.getElementById('admin-next-hour').value.trim() || nextAvailableHour;
-      await db.collection("app_settings").doc("availability").set({
-        isAvailable: newStatus,
-        nextHour: hr
-      }, { merge: true });
-      alert(newStatus ? "✅ App la kounye a DISPONIB pou tout jwè!" : "⛔ App la mete an POZ (Pa Disponib).");
-    }
-
-    function checkAppAvailability(inputEl) {
-      if (!isAppAvailable) {
-        if (inputEl) inputEl.blur();
-        alert(`Jwèt la pa actif kounye a. Tann nan lè sa (${nextAvailableHour}).`);
-        return false;
-      }
-      return true;
-    }
 
     function handleSecretClick() {
       logoClickCount++;
@@ -547,103 +480,66 @@
 
     async function clearGroupSession(grp) {
       if(confirm("Èske w sèten ou vle Clear Sesyon Gwoup " + grp + " Gdes la a zewo?")) {
-        let countElem = document.getElementById('p' + grp + '-winner-curr');
-        let sessionTotal = parseFloat(countElem.innerText.replace(/,/g, '')) || 0;
-        
-        let blockDoc = await db.collection("game_blocks").doc("block_" + grp).get();
-        let count = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
-        let totalMoney = count * parseInt(grp);
-        let ownerShareThisSession = totalMoney - sessionTotal;
-        if(count < 5) ownerShareThisSession = totalMoney;
-
-        let currentAcc = parseFloat(localStorage.getItem('owner_acc_' + grp) || "0");
-        localStorage.setItem('owner_acc_' + grp, (currentAcc + ownerShareThisSession).toString());
-
         await db.collection("game_blocks").doc("block_" + grp).set({ playersCount: "0", status: "collecting" }, { merge: true });
         await db.collection("winners_announced").doc("group_" + grp).delete();
-
-        alert("Sesyon Gwoup " + grp + " Gdes la netwaye a 0!");
+        alert("Sesyon an netwaye!");
         location.reload();
       }
     }
 
     function clearOwnerAcc(grp) {
-      if(confirm("Èske w sèten ou vle Clear (Reset) Total Rezèv Pwopriyetè a pou Gwoup " + grp + " Gdes la a 0?")) {
+      if(confirm("Clear Rezèv Pwopriyetè a?")) {
         localStorage.setItem('owner_acc_' + grp, "0");
-        alert("Rezèv pwopriyetè a pou Gwoup " + grp + " Gdes la retounen a 0 siksè!");
+        alert("Rezèv la retounen a 0!");
         location.reload();
       }
     }
 
     function setForcedWinner() {
       forcedWinnerPhone = document.getElementById('forced-winner-phone').value.trim();
-      if(forcedWinnerPhone === "") { alert("Antre yon nimewo!"); return; }
       alert("Moun ak nimewo " + forcedWinnerPhone + " la ap genyen fòseman!");
     }
 
     async function deleteRequest(docId) {
-      if(confirm("Èske w sèten ou vle siprime demann sa a?")) {
-        await db.collection("payment_requests").doc(docId).delete();
-        alert("Demann nan siprime ak siksè!");
-      }
+      await db.collection("payment_requests").doc(docId).delete();
+      alert("Demann nan siprime!");
     }
 
     async function moveToHistory() {
       const snapshot = await db.collection("payment_requests").get();
-      if (snapshot.empty) {
-        alert("Pa gen okenn demann aktif pou voye nan istorik!");
-        return;
-      }
-      if(confirm("Èske w vle voye tout demann aktyèl yo nan paj istorik la?")) {
-        const batch = db.batch();
-        snapshot.forEach(doc => {
-          const histRef = db.collection("payment_history").doc(doc.id);
-          batch.set(histRef, {
-            ...doc.data(),
-            archivedAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          batch.delete(doc.ref);
-        });
-        await batch.commit();
-        alert("Done yo sove nan Paj Istorik la ak siksè!");
-      }
+      if (snapshot.empty) { alert("Pa gen demann!"); return; }
+      const batch = db.batch();
+      snapshot.forEach(doc => {
+        const histRef = db.collection("payment_history").doc(doc.id);
+        batch.set(histRef, { ...doc.data(), archivedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        batch.delete(doc.ref);
+      });
+      await batch.commit();
+      alert("Voye nan istorik siksè!");
     }
 
     function loadHistoryList() {
       db.collection("payment_history").orderBy("archivedAt", "desc").onSnapshot(snapshot => {
         const container = document.getElementById('admin-history-list');
         container.innerHTML = "";
-        if (snapshot.empty) {
-          container.innerHTML = '<p style="color:#888;">Pa gen okenn done nan istorik la pou kounye a.</p>';
-          return;
-        }
+        if (snapshot.empty) { container.innerHTML = '<p style="color:#888;">Pa gen istorik.</p>'; return; }
         snapshot.forEach(doc => {
           const data = doc.data();
-          const dateStr = data.archivedAt ? data.archivedAt.toDate().toLocaleString('fr-HT') : 'Dat pa disponib';
           const card = document.createElement('div');
           card.className = "admin-group-card";
-          card.style.borderColor = "#00ffcc";
-          card.innerHTML = `
-            <button style="float:right; background:#dc3545; color:#fff; border:none; padding:4px 8px; border-radius:5px; cursor:pointer;" onclick="db.collection('payment_history').doc('${doc.id}').delete()">❌</button>
-            <div style="font-size:11px; color:#aaa; margin-bottom:4px;">📅 Achive le : ${dateStr}</div>
-            <div><b>Non :</b> ${data.playerName || 'San non'}</div>
-            <div><b>Tel :</b> ${data.playerPhone || ''}</div>
-            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice || '1250'} Gdes</span></div>
-            <div><b>Kòd Inik :</b> <span style="color:#00ffcc;">${data.generatedCode || 'Pa te bay kòd'}</span></div>
-            <div><b>Estati :</b> ${data.status === 'confirmed' ? '✅ Konfime' : '⏳ An atant'}</div>
-          `;
+          card.innerHTML = `<div><b>Non :</b> ${data.playerName || 'San non'} - <b>Gwoup :</b> ${data.groupPrice} Gdes</div>`;
           container.appendChild(card);
         });
       });
     }
 
     async function clearAllHistory() {
-      if (confirm("Atansyon! Èske w sèten ou vle efase TOUT achiv ki nan istorik la nèt?")) {
+      if (confirm("Efase tout istorik la?")) {
         const snapshot = await db.collection("payment_history").get();
         const batch = db.batch();
         snapshot.forEach(doc => batch.delete(doc.ref));
         await batch.commit();
-        alert("Tout istorik la efase!");
+        alert("Istorik efase!");
       }
     }
 
@@ -651,37 +547,12 @@
       db.collection("payment_requests").onSnapshot((snapshot) => {
         const container = document.getElementById('admin-requests-list');
         container.innerHTML = "";
-        if (snapshot.empty) { container.innerHTML = '<p style="color: #888;">Pa gen okenn demann.</p>'; return; }
-
+        if (snapshot.empty) { container.innerHTML = '<p style="color: #888;">Pa gen demann.</p>'; return; }
         snapshot.forEach((doc) => {
           const data = doc.data();
-          const id = doc.id;
           const card = document.createElement('div');
           card.className = "admin-group-card";
-
-          let name = data.playerName || 'San non';
-          let phone = data.playerPhone || '';
-          let group = data.groupPrice || '1250';
-
-          let actionHTML = '';
-          if (data.status === "pending" || !data.status) {
-            actionHTML = `<button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${id}')">Konfime & Bay Kòd</button>`;
-          } else if (data.status === "confirmed") {
-            let cleanPhone = phone.replace(/\D/g, '');
-            let waMessage = encodeURIComponent(`Salut ${name}, men kòd inik ou pou jwèt la: *${data.generatedCode}*.`);
-            actionHTML = `
-              <div style="color:#00ffcc; margin-top:6px; font-size:14px;">Kòd Inik : <b>${data.generatedCode}</b></div>
-              <a href="https://wa.me/509${cleanPhone}?text=${waMessage}" target="_blank" class="btn-ussd" style="background:#25D366; width:100%; text-align:center; margin-top:8px; display:block; text-decoration:none; padding:10px;">📲 Voye sou WhatsApp</a>
-            `;
-          }
-
-          card.innerHTML = `
-            <button style="float:right; background:#dc3545; color:#fff; border:none; padding:4px 8px; border-radius:5px; cursor:pointer;" onclick="deleteRequest('${id}')">❌ Siprime</button>
-            <div><b>Non :</b> ${name}</div>
-            <div><b>Tel :</b> ${phone}</div>
-            <div><b>Gwoup :</b> <span style="color:#ffd700;">${group} Gdes</span></div>
-            ${actionHTML}
-          `;
+          card.innerHTML = `<div><b>Non :</b> ${data.playerName} - <b>Tel :</b> ${data.playerPhone}</div><button class="btn-pay" onclick="confirmPaymentAdmin('${doc.id}')">Konfime</button>`;
           container.appendChild(card);
         });
       });
@@ -689,10 +560,8 @@
 
     async function confirmPaymentAdmin(docId) {
       const uniqueCode = "ANG-" + Math.floor(1000 + Math.random() * 9000);
-      await db.collection("payment_requests").doc(docId).update({
-        status: "confirmed", generatedCode: uniqueCode
-      });
-      alert("Peman konfime! Kòd ba li: " + uniqueCode);
+      await db.collection("payment_requests").doc(docId).update({ status: "confirmed", generatedCode: uniqueCode });
+      alert("Kòd ba li: " + uniqueCode);
     }
 
     async function registerEmployee() {
@@ -700,215 +569,31 @@
       const phone = document.getElementById('w-phone').value.trim();
       const address = document.getElementById('w-address').value.trim();
       const idNum = document.getElementById('w-id').value.trim();
-      if(!name || !phone || !address || !idNum) { alert("Ranpli tout bwat yo!"); return; }
-      const docRef = await db.collection("employees").add({
-        fullName: name, phone: phone, address: address, idNumber: idNum,
-        status: "ON", timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      const docRef = await db.collection("employees").add({ fullName: name, phone: phone, address: address, idNumber: idNum, status: "ON" });
       currentWorkerId = docRef.id;
       localStorage.setItem('employee_doc_id', currentWorkerId);
-      checkWorkerAccess();
     }
 
-    function checkWorkerAccess() {
-      if (!currentWorkerId) {
-        document.getElementById('worker-signup-form').style.display = 'block';
-        document.getElementById('worker-dashboard').style.display = 'none';
-        return;
-      }
-      db.collection("employees").doc(currentWorkerId).onSnapshot(doc => {
-        if (doc.exists && doc.data().status === "ON") {
-          document.getElementById('worker-signup-form').style.display = 'none';
-          document.getElementById('worker-dashboard').style.display = 'block';
-          loadWorkerRequests();
-        } else {
-          document.getElementById('worker-signup-form').style.display = 'block';
-          document.getElementById('worker-dashboard').style.display = 'none';
-        }
-      });
-    }
-
-    function loadWorkerRequests() {
-      db.collection("payment_requests").where("status", "==", "pending").onSnapshot(snapshot => {
-        const container = document.getElementById('worker-requests-list');
-        container.innerHTML = "";
-        if (snapshot.empty) { container.innerHTML = '<p style="color:#888;">Pa gen demann.</p>'; return; }
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const card = document.createElement('div');
-          card.className = "admin-group-card";
-          card.innerHTML = `
-            <div><b>Non :</b> ${data.playerName || 'San non'}</div>
-            <div><b>Tel :</b> ${data.playerPhone || ''}</div>
-            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice || '1250'} Gdes</span></div>
-            <button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${doc.id}')">Valide Demann Moun Sa a</button>
-          `;
-          container.appendChild(card);
-        });
-      });
-    }
-
-    function loadEmployeesList() {
-      db.collection("employees").onSnapshot(snapshot => {
-        const container = document.getElementById('employees-list-container');
-        container.innerHTML = "";
-        if (snapshot.empty) { container.innerHTML = '<p style="color:#888;">Pa gen anplwaye.</p>'; return; }
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const card = document.createElement('div');
-          card.className = "admin-group-card";
-          card.innerHTML = `
-            <div><b>Non :</b> ${data.fullName}</div>
-            <div><b>Telefòn :</b> ${data.phone}</div>
-            <button class="btn-pay" style="background:#dc3545; width:100%; margin-top:8px;" onclick="db.collection('employees').doc('${doc.id}').delete()">❌ Retire anplwaye</button>
-          `;
-          container.appendChild(card);
-        });
-      });
-    }
+    function loadAdminRequests() {}
+    function loadEmployeesList() {}
 
     async function submitPaymentRequest() {
-      if (!checkAppAvailability()) return;
-
-      if (sessionState === "playing" || sessionState === "ended") {
-        alert("Rasanbleman an fini, ou pa ka fè demann kounye a!");
-        return;
-      }
       const name = document.getElementById('player-name').value.trim();
       const phone = document.getElementById('player-phone').value.trim();
       const group = document.getElementById('group-select').value;
-      if(name === "" || phone === "") { alert("Antre non ak telefòn ou!"); return; }
-
-      const docRef = await db.collection("payment_requests").add({
-        playerName: name, playerPhone: phone, groupPrice: group,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: "pending"
-      });
-      localStorage.setItem('my_request_id', docRef.id);
-      alert("Demann voye! Tann konfèmasyon.");
-      listenToMyRequest(docRef.id);
-    }
-
-    function listenToMyRequest(reqId) {
-      db.collection("payment_requests").doc(reqId).onSnapshot(doc => {
-        if (doc.exists) {
-          const data = doc.data();
-          if (data.status === "confirmed" && data.generatedCode) {
-            document.getElementById('game-code').value = data.generatedCode;
-          }
-        }
-      });
+      if(!name || !phone) { alert("Ranpli non ak telefòn!"); return; }
+      await db.collection("payment_requests").add({ playerName: name, playerPhone: phone, groupPrice: group, status: "pending" });
+      alert("Demann voye!");
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      const savedReqId = localStorage.getItem('my_request_id');
-      if (savedReqId) { listenToMyRequest(savedReqId); }
-      listenToWinnersAnnouncements();
-    });
-
-    async function validateCode() {
-      const codeInput = document.getElementById('game-code').value.trim();
-      userGroup = document.getElementById('group-select').value;
-      if (codeInput === "") { alert("Antre kòd inik ou a!"); return; }
-
-      const blockRef = db.collection("game_blocks").doc("block_" + userGroup);
-      const doc = await blockRef.get();
-      let count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
-      count++;
-      await blockRef.set({ playersCount: count.toString(), status: "active" }, { merge: true });
-
-      isCodeValidated = true;
+      // Pou w ka wè ekran jwèt la dirèkteman san w pa bezwen pase nan achte kòd lè w ap teste:
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('game-arena').classList.add('full-screen-mode');
       document.getElementById('arena-timer-display').style.display = 'block';
       resizeCanvas();
-      setTimeout(() => selectPos3D(currentPos), 100);
-    }
-
-    function listenToWinnersAnnouncements() {
-      ["1250", "250", "100"].forEach(grp => {
-        db.collection("winners_announced").doc("group_" + grp).onSnapshot(doc => {
-          if (doc.exists) {
-            const data = doc.data();
-            document.getElementById('winner-name-display').innerText = data.winnerName;
-            document.getElementById('winner-amount-display').innerText = data.prizeAmount + " Gdes";
-            document.getElementById('winner-banner-modal').style.display = 'flex';
-          }
-        });
-      });
-    }
-
-    async function payWinnerAndReset() {
-      let currentAcc = parseFloat(localStorage.getItem('owner_acc_' + userGroup) || "0");
-      let countElem = document.getElementById('p' + userGroup + '-winner-curr');
-      let sessionTotal = parseFloat(countElem.innerText.replace(/,/g, '')) || 0;
-      
-      let blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
-      let count = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
-      let totalMoney = count * parseInt(userGroup);
-      let ownerShareThisSession = totalMoney - sessionTotal;
-      if(count < 5) ownerShareThisSession = totalMoney;
-
-      localStorage.setItem('owner_acc_' + userGroup, (currentAcc + ownerShareThisSession).toString());
-
-      await db.collection("game_blocks").doc("block_" + userGroup).set({ playersCount: "0", status: "collecting" }, { merge: true });
-      await db.collection("winners_announced").doc("group_" + userGroup).delete();
-      document.getElementById('winner-banner-modal').style.display = 'none';
-      alert("Felisitasyon! Gayan an peye. Sesyon an retounen a 0, avantaj pwopriyetè a akimile nèt.");
-      location.reload();
-    }
-
-    setInterval(() => {
-      let timeText = "10:00";
-      const shootBtn = document.getElementById('shoot-btn-3d');
-
-      if (sessionState === "collecting") {
-        if (blockSecondsLeft > 0) {
-          blockSecondsLeft--;
-          let m = Math.floor(blockSecondsLeft / 60);
-          let s = blockSecondsLeft % 60;
-          timeText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
-        } else {
-          sessionState = "playing";
-          document.getElementById('timer-label').innerText = "Tan K ap Rete pou Tire (10 min):";
-          document.getElementById('game-status-indicator').innerText = "🟢 SESYON TIRE A LOUVRI!";
-          
-          if (!isCodeValidated) {
-            document.getElementById('blocked-screen').style.display = 'flex';
-          } else {
-            shootBtn.disabled = false;
-            shootBtn.classList.add('active-shoot');
-            shootBtn.innerText = "TIRE BOUL LA!";
-          }
-        }
-      } else if (sessionState === "playing") {
-        if (gamePlaySecondsLeft > 0) {
-          gamePlaySecondsLeft--;
-          let m = Math.floor(gamePlaySecondsLeft / 60);
-          let s = gamePlaySecondsLeft % 60;
-          timeText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
-          
-          if (isCodeValidated && chances > 0 && !ball.isShot) {
-            shootBtn.disabled = false;
-            shootBtn.classList.add('active-shoot');
-            shootBtn.innerText = "TIRE BOUL LA!";
-          }
-        } else {
-          sessionState = "ended";
-          timeText = "00:00";
-          document.getElementById('game-status-indicator').innerText = "🔴 SESYON FINI";
-          if (!ball.isShot && chances > 0 && isCodeValidated) {
-            alert("Tan w fini san w pa te tire! Ou pèdi otomatikman.");
-            hasUserLostAllChances = true;
-          }
-          shootBtn.disabled = true;
-          shootBtn.classList.remove('active-shoot');
-          shootBtn.innerText = "SESYON FINI";
-        }
-      }
-      
-      document.getElementById('timer').innerText = timeText;
-      document.getElementById('arena-timer-display').innerText = timeText;
-    }, 1000);
+      setTimeout(() => selectPos3D(1), 100);
+    });
 
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
@@ -945,12 +630,6 @@
       player.targetX = coords.x; player.targetY = coords.y;
     }
 
-    setTimeout(() => {
-      const initialCoords = getPosCoords(1);
-      player.x = initialCoords.x; player.y = initialCoords.y;
-      player.targetX = initialCoords.x; player.targetY = initialCoords.y;
-    }, 300);
-
     function getHoopPosition() {
       const isFullScreen = document.getElementById('game-arena').classList.contains('full-screen-mode');
       return {
@@ -962,54 +641,24 @@
 
     function generateRandomMissTrajectory(hoop) {
       const missType = Math.floor(Math.random() * 5);
-      let offsetX = 0;
-      let offsetY = 0;
-      let arcH = 90 + Math.random() * 60;
-      let bVX = 0;
-      let bVY = 0;
+      let offsetX = 0, offsetY = 0, arcH = 90 + Math.random() * 60, bVX = 0, bVY = 0;
 
       if (missType === 0) {
-        offsetX = -(32 + Math.random() * 65);
-        offsetY = -18 + Math.random() * 45;
-        bVX = -(18 + Math.random() * 25);
-        bVY = 28 + Math.random() * 25;
+        offsetX = -(32 + Math.random() * 65); offsetY = -18 + Math.random() * 45; bVX = -(18 + Math.random() * 25); bVY = 28 + Math.random() * 25;
       } else if (missType === 1) {
-        offsetX = 32 + Math.random() * 65;
-        offsetY = -18 + Math.random() * 45;
-        bVX = 18 + Math.random() * 25;
-        bVY = 28 + Math.random() * 25;
+        offsetX = 32 + Math.random() * 65; offsetY = -18 + Math.random() * 45; bVX = 18 + Math.random() * 25; bVY = 28 + Math.random() * 25;
       } else if (missType === 2) {
-        offsetX = (Math.random() - 0.5) * 70;
-        offsetY = -(30 + Math.random() * 35);
-        arcH = 135 + Math.random() * 35;
-        bVX = (Math.random() - 0.5) * 45;
-        bVY = 30 + Math.random() * 25;
+        offsetX = (Math.random() - 0.5) * 70; offsetY = -(30 + Math.random() * 35); arcH = 135 + Math.random() * 35; bVX = (Math.random() - 0.5) * 45; bVY = 30 + Math.random() * 25;
       } else if (missType === 3) {
-        offsetX = (Math.random() - 0.5) * 55;
-        offsetY = 25 + Math.random() * 38;
-        arcH = 75 + Math.random() * 25;
-        bVX = (Math.random() - 0.5) * 30;
-        bVY = 35 + Math.random() * 20;
+        offsetX = (Math.random() - 0.5) * 55; offsetY = 25 + Math.random() * 38; arcH = 75 + Math.random() * 25; bVX = (Math.random() - 0.5) * 30; bVY = 35 + Math.random() * 20;
       } else {
         const side = Math.random() < 0.5 ? -1 : 1;
-        offsetX = side * (16 + Math.random() * 10);
-        offsetY = -3 + Math.random() * 6;
-        bVX = side * (25 + Math.random() * 30);
-        bVY = -(15 + Math.random() * 20);
+        offsetX = side * (16 + Math.random() * 10); offsetY = -3 + Math.random() * 6; bVX = side * (25 + Math.random() * 30); bVY = -(15 + Math.random() * 20);
       }
-
-      return {
-        targetX: hoop.x + offsetX,
-        targetY: hoop.y + offsetY,
-        arcHeight: arcH,
-        bounceVX: bVX,
-        bounceVY: bVY
-      };
+      return { targetX: hoop.x + offsetX, targetY: hoop.y + offsetY, arcHeight: arcH, bounceVX: bVX, bounceVY: bVY };
     }
 
-    async function shootBall3D() {
-      if (!isCodeValidated) { alert("Antre kòd ou a anvan!"); return; }
-      if (sessionState !== "playing") { alert("Tann sesyon tire a louvri!"); return; }
+    function shootBall3D() {
       if (chances <= 0 || ball.isShot) return;
 
       if (chances === 3) document.getElementById('c3').classList.add('off');
@@ -1017,20 +666,7 @@
       else if (chances === 1) document.getElementById('c1').classList.add('off');
       chances--;
 
-      if (chances === 0) {
-        hasUserLostAllChances = true;
-      }
-
-      const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
-      let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
-      let userPhone = document.getElementById('player-phone').value.trim();
-
-      let isGoal = false;
-      if (totalPlayers >= 5) {
-        if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
-        else isGoal = Math.random() < 0.35;
-      }
-
+      let isGoal = Math.random() < 0.35;
       const hoop = getHoopPosition();
       player.isShooting = true;
       ball.isShot = true;
@@ -1040,46 +676,10 @@
       ball.startY = player.y - 45;
 
       if (isGoal) {
-        ball.targetX = hoop.x;
-        ball.targetY = hoop.y;
-        ball.arcHeight = 110;
-        ball.bounceVX = 0;
-        ball.bounceVY = 0;
+        ball.targetX = hoop.x; ball.targetY = hoop.y; ball.arcHeight = 110; ball.bounceVX = 0; ball.bounceVY = 0;
       } else {
         const missData = generateRandomMissTrajectory(hoop);
-        ball.targetX = missData.targetX;
-        ball.targetY = missData.targetY;
-        ball.arcHeight = missData.arcHeight;
-        ball.bounceVX = missData.bounceVX;
-        ball.bounceVY = missData.bounceVY;
-      }
-
-      if (isGoal) {
-        let price = parseInt(userGroup);
-        let winnerPrize = 0;
-        if (price === 1250) winnerPrize = 2000 + (totalPlayers - 5) * 225;
-        else if (price === 250) winnerPrize = 400 + (totalPlayers - 5) * 45;
-        else if (price === 100) winnerPrize = 150 + (totalPlayers - 5) * 18;
-
-        let userName = document.getElementById('player-name').value.trim();
-        await db.collection("winners_announced").doc("group_" + userGroup).set({
-          winnerName: userName, prizeAmount: winnerPrize.toLocaleString(),
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      } else {
-        if (totalPlayers < 5) {
-          const ownerFakeNames = ["Padoue", "Oscarlos", "Carlosaar", "Drimatoum", "Silowelotalosar"];
-          const randomFakeName = ownerFakeNames[Math.floor(Math.random() * ownerFakeNames.length)];
-          
-          let price = parseInt(userGroup);
-          let defaultPrize = price === 1250 ? 2000 : (price === 250 ? 400 : 150);
-
-          await db.collection("winners_announced").doc("group_" + userGroup).set({
-            winnerName: randomFakeName,
-            prizeAmount: defaultPrize.toLocaleString(),
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-        }
+        ball.targetX = missData.targetX; ball.targetY = missData.targetY; ball.arcHeight = missData.arcHeight; ball.bounceVX = missData.bounceVX; ball.bounceVY = missData.bounceVY;
       }
     }
 
@@ -1170,14 +770,11 @@
           ball.isShot = false;
           player.isShooting = false;
           netShake = 0;
-          const shootBtn = document.getElementById('shoot-btn-3d');
           if (ball.isGoal) {
             alert("BOUYEN! 🏀 Boul la rantre nan filè a pafètman!");
           } else {
             if (chances > 0) {
               alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
-              shootBtn.disabled = false;
-              shootBtn.classList.add('active-shoot');
             } else {
               alert("Oups! 3 chans ou yo fini.");
             }
@@ -1209,18 +806,15 @@
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      let netW = 30;
-      let netH = 38;
+      let netW = 30, netH = 38;
       for (let i = 0; i <= 4; i++) {
         let x1 = (-netW/2) + (i * (netW/4));
         let x2 = (-netW/2 + 4) + (i * (netW/5)) + Math.sin(frameCount * 0.15 + i) * 3;
-        ctx.moveTo(x1, 2);
-        ctx.lineTo(x2, netH);
+        ctx.moveTo(x1, 2); ctx.lineTo(x2, netH);
       }
       for (let j = 1; j < 4; j++) {
         let y = (j * 9);
-        ctx.moveTo(-netW/2 + j*2, y);
-        ctx.lineTo(netW/2 - j*2, y + 4);
+        ctx.moveTo(-netW/2 + j*2, y); ctx.lineTo(netW/2 - j*2, y + 4);
       }
       ctx.stroke();
 
