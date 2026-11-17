@@ -343,14 +343,24 @@
     </div>
   </div>
 
+  <!-- Bwat Pop-up pou jwè yo (ak bouton Fèmen ble a sèlman) -->
   <div id="winner-banner-modal">
     <div class="winner-box">
       <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 GANYAN DETEKTE! 🏆</h2>
       <h3 style="color: #00ffcc;" id="winner-name-display">---</h3>
       <p style="margin-top: 8px; font-size: 13px;">Li genyen : <b style="color: #ffd700;" id="winner-amount-display">0 Gdes</b></p>
-      <!-- Bouton Peye a kounye a vizib SÈLMAN pou Pwopriyetè nan panèl admin, Jwè yo wè yon bouton Fèmen sèlman -->
-      <button id="admin-pay-btn" class="btn-action" style="margin-top: 15px; background: #28a745; color: #fff; display: none;" onclick="payWinnerAndReset()">Peye Gayan an & Reset a 0</button>
-      <button class="btn-action" style="margin-top: 10px; background: #007bff; color: #fff;" onclick="closeWinnerModalForPlayer()">Fèmen</button>
+      <button class="btn-action" style="margin-top: 15px; background: #007bff; color: #fff;" onclick="closeWinnerModalForPlayer()">Fèmen</button>
+    </div>
+  </div>
+
+  <!-- Bwat Pop-up pou Pwopriyetè (nan Panèl Admin la ak bouton Vèt la pou Peye a) -->
+  <div id="admin-winner-banner-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.92); z-index: 10001; align-items: center; justify-content: center; padding: 20px;">
+    <div class="winner-box">
+      <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 ADMIN: GANYAN DETEKTE! 🏆</h2>
+      <h3 style="color: #00ffcc;" id="admin-winner-name-display">---</h3>
+      <p style="margin-top: 8px; font-size: 13px;">Li genyen : <b style="color: #ffd700;" id="admin-winner-amount-display">0 Gdes</b></p>
+      <button class="btn-action" style="margin-top: 15px; background: #28a745; color: #fff;" onclick="payWinnerAndReset()">Peye Gayan an & Reset a 0</button>
+      <button class="btn-action" style="margin-top: 10px; background: #dc3545; color: #fff;" onclick="document.getElementById('admin-winner-banner-modal').style.display='none'">Fèmen Panèl Sa a</button>
     </div>
   </div>
 
@@ -491,8 +501,18 @@
 
     function openAdminPanel() {
       document.getElementById('secret-admin-modal').style.display = 'block';
-      // Lè se pwopriyetè a ki louvri l, nou afiche bouton vèt la pou l ka peye si l vle
-      document.getElementById('admin-pay-btn').style.display = 'block';
+      
+      // Si yon gayan deja la lè pwopriyetè a louvri panèl admin, nou montre bwat admin lan tou ak bouton vèt la
+      ["1250", "250", "100"].forEach(async (grp) => {
+        let winDoc = await db.collection("winners_announced").doc("group_" + grp).get();
+        if (winDoc.exists) {
+          let data = winDoc.data();
+          document.getElementById('admin-winner-name-display').innerText = data.winnerName;
+          document.getElementById('admin-winner-amount-display').innerText = data.prizeAmount + " Gdes";
+          document.getElementById('admin-winner-banner-modal').style.display = 'flex';
+        }
+      });
+
       loadAdminRequests();
       loadEmployeesList();
       loadHistoryList();
@@ -836,9 +856,17 @@
         db.collection("winners_announced").doc("group_" + grp).onSnapshot(doc => {
           if (doc.exists) {
             const data = doc.data();
+            // Pou jwè yo (san bouton peye)
             document.getElementById('winner-name-display').innerText = data.winnerName;
             document.getElementById('winner-amount-display').innerText = data.prizeAmount + " Gdes";
             document.getElementById('winner-banner-modal').style.display = 'flex';
+
+            // Si panèl admin lan louvri, mete l ajou tou
+            if (document.getElementById('secret-admin-modal').style.display === 'block') {
+              document.getElementById('admin-winner-name-display').innerText = data.winnerName;
+              document.getElementById('admin-winner-amount-display').innerText = data.prizeAmount + " Gdes";
+              document.getElementById('admin-winner-banner-modal').style.display = 'flex';
+            }
           }
         });
       });
@@ -860,6 +888,7 @@
       await db.collection("game_blocks").doc("block_" + userGroup).set({ playersCount: "0", status: "collecting" }, { merge: true });
       await db.collection("winners_announced").doc("group_" + userGroup).delete();
       document.getElementById('winner-banner-modal').style.display = 'none';
+      document.getElementById('admin-winner-banner-modal').style.display = 'none';
       alert("Felisitasyon! Gayan an peye. Sesyon an retounen a 0, avantaj pwopriyetè a akimile nèt.");
       location.reload();
     }
