@@ -348,7 +348,9 @@
       <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 GANYAN DETEKTE! 🏆</h2>
       <h3 style="color: #00ffcc;" id="winner-name-display">---</h3>
       <p style="margin-top: 8px; font-size: 13px;">Li genyen : <b style="color: #ffd700;" id="winner-amount-display">0 Gdes</b></p>
-      <button class="btn-action" style="margin-top: 15px; background: #28a745; color: #fff;" onclick="payWinnerAndReset()">Peye Gayan an & Reset a 0</button>
+      <!-- Bouton Peye a kounye a vizib SÈLMAN pou Pwopriyetè nan panèl admin, Jwè yo wè yon bouton Fèmen sèlman -->
+      <button id="admin-pay-btn" class="btn-action" style="margin-top: 15px; background: #28a745; color: #fff; display: none;" onclick="payWinnerAndReset()">Peye Gayan an & Reset a 0</button>
+      <button class="btn-action" style="margin-top: 10px; background: #007bff; color: #fff;" onclick="closeWinnerModalForPlayer()">Fèmen</button>
     </div>
   </div>
 
@@ -489,12 +491,18 @@
 
     function openAdminPanel() {
       document.getElementById('secret-admin-modal').style.display = 'block';
+      // Lè se pwopriyetè a ki louvri l, nou afiche bouton vèt la pou l ka peye si l vle
+      document.getElementById('admin-pay-btn').style.display = 'block';
       loadAdminRequests();
       loadEmployeesList();
       loadHistoryList();
     }
 
     function closeAdminPanel() { document.getElementById('secret-admin-modal').style.display = 'none'; }
+
+    function closeWinnerModalForPlayer() {
+      document.getElementById('winner-banner-modal').style.display = 'none';
+    }
 
     function switchAdminTab(pageNum) {
       [1, 2, 3].forEach(num => {
@@ -856,17 +864,16 @@
       location.reload();
     }
 
-    // Fonksyon ki jere revèy yo ak desizyon gayan an LÈ SESYON 10 MINIT LA FINI SOU 00:00
     async function determineSessionWinnerAtEnd() {
       const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
       let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
 
-      // Si deja gen yon gayan ki anonse pou sesyon sa a, pa repete l
       let winnerDoc = await db.collection("winners_announced").doc("group_" + userGroup).get();
       if (winnerDoc.exists) return;
 
       let winningName = "";
       let winningPrizeStr = "";
+      let winningPhone = "";
 
       let price = parseInt(userGroup);
       let basePrize = (price === 1250) ? 2000 : (price === 250) ? 400 : 150;
@@ -878,9 +885,9 @@
         else if (price === 100) prizeAmt = 150 + (totalPlayers - 5) * 18;
 
         winningName = document.getElementById('player-name').value.trim() || "Jwè a";
+        winningPhone = document.getElementById('player-phone').value.trim();
         winningPrizeStr = prizeAmt.toLocaleString();
       } else {
-        // Si gen ant 1 ak 4 moun (oswa 0), chwazi youn nan non sekrè yo pou pwopriyetè a pran tout kòb la
         const secretNames = ["COMOLE", "SANTILES", "ZAKRIPTA", "SANPATUBRE", "KOLOBOOS"];
         winningName = secretNames[Math.floor(Math.random() * secretNames.length)];
         winningPrizeStr = basePrize.toLocaleString();
@@ -891,6 +898,13 @@
         prizeAmount: winningPrizeStr,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
+
+      if (winningPhone && totalPlayers >= 5) {
+        let cleanPhone = winningPhone.replace(/\D/g, '');
+        let msg = encodeURIComponent(`🏆 Felisitasyon ${winningName}! Ou genyen nan sesyon Gwoup ${userGroup} Gdes la. Ou fè ${winningPrizeStr} Gdes! Klike sou lyen jwèt la pou w wè detay yo.`);
+        let waLink = `https://wa.me/509${cleanPhone}?text=${msg}`;
+        window.open(waLink, '_blank');
+      }
     }
 
     setInterval(() => {
@@ -931,7 +945,6 @@
         } else {
           if (sessionState !== "ended") {
             sessionState = "ended";
-            // Lè 10 minit yo fini nèt, detèmine gayan an ofisyèlman sou rezo a pou tout moun wè l
             determineSessionWinnerAtEnd();
           }
           timeText = "00:00";
@@ -1066,7 +1079,6 @@
 
       let isGoal = false;
 
-      // Pandan jwèt la ap fèt, jwè yo tire nòmalman. Rezilta final la deside lè 10 min yo fini sou 00:00.
       if (totalPlayers >= 1 && totalPlayers <= 4) {
         isGoal = false;
       } else {
