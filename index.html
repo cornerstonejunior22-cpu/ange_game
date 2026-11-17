@@ -114,16 +114,11 @@
     #pos-6 { top: 64%; right: 32%; }
     #pos-7 { top: 82%; left: 48%; }
 
-    /* --- BOUTON TIRE A PLASE EGZAKTÈMAN NAN ZÒN VÈT LA (BÒ GÒCH ANBA) --- */
+    /* --- BOUTON TIRE A SOU BÒ GÒCH LA (ZÒN VÈT) --- */
     .shoot-btn-3d {
       position: absolute; bottom: 95px; left: 15px;
-      width: 145px; padding: 12px 6px; background: linear-gradient(135deg, #555, #333);
-      color: #aaa; font-weight: bold; font-size: 13px; border: 2px solid #777; border-radius: 20px; cursor: not-allowed; z-index: 30;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.6);
-    }
-    .shoot-btn-3d.active-shoot {
-      background: linear-gradient(135deg, #ffd700, #ff4500);
-      color: #000; border: 2px solid #fff; cursor: pointer;
+      width: 145px; padding: 12px 6px; background: linear-gradient(135deg, #ffd700, #ff4500);
+      color: #000; font-weight: bold; font-size: 13px; border: 2px solid #fff; border-radius: 20px; cursor: pointer; z-index: 30;
       box-shadow: 0 6px 20px rgba(255, 69, 0, 0.6);
       animation: pulseBtn 1s infinite alternate;
     }
@@ -144,17 +139,6 @@
     .group-title { font-size: 15px; color: #ffd700; font-weight: bold; border-bottom: 1px dashed #444; padding-bottom: 5px; margin-bottom: 8px; }
     .btn-close-admin { background: #dc3545; color: #fff; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; float: right; cursor: pointer; }
 
-    #blocked-screen {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.96); z-index: 99999; align-items: center; justify-content: center; padding: 20px; text-align: center;
-    }
-    .blocked-box { background: #1e1e1e; border: 2px solid #ff4500; border-radius: 15px; padding: 25px; max-width: 350px; }
-
-    #worker-screen {
-      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: #111; z-index: 99998; padding: 15px; overflow-y: auto; text-align: left;
-    }
-
     #winner-banner-modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0, 0, 0, 0.92); z-index: 10000; align-items: center; justify-content: center; padding: 20px;
@@ -163,31 +147,6 @@
   </style>
 </head>
 <body>
-
-  <div id="blocked-screen">
-    <div class="blocked-box">
-      <h3 style="color: #ff4500; margin-bottom: 15px;">⚠️ Jwèt la Gentan Demare</h3>
-      <p style="font-size: 14px; color: #fff;">Rasanbleman an fini. Jwèt la ap dewoule kounye a nan dezyèm faz la. Tann pwochen sesyon an s.v.p.!</p>
-    </div>
-  </div>
-
-  <div id="worker-screen">
-    <h3 style="color:#ffd700; margin-bottom:10px;">Espace Travay Anplwaye a Distans</h3>
-    <div id="worker-signup-form" class="admin-group-card">
-      <div class="group-title">Enfòmasyon Pèsonèl Anplwaye</div>
-      <input type="text" id="w-fullname" class="input-field" placeholder="Non ak Prénom">
-      <input type="text" id="w-phone" class="input-field" placeholder="Nimewo Telefòn">
-      <input type="text" id="w-address" class="input-field" placeholder="Adrès Ou">
-      <input type="text" id="w-id" class="input-field" placeholder="NIF oswa CIN">
-      <button class="btn-action" style="margin-top:10px;" onclick="registerEmployee()">Enregistre</button>
-    </div>
-    <div id="worker-dashboard" style="display:none;">
-      <h4 style="color:#fff; margin-bottom:10px;">Lis Demann Kòd pou Valide:</h4>
-      <div id="worker-requests-list">
-        <p style="color:#aaa;">N ap chaje demann yo...</p>
-      </div>
-    </div>
-  </div>
 
   <div id="main-app-content">
     <div id="setup-screen">
@@ -209,14 +168,14 @@
         <a href="tel:*202%23" class="btn-ussd">*202# MonCash</a>
         <a href="tel:*202%23" class="btn-ussd" style="background:#dc3545;">*202# Natcash</a>
 
-        <select id="group-select" class="select-field" onchange="checkAppAvailability()">
+        <select id="group-select" class="select-field">
           <option value="1250">Gwoup 1 - Code 1,250 Gdes</option>
           <option value="250">Gwoup 2 - Code 250 Gdes</option>
           <option value="100">Gwoup 3 - Code 100 Gdes</option>
         </select>
 
-        <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou" onfocus="checkAppAvailability(this)" onclick="checkAppAvailability(this)">
-        <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la" onfocus="checkAppAvailability(this)" onclick="checkAppAvailability(this)">
+        <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou">
+        <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la">
         
         <button class="btn-action" style="font-size: 13px; padding: 8px;" onclick="submitPaymentRequest()">Mande Kòd Inik Mwen</button>
         
@@ -231,7 +190,6 @@
 
     <div id="game-arena">
       <div class="live-indicator" id="game-status-indicator">🟢 SESYON TIRE A LOUVRI!</div>
-      
       <div class="arena-timer" id="arena-timer-display" style="display:block;">10:00</div>
 
       <div class="chances-card">
@@ -251,8 +209,7 @@
       <div class="pos-btn-3d" id="pos-6" onclick="selectPos3D(6)">6</div>
       <div class="pos-btn-3d" id="pos-7" onclick="selectPos3D(7)">7</div>
 
-      <!-- LÈ W NAN TEST, KÒMANSE AK 'active-shoot' POU L TOUT JWAYE -->
-      <button class="shoot-btn-3d active-shoot" id="shoot-btn-3d" onclick="shootBall3D()">TIRE BOUL LA!</button>
+      <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()">TIRE BOUL LA!</button>
     </div>
   </div>
 
@@ -260,88 +217,10 @@
   <div id="secret-admin-modal">
     <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
-
-    <div class="admin-group-card" style="border-color: #00ffcc; background: #142222;">
-      <div class="group-title" style="color: #00ffcc;">⚙️ Kontwòl Disponibilite App la</div>
-      <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px;">
-        <input type="text" id="admin-next-hour" class="input-field" style="margin:0; flex:1;" placeholder="Mete lè a (ex: 18:30)">
-        <button class="btn-pay" style="background:#007bff; padding: 9px 12px; margin:0;" onclick="publishNextHour()">Pibliye Lè</button>
-      </div>
-      <button id="toggle-app-status-btn" class="btn-action" style="width:100%; font-size:13px; background:#28a745; color:#fff;" onclick="toggleAppAvailability()">
-        ✅ App Disponib (Klike pou w Mete l an Poz)
-      </button>
-    </div>
-
-    <div style="margin-bottom: 10px;">
-      <button class="admin-tab-btn active" id="tab-btn-1" onclick="switchAdminTab(1)">Paj 1: Finans & Demann</button>
-      <button class="admin-tab-btn" id="tab-btn-2" onclick="switchAdminTab(2)">Paj 2: Jesyon Anplwaye</button>
-      <button class="admin-tab-btn" id="tab-btn-3" style="border-color:#00ffcc; color:#00ffcc;" onclick="switchAdminTab(3)">📜 Gade Istorik</button>
-      <button class="admin-tab-btn" style="background:#007bff; color:#fff; border-color:#00ffcc;" onclick="moveToHistory()">📦 Voye nan Istorik</button>
-    </div>
-
-    <!-- PAJ 1: FINANS & DEMANN -->
-    <div id="admin-page-1">
-      <div class="admin-group-card">
-        <button class="btn-clear-group" onclick="clearGroupSession('1250')">Clear Sesyon 🔄</button>
-        <button class="btn-clear-group" style="background:#ff8c00;" onclick="clearOwnerAcc('1250')">Clear Rezèv 💰</button>
-        <div class="group-title">Gwoup 1,250 Gdes</div>
-        <div style="margin-top: 6px;">Total Pwopriyetè Akimile (Rezèv): <b style="color:#28a745;"><span id="p1250-owner-acc">0</span> Gdes</b></div>
-        <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p1250-winner-curr">0</span> Gdes</b></div>
-      </div>
-
-      <div class="admin-group-card">
-        <button class="btn-clear-group" onclick="clearGroupSession('250')">Clear Sesyon 🔄</button>
-        <button class="btn-clear-group" style="background:#ff8c00;" onclick="clearOwnerAcc('250')">Clear Rezèv 💰</button>
-        <div class="group-title">Gwoup 250 Gdes</div>
-        <div style="margin-top: 6px;">Total Pwopriyetè Akimile (Rezèv): <b style="color:#28a745;"><span id="p250-owner-acc">0</span> Gdes</b></div>
-        <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p250-winner-curr">0</span> Gdes</b></div>
-      </div>
-
-      <div class="admin-group-card">
-        <button class="btn-clear-group" onclick="clearGroupSession('100')">Clear Sesyon 🔄</button>
-        <button class="btn-clear-group" style="background:#ff8c00;" onclick="clearOwnerAcc('100')">Clear Rezèv 💰</button>
-        <div class="group-title">Gwoup 100 Gdes</div>
-        <div style="margin-top: 6px;">Total Pwopriyetè Akimile (Rezèv): <b style="color:#28a745;"><span id="p100-owner-acc">0</span> Gdes</b></div>
-        <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p100-winner-curr">0</span> Gdes</b></div>
-      </div>
-
-      <div class="admin-group-card" style="border-color: #ff4500;">
-        <div class="group-title" style="color: #ff4500;">Bouton Sekrè: Chwazi Ganyan an</div>
-        <input type="text" id="forced-winner-phone" class="input-field" placeholder="Nimewo moun ou vle fè genyen an">
-        <button class="btn-action" style="background: #ff4500; color: #fff; width:100%;" onclick="setForcedWinner()">Chwazi Moun Sa a kòm Ganyan</button>
-      </div>
-
-      <h4 style="color: #fff; margin-bottom: 10px;">Demann Kòd & Peman Ganyan:</h4>
-      <div id="admin-requests-list">
-        <p style="color: #aaa;">N ap chaje demann yo...</p>
-      </div>
-    </div>
-
-    <!-- PAJ 2: JESYON ANPLWAYE -->
-    <div id="admin-page-2" style="display:none;">
-      <h4 style="color:#ffd700; margin-bottom:10px;">Jesyon ak Jenewatè Lyen Anplwaye:</h4>
-      <div style="background:#222; padding:12px; border-radius:10px; margin-bottom:15px; border:1px solid #ffd700; text-align:center;">
-        <button class="btn-action" style="font-size:14px; width:100%;" onclick="generateNewWorkerLink()">➕ Klike La Pou w Kreye yon Nouvo Lyen Anplwaye</button>
-        <div id="generated-link-box" style="display:none; margin-top:12px;">
-          <input type="text" id="new-worker-link-input" class="input-field" readonly style="font-size:11px; margin-top:5px; color:#ffd700;">
-          <button class="btn-pay" style="background:#007bff; width:100%; margin-top:5px; font-size:13px; padding:8px;" onclick="copyGeneratedWorkerLink()">📋 Kopye Lyen Sa A</button>
-        </div>
-      </div>
-      <h4 style="color:#fff; margin-bottom:10px;">Lis Anplwaye ki Anrejistre yo:</h4>
-      <div id="employees-list-container">
-        <p style="color:#888;">Pa gen anplwaye.</p>
-      </div>
-    </div>
-
-    <!-- PAJ 3: PAJ ESPESYAL POU ISTORIK LA -->
-    <div id="admin-page-3" style="display:none;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <h4 style="color:#00ffcc;">📜 Achiv Done Istorik yo:</h4>
-        <button class="btn-clear-group" style="padding:6px 10px; font-size:11px;" onclick="clearAllHistory()">🗑️ Efase Tout Istorik</button>
-      </div>
-      <div id="admin-history-list">
-        <p style="color:#aaa;">N ap chaje istorik la...</p>
-      </div>
+    <div class="admin-group-card">
+      <div class="group-title">Kontwòl Sesyon yo</div>
+      <button class="btn-clear-group" onclick="clearGroupSession('1250')">Clear Sesyon 1250</button>
+      <div style="margin-top:6px;">Total Rezèv Akimile: <b style="color:#28a745;"><span id="p1250-owner-acc">0</span> Gdes</b></div>
     </div>
   </div>
 
@@ -350,7 +229,7 @@
       <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 GANYAN DETEKTE! 🏆</h2>
       <h3 style="color: #00ffcc;" id="winner-name-display">---</h3>
       <p style="margin-top: 8px; font-size: 13px;">Li genyen : <b style="color: #ffd700;" id="winner-amount-display">0 Gdes</b></p>
-      <button class="btn-action" style="margin-top: 15px; background: #28a745; color: #fff;" onclick="payWinnerAndReset()">Peye Gayan an & Reset a 0</button>
+      <button class="btn-action" style="margin-top: 15px; background: #28a745; color: #fff;" onclick="payWinnerAndReset()">Fèmen</button>
     </div>
   </div>
 
@@ -371,43 +250,16 @@
     let currentPos = 1;
     let chances = 3;
     let userGroup = "1250";
-    let isCodeValidated = true; // Mete true pou tès dirèk nan teren an
+    let isCodeValidated = true;
     let forcedWinnerPhone = "";
-    let hasUserLostAllChances = false;
-
-    let sessionState = "playing"; // Mete playing dirèk pou tès bouton an
-    let blockSecondsLeft = 600;      
-    let gamePlaySecondsLeft = 600;   
-
-    let isAppAvailable = true;
-    let nextAvailableHour = "---";
 
     let logoClickCount = 0;
     let clickTimer;
-    let currentWorkerId = localStorage.getItem('employee_doc_id') || "";
-
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('role') === 'worker') {
-      document.getElementById('main-app-content').style.display = 'none';
-      document.getElementById('worker-screen').style.display = 'block';
-      checkWorkerAccess();
-    }
 
     function copyNum(num) {
       navigator.clipboard.writeText(num);
       alert("Nimewo " + num + " kopye!");
     }
-
-    function listenAppAvailability() {
-      db.collection("app_settings").doc("availability").onSnapshot(doc => {
-        if (doc.exists) {
-          const data = doc.data();
-          isAppAvailable = data.isAvailable !== false;
-          nextAvailableHour = data.nextHour || "---";
-        }
-      });
-    }
-    listenAppAvailability();
 
     function handleSecretClick() {
       logoClickCount++;
@@ -416,181 +268,15 @@
       if (logoClickCount === 3) {
         logoClickCount = 0;
         const pin = prompt("Antre PIN Sekrè Pwopriyetè a :");
-        if (pin === "482915") { openAdminPanel(); }
-        else if(pin !== null) { alert("PIN pa bon! Aksè refize."); }
+        if (pin === "482915") { document.getElementById('secret-admin-modal').style.display = 'block'; }
       }
-    }
-
-    function openAdminPanel() {
-      document.getElementById('secret-admin-modal').style.display = 'block';
-      loadAdminRequests();
-      loadEmployeesList();
-      loadHistoryList();
     }
 
     function closeAdminPanel() { document.getElementById('secret-admin-modal').style.display = 'none'; }
 
-    function switchAdminTab(pageNum) {
-      [1, 2, 3].forEach(num => {
-        const btn = document.getElementById('tab-btn-' + num);
-        const page = document.getElementById('admin-page-' + num);
-        if (btn) btn.classList.remove('active');
-        if (page) page.style.display = 'none';
-      });
-      document.getElementById('tab-btn-' + pageNum).classList.add('active');
-      document.getElementById('admin-page-' + pageNum).style.display = 'block';
-    }
-
-    function generateNewWorkerLink() {
-      const baseUrl = window.location.href.split('?')[0];
-      const uniqueWorkerKey = "EMP-" + Math.floor(10000 + Math.random() * 90000);
-      document.getElementById('new-worker-link-input').value = baseUrl + "?role=worker&emp_key=" + uniqueWorkerKey;
-      document.getElementById('generated-link-box').style.display = 'block';
-    }
-
-    function copyGeneratedWorkerLink() {
-      navigator.clipboard.writeText(document.getElementById('new-worker-link-input').value);
-      alert("Lyen Anplwaye a kopye!");
-    }
-
-    function listenAllGroups() {
-      ["1250", "250", "100"].forEach(grp => {
-        db.collection("game_blocks").doc("block_" + grp).onSnapshot(doc => {
-          let count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
-          let price = parseInt(grp);
-          let total = count * price;
-          let winnerPrize = 0;
-          let sessionOwnerShare = total;
-
-          if (count >= 5 && count <= 220) {
-            if (price === 1250) winnerPrize = 2000 + (count - 5) * 225;
-            else if (price === 250) winnerPrize = 400 + (count - 5) * 45;
-            else if (price === 100) winnerPrize = 150 + (count - 5) * 18;
-            sessionOwnerShare = total - winnerPrize;
-          }
-
-          document.getElementById('p' + grp + '-winner-curr').innerText = winnerPrize.toLocaleString();
-
-          let currentAcc = parseFloat(localStorage.getItem('owner_acc_' + grp) || "0");
-          document.getElementById('p' + grp + '-owner-acc').innerText = (currentAcc + sessionOwnerShare).toLocaleString();
-        });
-      });
-    }
-    listenAllGroups();
-
-    async function clearGroupSession(grp) {
-      if(confirm("Èske w sèten ou vle Clear Sesyon Gwoup " + grp + " Gdes la a zewo?")) {
-        await db.collection("game_blocks").doc("block_" + grp).set({ playersCount: "0", status: "collecting" }, { merge: true });
-        await db.collection("winners_announced").doc("group_" + grp).delete();
-        alert("Sesyon an netwaye!");
-        location.reload();
-      }
-    }
-
-    function clearOwnerAcc(grp) {
-      if(confirm("Clear Rezèv Pwopriyetè a?")) {
-        localStorage.setItem('owner_acc_' + grp, "0");
-        alert("Rezèv la retounen a 0!");
-        location.reload();
-      }
-    }
-
-    function setForcedWinner() {
-      forcedWinnerPhone = document.getElementById('forced-winner-phone').value.trim();
-      alert("Moun ak nimewo " + forcedWinnerPhone + " la ap genyen fòseman!");
-    }
-
-    async function deleteRequest(docId) {
-      await db.collection("payment_requests").doc(docId).delete();
-      alert("Demann nan siprime!");
-    }
-
-    async function moveToHistory() {
-      const snapshot = await db.collection("payment_requests").get();
-      if (snapshot.empty) { alert("Pa gen demann!"); return; }
-      const batch = db.batch();
-      snapshot.forEach(doc => {
-        const histRef = db.collection("payment_history").doc(doc.id);
-        batch.set(histRef, { ...doc.data(), archivedAt: firebase.firestore.FieldValue.serverTimestamp() });
-        batch.delete(doc.ref);
-      });
-      await batch.commit();
-      alert("Voye nan istorik siksè!");
-    }
-
-    function loadHistoryList() {
-      db.collection("payment_history").orderBy("archivedAt", "desc").onSnapshot(snapshot => {
-        const container = document.getElementById('admin-history-list');
-        container.innerHTML = "";
-        if (snapshot.empty) { container.innerHTML = '<p style="color:#888;">Pa gen istorik.</p>'; return; }
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const card = document.createElement('div');
-          card.className = "admin-group-card";
-          card.innerHTML = `<div><b>Non :</b> ${data.playerName || 'San non'} - <b>Gwoup :</b> ${data.groupPrice} Gdes</div>`;
-          container.appendChild(card);
-        });
-      });
-    }
-
-    async function clearAllHistory() {
-      if (confirm("Efase tout istorik la?")) {
-        const snapshot = await db.collection("payment_history").get();
-        const batch = db.batch();
-        snapshot.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        alert("Istorik efase!");
-      }
-    }
-
-    function loadAdminRequests() {
-      db.collection("payment_requests").onSnapshot((snapshot) => {
-        const container = document.getElementById('admin-requests-list');
-        container.innerHTML = "";
-        if (snapshot.empty) { container.innerHTML = '<p style="color: #888;">Pa gen demann.</p>'; return; }
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          const card = document.createElement('div');
-          card.className = "admin-group-card";
-          card.innerHTML = `<div><b>Non :</b> ${data.playerName} - <b>Tel :</b> ${data.playerPhone}</div><button class="btn-pay" onclick="confirmPaymentAdmin('${doc.id}')">Konfime</button>`;
-          container.appendChild(card);
-        });
-      });
-    }
-
-    async function confirmPaymentAdmin(docId) {
-      const uniqueCode = "ANG-" + Math.floor(1000 + Math.random() * 9000);
-      await db.collection("payment_requests").doc(docId).update({ status: "confirmed", generatedCode: uniqueCode });
-      alert("Kòd ba li: " + uniqueCode);
-    }
-
-    async function registerEmployee() {
-      const name = document.getElementById('w-fullname').value.trim();
-      const phone = document.getElementById('w-phone').value.trim();
-      const address = document.getElementById('w-address').value.trim();
-      const idNum = document.getElementById('w-id').value.trim();
-      const docRef = await db.collection("employees").add({ fullName: name, phone: phone, address: address, idNumber: idNum, status: "ON" });
-      currentWorkerId = docRef.id;
-      localStorage.setItem('employee_doc_id', currentWorkerId);
-    }
-
-    function loadAdminRequests() {}
-    function loadEmployeesList() {}
-
-    async function submitPaymentRequest() {
-      const name = document.getElementById('player-name').value.trim();
-      const phone = document.getElementById('player-phone').value.trim();
-      const group = document.getElementById('group-select').value;
-      if(!name || !phone) { alert("Ranpli non ak telefòn!"); return; }
-      await db.collection("payment_requests").add({ playerName: name, playerPhone: phone, groupPrice: group, status: "pending" });
-      alert("Demann voye!");
-    }
-
     window.addEventListener('DOMContentLoaded', () => {
-      // Pou w ka wè ekran jwèt la dirèkteman san w pa bezwen pase nan achte kòd lè w ap teste:
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('game-arena').classList.add('full-screen-mode');
-      document.getElementById('arena-timer-display').style.display = 'block';
       resizeCanvas();
       setTimeout(() => selectPos3D(1), 100);
     });
@@ -608,8 +294,7 @@
     let player = { x: 0, y: 0, targetX: 0, targetY: 0, isShooting: false, jumpOffset: 0 };
     let ball = {
       x: 0, y: 0, isShot: false, isGoal: false, progress: 0,
-      dribbleOffset: 0, dribbleDir: 1,
-      arcHeight: 110, bounceVX: 0, bounceVY: 0
+      dribbleOffset: 0, dribbleDir: 1, arcHeight: 110, bounceVX: 0, bounceVY: 0
     };
     let frameCount = 0;
     let netShake = 0;
@@ -642,7 +327,6 @@
     function generateRandomMissTrajectory(hoop) {
       const missType = Math.floor(Math.random() * 5);
       let offsetX = 0, offsetY = 0, arcH = 90 + Math.random() * 60, bVX = 0, bVY = 0;
-
       if (missType === 0) {
         offsetX = -(32 + Math.random() * 65); offsetY = -18 + Math.random() * 45; bVX = -(18 + Math.random() * 25); bVY = 28 + Math.random() * 25;
       } else if (missType === 1) {
@@ -658,7 +342,7 @@
       return { targetX: hoop.x + offsetX, targetY: hoop.y + offsetY, arcHeight: arcH, bounceVX: bVX, bounceVY: bVY };
     }
 
-    function shootBall3D() {
+    async function shootBall3D() {
       if (chances <= 0 || ball.isShot) return;
 
       if (chances === 3) document.getElementById('c3').classList.add('off');
@@ -666,7 +350,20 @@
       else if (chances === 1) document.getElementById('c1').classList.add('off');
       chances--;
 
-      let isGoal = Math.random() < 0.35;
+      // Tcheke konbyen jwè ki nan sesyon an kounye a sou Firebase
+      let blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
+      let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 1) : 1;
+
+      let isGoal = false;
+
+      // SI GEN 1 JOUK 4 MOUN: TOUT MOUN PÈDI (Boul la pa janm antre, epi se yon non sekrè ki genyen)
+      if (totalPlayers >= 1 && totalPlayers <= 4) {
+        isGoal = false; 
+      } else {
+        // Apati 5 moun, gen yon sèl moun ki genyen baze sou chans (35%)
+        isGoal = Math.random() < 0.35;
+      }
+
       const hoop = getHoopPosition();
       player.isShooting = true;
       ball.isShot = true;
@@ -770,13 +467,24 @@
           ball.isShot = false;
           player.isShooting = false;
           netShake = 0;
+
           if (ball.isGoal) {
             alert("BOUYEN! 🏀 Boul la rantre nan filè a pafètman!");
           } else {
             if (chances > 0) {
               alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
             } else {
-              alert("Oups! 3 chans ou yo fini.");
+              // Lè 3 chans yo fini nèt epi pa gen ase moun (oswa li pèdi),
+              // N ap sèvi ak youn nan non sekrè yo pou jwè a panse se yon lòt ki genyen!
+              const secretNames = ["COMOLE", "SANTILES", "ZAKRIPTA", "SANPATUBRE", "KOLOBOOS"];
+              const randomWinner = secretNames[Math.floor(Math.random() * secretNames.length)];
+              
+              let groupPrices = { "1250": "2,000", "250": "400", "100": "150" };
+              let prizeAmt = groupPrices[userGroup] || "2,000";
+
+              document.getElementById('winner-name-display').innerText = randomWinner;
+              document.getElementById('winner-amount-display').innerText = prizeAmt + " Gdes";
+              document.getElementById('winner-banner-modal').style.display = 'flex';
             }
           }
         }
@@ -830,6 +538,11 @@
       ctx.fillStyle = grad; ctx.fill();
       ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.stroke();
       ctx.restore();
+    }
+
+    function payWinnerAndReset() {
+      document.getElementById('winner-banner-modal').style.display = 'none';
+      location.reload();
     }
 
     requestAnimationFrame(gameLoop);
