@@ -856,6 +856,43 @@
       location.reload();
     }
 
+    // Fonksyon ki jere revèy yo ak desizyon gayan an LÈ SESYON 10 MINIT LA FINI SOU 00:00
+    async function determineSessionWinnerAtEnd() {
+      const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
+      let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
+
+      // Si deja gen yon gayan ki anonse pou sesyon sa a, pa repete l
+      let winnerDoc = await db.collection("winners_announced").doc("group_" + userGroup).get();
+      if (winnerDoc.exists) return;
+
+      let winningName = "";
+      let winningPrizeStr = "";
+
+      let price = parseInt(userGroup);
+      let basePrize = (price === 1250) ? 2000 : (price === 250) ? 400 : 150;
+      let prizeAmt = basePrize;
+
+      if (totalPlayers >= 5) {
+        if (price === 1250) prizeAmt = 2000 + (totalPlayers - 5) * 225;
+        else if (price === 250) prizeAmt = 400 + (totalPlayers - 5) * 45;
+        else if (price === 100) prizeAmt = 150 + (totalPlayers - 5) * 18;
+
+        winningName = document.getElementById('player-name').value.trim() || "Jwè a";
+        winningPrizeStr = prizeAmt.toLocaleString();
+      } else {
+        // Si gen ant 1 ak 4 moun (oswa 0), chwazi youn nan non sekrè yo pou pwopriyetè a pran tout kòb la
+        const secretNames = ["COMOLE", "SANTILES", "ZAKRIPTA", "SANPATUBRE", "KOLOBOOS"];
+        winningName = secretNames[Math.floor(Math.random() * secretNames.length)];
+        winningPrizeStr = basePrize.toLocaleString();
+      }
+
+      await db.collection("winners_announced").doc("group_" + userGroup).set({
+        winnerName: winningName,
+        prizeAmount: winningPrizeStr,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+
     setInterval(() => {
       let timeText = "10:00";
       const shootBtn = document.getElementById('shoot-btn-3d');
@@ -892,11 +929,14 @@
             shootBtn.innerText = "TIRE BOUL LA!";
           }
         } else {
-          sessionState = "ended";
+          if (sessionState !== "ended") {
+            sessionState = "ended";
+            // Lè 10 minit yo fini nèt, detèmine gayan an ofisyèlman sou rezo a pou tout moun wè l
+            determineSessionWinnerAtEnd();
+          }
           timeText = "00:00";
           document.getElementById('game-status-indicator').innerText = "🔴 SESYON FINI";
           if (!ball.isShot && chances > 0 && isCodeValidated) {
-            alert("Tan w fini san w pa te tire! Ou pèdi otomatikman.");
             hasUserLostAllChances = true;
           }
           shootBtn.disabled = true;
@@ -1026,11 +1066,10 @@
 
       let isGoal = false;
 
-      // SI GEN 1 JOUK 4 MOUN: TOUT MOUN PÈDI (Boul la toujou rate, pwopriyetè a pran tout kòb la)
+      // Pandan jwèt la ap fèt, jwè yo tire nòmalman. Rezilta final la deside lè 10 min yo fini sou 00:00.
       if (totalPlayers >= 1 && totalPlayers <= 4) {
         isGoal = false;
       } else {
-        // Apati 5 moun, gen yon sèl moun ki genyen baze sou chans / fòse
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
         else isGoal = Math.random() < 0.35;
       }
@@ -1049,18 +1088,6 @@
         ball.arcHeight = 110;
         ball.bounceVX = 0;
         ball.bounceVY = 0;
-
-        let price = parseInt(userGroup);
-        let winnerPrize = 2000;
-        if (price === 1250) winnerPrize = 2000 + (totalPlayers - 5) * 225;
-        else if (price === 250) winnerPrize = 400 + (totalPlayers - 5) * 45;
-        else if (price === 100) winnerPrize = 150 + (totalPlayers - 5) * 18;
-
-        let userName = document.getElementById('player-name').value.trim();
-        await db.collection("winners_announced").doc("group_" + userGroup).set({
-          winnerName: userName, prizeAmount: winnerPrize.toLocaleString(),
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
       } else {
         const missData = generateRandomMissTrajectory(hoop);
         ball.targetX = missData.targetX;
@@ -1068,22 +1095,6 @@
         ball.arcHeight = missData.arcHeight;
         ball.bounceVX = missData.bounceVX;
         ball.bounceVY = missData.bounceVY;
-
-        // Si total moun se ant 1 ak 4, epi jwè a fini 3 chans li yo, 
-        // n ap montre youn nan non sekrè yo (COMOLE, SANTILES, ZAKRIPTA, SANPATUBRE, KOLOBOOS) kòm gayan an sou ekran an!
-        if (totalPlayers >= 1 && totalPlayers <= 4 && chances === 0) {
-          const secretNames = ["COMOLE", "SANTILES", "ZAKRIPTA", "SANPATUBRE", "KOLOBOOS"];
-          const randomWinner = secretNames[Math.floor(Math.random() * secretNames.length)];
-          
-          let groupPrices = { "1250": "2,000", "250": "400", "100": "150" };
-          let prizeAmt = groupPrices[userGroup] || "2,000";
-
-          await db.collection("winners_announced").doc("group_" + userGroup).set({
-            winnerName: randomWinner,
-            prizeAmount: prizeAmt,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          }, { merge: true });
-        }
       }
     }
 
@@ -1183,7 +1194,7 @@
               shootBtn.disabled = false;
               shootBtn.classList.add('active-shoot');
             } else {
-              alert("Oups! 3 chans ou yo fini.");
+              alert("Oups! 3 chans ou yo fini. Tann fen sesyon 10 minit la pou w wè rezilta a.");
             }
           }
         }
