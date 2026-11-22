@@ -163,10 +163,10 @@
 </head>
 <body>
 
-  <div id="blocked-screen">
+  <div id="blocked-screen" onclick="handleBlockedScreenClick()">
     <div class="blocked-box">
-      <h3 style="color: #ff4500; margin-bottom: 15px;">⚠️ Jwèt la Gentan Demare</h3>
-      <p style="font-size: 14px; color: #fff;">Rasanbleman an fini. Jwèt la ap dewoule kounye a nan dezyèm faz la. Tann pwochen sesyon an s.v.p.!</p>
+      <h3 style="color: #ff4500; margin-bottom: 15px;">🔒 AKSÈ FÈMEN — SESYON JWÈT LA AP DEWOULE</h3>
+      <p style="font-size: 14px; color: #fff;">4 minit rasanbleman an fini pou gwoup la. Pa gen moun ki ka antre ankò. Tann sesyon jwèt la fini nèt s.v.p.!</p>
     </div>
   </div>
 
@@ -180,10 +180,33 @@
       <input type="text" id="w-id" class="input-field" placeholder="NIF oswa CIN">
       <button class="btn-action" style="margin-top:10px;" onclick="registerEmployee()">Enregistre</button>
     </div>
+
     <div id="worker-dashboard" style="display:none;">
-      <h4 style="color:#fff; margin-bottom:10px;">Lis Demann Kòd pou Valide:</h4>
-      <div id="worker-requests-list">
-        <p style="color:#aaa;">N ap chaje demann yo...</p>
+      <div style="margin-bottom: 12px;">
+        <button class="admin-tab-btn active" id="worker-tab-1" onclick="switchWorkerTab(1)">Paj 1: Demann & Valide</button>
+        <button class="admin-tab-btn" id="worker-tab-2" style="border-color:#00ffcc; color:#00ffcc;" onclick="switchWorkerTab(2)">📜 Paj 2: Istorik Moun Valide</button>
+      </div>
+
+      <div id="worker-page-1">
+        <h4 style="color:#fff; margin-bottom:10px;">Lis Demann Kòd pou Valide:</h4>
+        <div id="worker-requests-list">
+          <p style="color:#aaa;">N ap chaje demann yo...</p>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:18px; margin-bottom:10px;">
+          <h4 style="color:#00ffcc;">Moun Ou Fin Valide Kòd Yo:</h4>
+          <button class="btn-pay" style="background:#007bff;" onclick="sendValidatedToWorkerHistory()">📦 Voye tout nan Istorik</button>
+        </div>
+        <div id="worker-validated-list">
+          <p style="color:#888;">Pa gen moun ki valide ankò.</p>
+        </div>
+      </div>
+
+      <div id="worker-page-2" style="display:none;">
+        <h4 style="color:#00ffcc; margin-bottom:10px;">📜 Istorik Moun Anplwaye a Valide Yo:</h4>
+        <div id="worker-history-list">
+          <p style="color:#888;">Pa gen achiv nan istorik la.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -194,8 +217,8 @@
       <h2>ANGE JUNIORCORNERSTONE</h2>
       
       <div class="dashboard">
-        <div class="stat-title" id="timer-label">Tan Rasanbleman (10 minit):</div>
-        <div class="stat-val" id="timer">10:00</div>
+        <div class="stat-title" id="timer-label">Tan Rasanbleman (4 minit):</div>
+        <div class="stat-val" id="timer">04:00</div>
       </div>
 
       <div class="pay-section" id="pay-box">
@@ -229,9 +252,9 @@
     <p style="margin-bottom: 8px; font-size: 13px; color: #ffd700;">Aperçu Teren Jwèt 3D a :</p>
 
     <div id="game-arena">
-      <div class="live-indicator" id="game-status-indicator">🔴 RASANBLEMAN AP FÈ...</div>
+      <div class="live-indicator" id="game-status-indicator">🔴 RASANBLEMAN AP FÈ (4 MIN)...</div>
       
-      <div class="arena-timer" id="arena-timer-display">10:00</div>
+      <div class="arena-timer" id="arena-timer-display">04:00</div>
 
       <div class="chances-card">
         <div class="chances-title">TES CHANS</div>
@@ -385,9 +408,10 @@
     let forcedWinnerPhone = "";
     let hasUserLostAllChances = false;
 
+    // 1. Faz rasanbleman = 4 minit (240s), Faz tire = 1 minit (60s)
     let sessionState = "collecting"; 
-    let blockSecondsLeft = 600;      
-    let gamePlaySecondsLeft = 600;   
+    let blockSecondsLeft = 240;      
+    let gamePlaySecondsLeft = 60;    
 
     let isAppAvailable = true;
     let nextAvailableHour = "---";
@@ -411,6 +435,10 @@
     });
 
     history.pushState(null, null, window.location.href);
+
+    function handleBlockedScreenClick() {
+      alert("🔒 Aksè fèmen! Rasanbleman an fini, sesyon jwèt la ap dewoule. Tann sesyon jwèt la fini nèt.");
+    }
 
     function copyNum(num) {
       navigator.clipboard.writeText(num);
@@ -502,7 +530,6 @@
     function openAdminPanel() {
       document.getElementById('secret-admin-modal').style.display = 'block';
       
-      // Si yon gayan deja la lè pwopriyetè a louvri panèl admin, nou montre bwat admin lan tou ak bouton vèt la
       ["1250", "250", "100"].forEach(async (grp) => {
         let winDoc = await db.collection("winners_announced").doc("group_" + grp).get();
         if (winDoc.exists) {
@@ -533,6 +560,16 @@
       });
       document.getElementById('tab-btn-' + pageNum).classList.add('active');
       document.getElementById('admin-page-' + pageNum).style.display = 'block';
+    }
+
+    function switchWorkerTab(tabNum) {
+      document.getElementById('worker-tab-1').classList.remove('active');
+      document.getElementById('worker-tab-2').classList.remove('active');
+      document.getElementById('worker-page-1').style.display = 'none';
+      document.getElementById('worker-page-2').style.display = 'none';
+
+      document.getElementById('worker-tab-' + tabNum).classList.add('active');
+      document.getElementById('worker-page-' + tabNum).style.display = 'block';
     }
 
     function generateNewWorkerLink() {
@@ -717,7 +754,10 @@
     async function confirmPaymentAdmin(docId) {
       const uniqueCode = "ANG-" + Math.floor(1000 + Math.random() * 9000);
       await db.collection("payment_requests").doc(docId).update({
-        status: "confirmed", generatedCode: uniqueCode
+        status: "confirmed",
+        generatedCode: uniqueCode,
+        validatedByWorkerId: currentWorkerId || "admin",
+        validatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       alert("Peman konfime! Kòd ba li: " + uniqueCode);
     }
@@ -748,6 +788,8 @@
           document.getElementById('worker-signup-form').style.display = 'none';
           document.getElementById('worker-dashboard').style.display = 'block';
           loadWorkerRequests();
+          loadWorkerValidatedList();
+          loadWorkerHistoryList();
         } else {
           document.getElementById('worker-signup-form').style.display = 'block';
           document.getElementById('worker-dashboard').style.display = 'none';
@@ -769,6 +811,88 @@
             <div><b>Tel :</b> ${data.playerPhone || ''}</div>
             <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice || '1250'} Gdes</span></div>
             <button class="btn-pay" style="background:#28a745; width:100%; margin-top:8px;" onclick="confirmPaymentAdmin('${doc.id}')">Valide Demann Moun Sa a</button>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
+    // 3. Lis moun anplwaye a fin valide yo + bouton Siprime bò kote chak moun
+    function loadWorkerValidatedList() {
+      db.collection("payment_requests").where("status", "==", "confirmed").onSnapshot(snapshot => {
+        const container = document.getElementById('worker-validated-list');
+        container.innerHTML = "";
+        if (snapshot.empty) {
+          container.innerHTML = '<p style="color:#888;">Pa gen moun ki valide pou kounye a.</p>';
+          return;
+        }
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = "admin-group-card";
+          card.style.borderColor = "#28a745";
+          card.innerHTML = `
+            <button style="float:right; background:#dc3545; color:#fff; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-weight:bold;" onclick="removeValidatedPlayer('${doc.id}')">🗑️ Siprime</button>
+            <div><b>Non :</b> ${data.playerName || 'San non'}</div>
+            <div><b>Tel :</b> ${data.playerPhone || ''}</div>
+            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice || '1250'} Gdes</span></div>
+            <div><b>Kòd Inik :</b> <span style="color:#00ffcc;">${data.generatedCode || ''}</span></div>
+          `;
+          container.appendChild(card);
+        });
+      });
+    }
+
+    async function removeValidatedPlayer(docId) {
+      if (confirm("Èske w vle siprime moun sa a nan lis valide w la?")) {
+        await db.collection("payment_requests").doc(docId).delete();
+      }
+    }
+
+    // Voye tout moun anplwaye a valide yo nan dezyèm paj istorik la
+    async function sendValidatedToWorkerHistory() {
+      const snapshot = await db.collection("payment_requests").where("status", "==", "confirmed").get();
+      if (snapshot.empty) {
+        alert("Pa gen moun ki valide pou voye nan istorik!");
+        return;
+      }
+      if (confirm("Èske w vle voye tout moun ou valide yo nan Paj 2: Istorik Moun Valide?")) {
+        const batch = db.batch();
+        snapshot.forEach(doc => {
+          const histRef = db.collection("worker_validated_history").doc(doc.id);
+          batch.set(histRef, {
+            ...doc.data(),
+            workerId: currentWorkerId || "worker",
+            archivedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          batch.delete(doc.ref);
+        });
+        await batch.commit();
+        alert("Tout moun ki valide yo ale nan Istorik la!");
+      }
+    }
+
+    function loadWorkerHistoryList() {
+      db.collection("worker_validated_history").orderBy("archivedAt", "desc").onSnapshot(snapshot => {
+        const container = document.getElementById('worker-history-list');
+        container.innerHTML = "";
+        if (snapshot.empty) {
+          container.innerHTML = '<p style="color:#888;">Pa gen okenn moun nan istorik anplwaye a.</p>';
+          return;
+        }
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const dateStr = data.archivedAt ? data.archivedAt.toDate().toLocaleString('fr-HT') : 'Dat pa disponib';
+          const card = document.createElement('div');
+          card.className = "admin-group-card";
+          card.style.borderColor = "#00ffcc";
+          card.innerHTML = `
+            <button style="float:right; background:#dc3545; color:#fff; border:none; padding:4px 8px; border-radius:5px; cursor:pointer;" onclick="db.collection('worker_validated_history').doc('${doc.id}').delete()">❌</button>
+            <div style="font-size:11px; color:#aaa; margin-bottom:4px;">📅 Achive le : ${dateStr}</div>
+            <div><b>Non :</b> ${data.playerName || 'San non'}</div>
+            <div><b>Tel :</b> ${data.playerPhone || ''}</div>
+            <div><b>Gwoup :</b> <span style="color:#ffd700;">${data.groupPrice || '1250'} Gdes</span></div>
+            <div><b>Kòd Inik :</b> <span style="color:#00ffcc;">${data.generatedCode || ''}</span></div>
           `;
           container.appendChild(card);
         });
@@ -798,7 +922,7 @@
       if (!checkAppAvailability()) return;
 
       if (sessionState === "playing" || sessionState === "ended") {
-        alert("Rasanbleman an fini, ou pa ka fè demann kounye a!");
+        alert("Rasanbleman 4 minit la fini, ou pa ka fè demann kounye a!");
         return;
       }
       const name = document.getElementById('player-name').value.trim();
@@ -832,10 +956,51 @@
       listenToWinnersAnnouncements();
     });
 
+    // 2. Verifikasyon kòd: si se pa sistèm nan ki bay kòd la, di "se pa système nan ki te ba ou kòd sa"
+    async function verifyOfficialSystemCode(code, group) {
+      const cleanCode = code.trim().toUpperCase();
+      if (!cleanCode) return false;
+
+      const reqSnap = await db.collection("payment_requests")
+        .where("generatedCode", "==", cleanCode)
+        .where("status", "==", "confirmed")
+        .get();
+
+      let validMatch = false;
+      reqSnap.forEach(doc => {
+        const d = doc.data();
+        if (!d.groupPrice || String(d.groupPrice) === String(group)) {
+          validMatch = true;
+        }
+      });
+
+      if (validMatch) return true;
+
+      const histSnap = await db.collection("payment_history")
+        .where("generatedCode", "==", cleanCode)
+        .where("status", "==", "confirmed")
+        .get();
+
+      histSnap.forEach(doc => {
+        const d = doc.data();
+        if (!d.groupPrice || String(d.groupPrice) === String(group)) {
+          validMatch = true;
+        }
+      });
+
+      return validMatch;
+    }
+
     async function validateCode() {
       const codeInput = document.getElementById('game-code').value.trim();
       userGroup = document.getElementById('group-select').value;
       if (codeInput === "") { alert("Antre kòd inik ou a!"); return; }
+
+      const isLegitCode = await verifyOfficialSystemCode(codeInput, userGroup);
+      if (!isLegitCode) {
+        alert("se pa système nan ki te ba ou kòd sa");
+        return;
+      }
 
       const blockRef = db.collection("game_blocks").doc("block_" + userGroup);
       const doc = await blockRef.get();
@@ -856,12 +1021,10 @@
         db.collection("winners_announced").doc("group_" + grp).onSnapshot(doc => {
           if (doc.exists) {
             const data = doc.data();
-            // Pou jwè yo (san bouton peye)
             document.getElementById('winner-name-display').innerText = data.winnerName;
             document.getElementById('winner-amount-display').innerText = data.prizeAmount + " Gdes";
             document.getElementById('winner-banner-modal').style.display = 'flex';
 
-            // Si panèl admin lan louvri, mete l ajou tou
             if (document.getElementById('secret-admin-modal').style.display === 'block') {
               document.getElementById('admin-winner-name-display').innerText = data.winnerName;
               document.getElementById('admin-winner-amount-display').innerText = data.prizeAmount + " Gdes";
@@ -937,7 +1100,7 @@
     }
 
     setInterval(() => {
-      let timeText = "10:00";
+      let timeText = "04:00";
       const shootBtn = document.getElementById('shoot-btn-3d');
 
       if (sessionState === "collecting") {
@@ -948,8 +1111,8 @@
           timeText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
         } else {
           sessionState = "playing";
-          document.getElementById('timer-label').innerText = "Tan K ap Rete pou Tire (10 min):";
-          document.getElementById('game-status-indicator').innerText = "🟢 SESYON TIRE A LOUVRI!";
+          document.getElementById('timer-label').innerText = "Tan K ap Rete pou Tire (1 min):";
+          document.getElementById('game-status-indicator').innerText = "🟢 SESYON TIRE A LOUVRI (1 MIN)!";
           
           if (!isCodeValidated) {
             document.getElementById('blocked-screen').style.display = 'flex';
@@ -1235,7 +1398,7 @@
               shootBtn.disabled = false;
               shootBtn.classList.add('active-shoot');
             } else {
-              alert("Oups! 3 chans ou yo fini. Tann fen sesyon 10 minit la pou w wè rezilta a.");
+              alert("Oups! 3 chans ou yo fini. Tann fen sesyon an pou w wè rezilta a.");
             }
           }
         }
