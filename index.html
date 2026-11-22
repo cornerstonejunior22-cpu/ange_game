@@ -45,6 +45,12 @@
       border: 1px solid #444; background: #222; color: #fff;
       text-align: center; font-size: 13px; margin-top: 4px; margin-bottom: 6px;
     }
+    .locked-code-field {
+      background: #151515;
+      color: #00ffcc;
+      border: 1px solid #555;
+      cursor: not-allowed;
+    }
     .btn-pay {
       background: #28a745; color: #fff; font-weight: bold; padding: 6px 10px;
       border: none; border-radius: 15px; font-size: 12px; cursor: pointer; margin: 2px;
@@ -243,7 +249,7 @@
         <button class="btn-action" style="font-size: 13px; padding: 8px;" onclick="submitPaymentRequest()">Mande Kòd Inik Mwen</button>
         
         <div style="margin-top: 8px;">
-          <input type="text" id="game-code" class="input-field" placeholder="Antre Kòd Inik ou resevwa a">
+          <input type="text" id="game-code" class="input-field locked-code-field" value="" placeholder="kòd inik klian" readonly aria-readonly="true" onclick="handleClientCodeBoxClick()">
           <button class="btn-action" style="font-size: 13px; padding: 6px;" onclick="validateCode()">Valide Kòd la</button>
         </div>
       </div>
@@ -408,7 +414,6 @@
     let forcedWinnerPhone = "";
     let hasUserLostAllChances = false;
 
-    // 1. Faz rasanbleman = 4 minit (240s), Faz tire = 1 minit (60s)
     let sessionState = "collecting"; 
     let blockSecondsLeft = 240;      
     let gamePlaySecondsLeft = 60;    
@@ -438,6 +443,13 @@
 
     function handleBlockedScreenClick() {
       alert("🔒 Aksè fèmen! Rasanbleman an fini, sesyon jwèt la ap dewoule. Tann sesyon jwèt la fini nèt.");
+    }
+
+    function handleClientCodeBoxClick() {
+      const codeInput = document.getElementById('game-code');
+      if (!codeInput.value.trim()) {
+        alert("Ou pa ka mete kòd pa ou. Tann pwopriyetè a oswa anplwaye a konfime & voye kòd la.");
+      }
     }
 
     function copyNum(num) {
@@ -755,11 +767,12 @@
       const uniqueCode = "ANG-" + Math.floor(1000 + Math.random() * 9000);
       await db.collection("payment_requests").doc(docId).update({
         status: "confirmed",
+        sentToClient: true,
         generatedCode: uniqueCode,
         validatedByWorkerId: currentWorkerId || "admin",
         validatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      alert("Peman konfime! Kòd ba li: " + uniqueCode);
+      alert("Peman konfime & kòd voye bay kliyan an: " + uniqueCode);
     }
 
     async function registerEmployee() {
@@ -817,7 +830,6 @@
       });
     }
 
-    // 3. Lis moun anplwaye a fin valide yo + bouton Siprime bò kote chak moun
     function loadWorkerValidatedList() {
       db.collection("payment_requests").where("status", "==", "confirmed").onSnapshot(snapshot => {
         const container = document.getElementById('worker-validated-list');
@@ -849,7 +861,6 @@
       }
     }
 
-    // Voye tout moun anplwaye a valide yo nan dezyèm paj istorik la
     async function sendValidatedToWorkerHistory() {
       const snapshot = await db.collection("payment_requests").where("status", "==", "confirmed").get();
       if (snapshot.empty) {
@@ -930,33 +941,47 @@
       const group = document.getElementById('group-select').value;
       if(name === "" || phone === "") { alert("Antre non ak telefòn ou!"); return; }
 
+      document.getElementById('game-code').value = "";
+
       const docRef = await db.collection("payment_requests").add({
-        playerName: name, playerPhone: phone, groupPrice: group,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(), status: "pending"
+        playerName: name,
+        playerPhone: phone,
+        groupPrice: group,
+        sentToClient: false,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        status: "pending"
       });
       localStorage.setItem('my_request_id', docRef.id);
-      alert("Demann voye! Tann konfèmasyon.");
+      alert("Demann voye! Tann pwopriyetè a oswa anplwaye a konfime & voye kòd la.");
       listenToMyRequest(docRef.id);
     }
 
+    // Kòd la sèlman rantre nan espas "kòd inik klian" lè pwopriyetè a oswa anplwaye a konfime epi voye l (sentToClient === true)
     function listenToMyRequest(reqId) {
+      const codeInput = document.getElementById('game-code');
+      codeInput.value = "";
+
       db.collection("payment_requests").doc(reqId).onSnapshot(doc => {
         if (doc.exists) {
           const data = doc.data();
-          if (data.status === "confirmed" && data.generatedCode) {
-            document.getElementById('game-code').value = data.generatedCode;
+          if (data.status === "confirmed" && data.sentToClient === true && data.generatedCode) {
+            codeInput.value = data.generatedCode;
+          } else {
+            codeInput.value = "";
           }
+        } else {
+          codeInput.value = "";
         }
       });
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('game-code').value = "";
       const savedReqId = localStorage.getItem('my_request_id');
       if (savedReqId) { listenToMyRequest(savedReqId); }
       listenToWinnersAnnouncements();
     });
 
-    // 2. Verifikasyon kòd: si se pa sistèm nan ki bay kòd la, di "se pa système nan ki te ba ou kòd sa"
     async function verifyOfficialSystemCode(code, group) {
       const cleanCode = code.trim().toUpperCase();
       if (!cleanCode) return false;
@@ -964,6 +989,7 @@
       const reqSnap = await db.collection("payment_requests")
         .where("generatedCode", "==", cleanCode)
         .where("status", "==", "confirmed")
+        .where("sentToClient", "==", true)
         .get();
 
       let validMatch = false;
@@ -979,6 +1005,7 @@
       const histSnap = await db.collection("payment_history")
         .where("generatedCode", "==", cleanCode)
         .where("status", "==", "confirmed")
+        .where("sentToClient", "==", true)
         .get();
 
       histSnap.forEach(doc => {
@@ -994,7 +1021,10 @@
     async function validateCode() {
       const codeInput = document.getElementById('game-code').value.trim();
       userGroup = document.getElementById('group-select').value;
-      if (codeInput === "") { alert("Antre kòd inik ou a!"); return; }
+      if (codeInput === "") {
+        alert("Pa gen kòd nan espas kòd inik klian an. Tann pwopriyetè a oswa anplwaye a konfime & voye l.");
+        return;
+      }
 
       const isLegitCode = await verifyOfficialSystemCode(codeInput, userGroup);
       if (!isLegitCode) {
