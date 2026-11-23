@@ -237,7 +237,7 @@
         <a href="tel:*202%23" class="btn-ussd">*202# MonCash</a>
         <a href="tel:*202%23" class="btn-ussd" style="background:#dc3545;">*202# Natcash</a>
 
-        <select id="group-select" class="select-field" onchange="checkAppAvailability()">
+        <select id="group-select" class="select-field" onchange="handleGroupChange()">
           <option value="1250">Gwoup 1 - Code 1,250 Gdes</option>
           <option value="250">Gwoup 2 - Code 250 Gdes</option>
           <option value="100">Gwoup 3 - Code 100 Gdes</option>
@@ -420,6 +420,7 @@
     let validatedPlayerPhone = "";
     let forcedWinnerPhone = "";
     let hasUserLostAllChances = false;
+    let myRequestUnsubscribe = null;
 
     let sessionState = "collecting"; 
     let blockSecondsLeft = 240;      
@@ -433,9 +434,9 @@
     let currentWorkerId = localStorage.getItem('employee_doc_id') || "";
 
     const groupSessionStats = {
-      "1250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0 },
-      "250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0 },
-      "100": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0 }
+      "1250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [] },
+      "250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [] },
+      "100": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [] }
     };
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -453,6 +454,21 @@
     });
 
     history.pushState(null, null, window.location.href);
+
+    function clearClientCodeBox() {
+      const codeInput = document.getElementById('game-code');
+      if (codeInput) codeInput.value = "";
+      localStorage.removeItem('my_request_id');
+      if (typeof myRequestUnsubscribe === 'function') {
+        myRequestUnsubscribe();
+        myRequestUnsubscribe = null;
+      }
+    }
+
+    function handleGroupChange() {
+      checkAppAvailability();
+      clearClientCodeBox();
+    }
 
     function handleBlockedScreenClick() {
       alert("🔒 Aksè fèmen! Rasanbleman an fini, sesyon jwèt la ap dewoule. Tann sesyon jwèt la fini nèt.");
@@ -527,6 +543,7 @@
         }
         nameInput.readOnly = true;
         phoneInput.readOnly = true;
+        clearClientCodeBox();
       }
     }
 
@@ -643,8 +660,9 @@
 
         blockRef.onSnapshot(doc => {
           const count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
+          const usedCodes = doc.exists && Array.isArray(doc.data().usedCodes) ? doc.data().usedCodes : [];
           const stats = calculateGroupFinance(grp, count);
-          groupSessionStats[grp] = stats;
+          groupSessionStats[grp] = { ...stats, usedCodes };
 
           const countEl = document.getElementById('p' + grp + '-players-count');
           const potEl = document.getElementById('p' + grp + '-total-pot');
@@ -653,6 +671,11 @@
           if (countEl) countEl.innerText = stats.count.toLocaleString();
           if (potEl) potEl.innerText = stats.totalPot.toLocaleString();
           if (winEl) winEl.innerText = stats.winnerPrize.toLocaleString();
+
+          const currentBoxCode = document.getElementById('game-code').value.trim().toUpperCase();
+          if (currentBoxCode && usedCodes.includes(currentBoxCode)) {
+            clearClientCodeBox();
+          }
         });
       });
     }
@@ -689,6 +712,7 @@
       });
 
       await db.collection("winners_announced").doc("group_" + grp).delete();
+      clearClientCodeBox();
     }
 
     async function clearGroupSession(grp) {
@@ -719,6 +743,9 @@
     async function deleteRequest(docId) {
       if(confirm("Èske w sèten ou vle siprime demann sa a?")) {
         await db.collection("payment_requests").doc(docId).delete();
+        if (localStorage.getItem('my_request_id') === docId) {
+          clearClientCodeBox();
+        }
         alert("Demann nan siprime ak siksè!");
       }
     }
@@ -740,6 +767,7 @@
           batch.delete(doc.ref);
         });
         await batch.commit();
+        clearClientCodeBox();
         alert("Done yo sove nan Paj Istorik la ak siksè!");
       }
     }
@@ -917,6 +945,9 @@
     async function removeValidatedPlayer(docId) {
       if (confirm("Èske w vle siprime moun sa a nan lis valide w la?")) {
         await db.collection("payment_requests").doc(docId).delete();
+        if (localStorage.getItem('my_request_id') === docId) {
+          clearClientCodeBox();
+        }
       }
     }
 
@@ -928,6 +959,7 @@
       }
       if (confirm("Èske w vle voye tout moun ou valide yo nan Paj 2: Istorik Moun Valide?")) {
         const batch = db.batch();
+        const activeReqId = localStorage.getItem('my_request_id');
         snapshot.forEach(doc => {
           const histRef = db.collection("worker_validated_history").doc(doc.id);
           batch.set(histRef, {
@@ -936,6 +968,9 @@
             archivedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
           batch.delete(doc.ref);
+          if (doc.id === activeReqId) {
+            clearClientCodeBox();
+          }
         });
         await batch.commit();
         alert("Tout moun ki valide yo ale nan Istorik la!");
@@ -1000,7 +1035,7 @@
       const group = document.getElementById('group-select').value;
       if(name === "" || phone === "") { alert("Antre non ak telefòn ou!"); return; }
 
-      document.getElementById('game-code').value = "";
+      clearClientCodeBox();
 
       const docRef = await db.collection("payment_requests").add({
         playerName: name,
@@ -1019,24 +1054,65 @@
       const codeInput = document.getElementById('game-code');
       codeInput.value = "";
 
-      db.collection("payment_requests").doc(reqId).onSnapshot(doc => {
+      if (typeof myRequestUnsubscribe === 'function') {
+        myRequestUnsubscribe();
+      }
+
+      myRequestUnsubscribe = db.collection("payment_requests").doc(reqId).onSnapshot(doc => {
         if (doc.exists) {
           const data = doc.data();
-          if (data.status === "confirmed" && data.sentToClient === true && data.generatedCode) {
-            codeInput.value = data.generatedCode;
+          const grp = String(data.groupPrice || document.getElementById('group-select').value || "1250");
+          const codeUpper = (data.generatedCode || "").trim().toUpperCase();
+          const alreadyUsed = groupSessionStats[grp] && Array.isArray(groupSessionStats[grp].usedCodes) && groupSessionStats[grp].usedCodes.includes(codeUpper);
+
+          if (data.status === "confirmed" && data.sentToClient === true && codeUpper && !alreadyUsed) {
+            codeInput.value = codeUpper;
           } else {
             codeInput.value = "";
+            if (alreadyUsed) {
+              localStorage.removeItem('my_request_id');
+            }
           }
         } else {
           codeInput.value = "";
+          localStorage.removeItem('my_request_id');
         }
       });
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('game-code').value = "";
+    async function validateSavedClientRequestOnLoad() {
+      const codeInput = document.getElementById('game-code');
+      codeInput.value = "";
       const savedReqId = localStorage.getItem('my_request_id');
-      if (savedReqId) { listenToMyRequest(savedReqId); }
+      if (!savedReqId) return;
+
+      const reqDoc = await db.collection("payment_requests").doc(savedReqId).get();
+      if (!reqDoc.exists) {
+        clearClientCodeBox();
+        return;
+      }
+
+      const data = reqDoc.data();
+      const codeUpper = (data.generatedCode || "").trim().toUpperCase();
+      const grp = String(data.groupPrice || "1250");
+
+      if (data.status !== "confirmed" || data.sentToClient !== true || !codeUpper) {
+        listenToMyRequest(savedReqId);
+        return;
+      }
+
+      const blockDoc = await db.collection("game_blocks").doc("block_" + grp).get();
+      const usedCodes = blockDoc.exists && Array.isArray(blockDoc.data().usedCodes) ? blockDoc.data().usedCodes : [];
+      if (usedCodes.includes(codeUpper)) {
+        clearClientCodeBox();
+        return;
+      }
+
+      listenToMyRequest(savedReqId);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      validateSavedClientRequestOnLoad();
       listenToWinnersAnnouncements();
     });
 
@@ -1077,6 +1153,7 @@
 
     async function validateCode() {
       if (sessionState !== "collecting") {
+        clearClientCodeBox();
         alert("🔒 Aksè fèmen! 4 minit rasanbleman an fini, pa gen moun ki ka antre nan sesyon an ankò.");
         document.getElementById('blocked-screen').style.display = 'flex';
         return;
@@ -1091,6 +1168,7 @@
 
       const officialRecord = await findOfficialCodeRecord(codeInput, userGroup);
       if (!officialRecord) {
+        clearClientCodeBox();
         alert("se pa système nan ki te ba ou kòd sa");
         return;
       }
@@ -1123,12 +1201,14 @@
       });
 
       if (!joinedOk) {
+        clearClientCodeBox();
         alert("Kòd sa a deja itilize nan sesyon aktyèl la oswa gwoup la plen (220 max).");
         return;
       }
 
       validatedPlayerName = (document.getElementById('player-name').value.trim() || officialRecord.playerName || "Jwè a");
       validatedPlayerPhone = (document.getElementById('player-phone').value.trim() || officialRecord.playerPhone || "");
+      clearClientCodeBox();
       isCodeValidated = true;
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('game-arena').classList.add('full-screen-mode');
@@ -1218,6 +1298,7 @@
           document.getElementById('game-status-indicator').innerText = "🟢 SESYON TIRE A LOUVRI (1 MIN)!";
           
           if (!isCodeValidated) {
+            clearClientCodeBox();
             document.getElementById('blocked-screen').style.display = 'flex';
           } else {
             shootBtn.disabled = false;
@@ -1372,7 +1453,6 @@
       let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 1) : 1;
       let userPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim();
 
-      // Strik: mwens pase 5 moun pa ka deklanche gayan reyèl (isGoal toujou false)
       let isGoal = false;
       if (totalPlayers >= 5) {
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
