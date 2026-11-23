@@ -510,7 +510,6 @@
     let currentPlayerSessionDocId = null;
     let myShotsUsed = 0;
 
-    // Eta revèy senkronize sou tout ekran menmsi gen rafrechisman
     let sessionState = "collecting";
     let syncedPhaseStartMs = Date.now();
     let syncedDurationSec = COLLECTING_DURATION_SEC;
@@ -658,6 +657,7 @@
           isAdvancingCycle = false;
           if (sessionState === "playing") {
             closeBlockedPopup();
+            document.getElementById('winner-banner-modal').style.display = 'none';
           } else if (sessionState === "collecting") {
             resetLocalPlayerForNewGathering();
           }
@@ -667,11 +667,22 @@
       });
     }
 
+    // Lè 1 minit tire a fini nèt: moun ki pa t pwofite tire pèdi, gayan an afiche, epi nouvo rasanbleman 4 minit kòmanse
     async function handlePlayingPhaseCompleted() {
       if (isAdvancingCycle) return;
       isAdvancingCycle = true;
       try {
         closeBlockedPopup();
+        if (isCodeValidated && chances > 0) {
+          hasUserLostAllChances = true;
+          chances = 0;
+          const c1 = document.getElementById('c1');
+          const c2 = document.getElementById('c2');
+          const c3 = document.getElementById('c3');
+          if (c1) c1.classList.add('off');
+          if (c2) c2.classList.add('off');
+          if (c3) c3.classList.add('off');
+        }
         exitArenaBackToSetup();
         await determineSessionWinnerAtEnd();
         await new Promise(resolve => setTimeout(resolve, 4000));
@@ -713,6 +724,8 @@
           }
         }
       } else if (sessionState === "playing") {
+        // Pandan 1 minit tire a poko fin pase, pa afiche gayan ni anpeche moun ki kalifye tire
+        document.getElementById('winner-banner-modal').style.display = 'none';
         if (timerLabel) timerLabel.innerText = "Tan K ap Rete pou Tire (1 min):";
         if (statusInd) statusInd.innerText = "🟢 SESYON TIRE A LOUVRI (1 MIN)!";
         if (adminPhaseEl) adminPhaseEl.innerText = "TIRE (1 MIN)";
@@ -726,15 +739,21 @@
             shootBtn.disabled = true;
             shootBtn.classList.remove('active-shoot');
             shootBtn.innerText = "SESYON AP JWE...";
+          } else if (shootBtn && chances <= 0) {
+            shootBtn.disabled = true;
+            shootBtn.classList.remove('active-shoot');
+            shootBtn.innerText = "CHANS FINI";
           }
         } else {
+          // 1 minit la fini nèt: moun ki pat tire pèdi epi gayan an afiche
           if (shootBtn) {
             shootBtn.disabled = true;
             shootBtn.classList.remove('active-shoot');
             shootBtn.innerText = "SESYON FINI";
           }
-          if (!ball.isShot && chances > 0 && isCodeValidated) {
+          if (isCodeValidated && chances > 0) {
             hasUserLostAllChances = true;
+            chances = 0;
           }
 
           const endKey = `playing_${syncedCycleId}`;
@@ -916,27 +935,6 @@
           finishedShooting: isDone,
           lastShotAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-      }
-
-      await checkIfAllPlayersFinishedShooting(userGroup);
-    }
-
-    async function checkIfAllPlayersFinishedShooting(grp) {
-      const targetGroup = String(grp || userGroup || "1250");
-      const allSnap = await db.collection("session_players")
-        .where("group", "==", targetGroup)
-        .get();
-
-      if (allSnap.empty) return;
-
-      const unfinishedSnap = await db.collection("session_players")
-        .where("group", "==", targetGroup)
-        .where("finishedShooting", "==", false)
-        .get();
-
-      if (unfinishedSnap.empty) {
-        exitArenaBackToSetup();
-        await finalizeSessionWinnerOnce(targetGroup);
       }
     }
 
@@ -1746,6 +1744,7 @@
     }
 
     function showWinnerModalWithAutoHide(grp, winnerData) {
+      if (isShootingMinuteActive()) return;
       exitArenaBackToSetup();
       populateWinnerModalsFromData(grp, winnerData);
       document.getElementById('winner-banner-modal').style.display = 'flex';
@@ -2135,7 +2134,7 @@
               shootBtn.disabled = false;
               shootBtn.classList.add('active-shoot');
             } else if (chances === 0) {
-              alert("Oups! 3 chans ou yo fini. Tann tout jwè fin tire pou w wè gayan an.");
+              alert("Oups! 3 chans ou yo fini. Tann 1 minit lan fini pou w wè gayan an.");
             }
           }
         }
