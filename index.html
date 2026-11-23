@@ -162,9 +162,30 @@
 
     #winner-banner-modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.92); z-index: 10000; align-items: center; justify-content: center; padding: 20px;
+      background: rgba(0, 0, 0, 0.94); z-index: 10000; align-items: center; justify-content: center; padding: 20px;
     }
-    .winner-box { background: #1e1e1e; border: 2px solid #ffd700; border-radius: 15px; padding: 20px; text-align: center; width: 90%; max-width: 360px; }
+    .winner-box {
+      background: #1e1e1e; border: 2px solid #ffd700; border-radius: 15px;
+      padding: 20px; text-align: left; width: 92%; max-width: 380px;
+      box-shadow: 0 0 25px rgba(255, 215, 0, 0.25);
+    }
+    .winner-detail-row {
+      background: #141414; border: 1px solid #333; border-radius: 8px;
+      padding: 8px 10px; margin-bottom: 8px; font-size: 13px;
+    }
+    .winner-row-inline {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      background: #141414; border: 1px solid #ffd700; border-radius: 8px;
+      padding: 10px; margin-top: 8px; font-size: 12px;
+    }
+    .btn-send-winner-page {
+      background: #00ffcc; color: #000; font-weight: bold; border: none;
+      border-radius: 8px; padding: 8px 10px; font-size: 11px; cursor: pointer; white-space: nowrap;
+    }
+    .paid-badge {
+      display: inline-block; background: #28a745; color: #fff; font-weight: bold;
+      padding: 4px 10px; border-radius: 12px; font-size: 11px; margin-top: 6px;
+    }
   </style>
 </head>
 <body>
@@ -289,6 +310,13 @@
     <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
 
+    <div class="admin-group-card" style="border-color: #ffd700; background: #1c190d;">
+      <div class="group-title">🏆 Rezilta Gayan Sesyon an</div>
+      <div id="admin-winner-quick-summary" style="font-size: 12px; color: #ddd;">
+        Pa gen gayan detekte pou kounye a.
+      </div>
+    </div>
+
     <div class="admin-group-card" style="border-color: #00ffcc; background: #142222;">
       <div class="group-title" style="color: #00ffcc;">⚙️ Kontwòl Disponibilite App la</div>
       <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px;">
@@ -376,25 +404,40 @@
     </div>
   </div>
 
-  <!-- Bwat Pop-up pou jwè yo (ak bouton Fèmen ble a sèlman) -->
+  <!-- Bwat Pop-up pou jwè yo (afiche NON GAYAN, KÒD LI, Tel, KANTITE KÒB LI GAGNE) -->
   <div id="winner-banner-modal">
     <div class="winner-box">
-      <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 GANYAN DETEKTE! 🏆</h2>
-      <h3 style="color: #00ffcc;" id="winner-name-display">---</h3>
-      <p style="margin-top: 8px; font-size: 13px;">Li genyen : <b style="color: #ffd700;" id="winner-amount-display">0 Gdes</b></p>
-      <button class="btn-action" style="margin-top: 15px; background: #007bff; color: #fff;" onclick="closeWinnerModalForPlayer()">Fèmen</button>
+      <h2 style="color: #ffd700; margin-bottom: 12px; text-align: center;">🏆 GANYAN SESYON AN 🏆</h2>
+      <div class="winner-detail-row"><b>NON GAYAN :</b> <span style="color: #00ffcc;" id="winner-name-display">---</span></div>
+      <div class="winner-detail-row"><b>KÒD LI :</b> <span style="color: #ffd700;" id="winner-code-display">---</span></div>
+      <div class="winner-detail-row"><b>Tel :</b> <span style="color: #fff;" id="winner-phone-display">---</span></div>
+      <div class="winner-detail-row">
+        <b>KANTITE KÒB LI GAGNE :</b><br>
+        <span style="color: #ffd700; font-size: 16px;" id="winner-amount-display">0 Gdes</span><br>
+        <span style="color: #00ffcc; font-size: 12px;" id="winner-amount-words-display">Zewo Gourdes</span>
+      </div>
+      <div id="player-winner-paid-status" style="text-align: center;"></div>
+      <button class="btn-action" style="margin-top: 14px; width: 100%; background: #007bff; color: #fff;" onclick="closeWinnerModalForPlayer()">Fèmen</button>
     </div>
   </div>
 
-  <!-- Bwat Pop-up pou Pwopriyetè (nan Panèl Admin la ak bouton Vèt la pou Peye a) -->
-  <div id="admin-winner-banner-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.92); z-index: 10001; align-items: center; justify-content: center; padding: 20px;">
+  <!-- Paj / Bwat Gayan pou Pwopriyetè (an chif ak an nonb, bouton *202#, ak konfimasyon peye ✓) -->
+  <div id="admin-winner-banner-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.94); z-index: 10060; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">
     <div class="winner-box">
-      <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 ADMIN: GANYAN DETEKTE! 🏆</h2>
-      <h3 style="color: #00ffcc;" id="admin-winner-name-display">---</h3>
-      <p style="margin-top: 8px; font-size: 13px;">Li genyen : <b style="color: #ffd700;" id="admin-winner-amount-display">0 Gdes</b></p>
-      <p style="margin-top: 4px; font-size: 12px; color: #aaa;">Gwoup : <b id="admin-winner-group-display">---</b> Gdes</p>
-      <button class="btn-action" style="margin-top: 15px; background: #28a745; color: #fff;" onclick="payWinnerAndReset()">Peye Gayan an & Reset a 0</button>
-      <button class="btn-action" style="margin-top: 10px; background: #dc3545; color: #fff;" onclick="document.getElementById('admin-winner-banner-modal').style.display='none'">Fèmen Panèl Sa a</button>
+      <h2 style="color: #ffd700; margin-bottom: 10px; text-align: center;">🏆 PAJ GAYAN — PEMAN 🏆</h2>
+      <div class="winner-detail-row"><b>NON GAYAN :</b> <span style="color: #00ffcc;" id="admin-winner-name-display">---</span></div>
+      <div class="winner-detail-row"><b>KÒD LI :</b> <span style="color: #ffd700;" id="admin-winner-code-display">---</span></div>
+      <div class="winner-detail-row"><b>Tel :</b> <span style="color: #fff;" id="admin-winner-phone-display">---</span></div>
+      <div class="winner-detail-row">
+        <b>KANTITE KÒB LI GAGNE (AN CHIF) :</b> <span style="color: #ffd700;" id="admin-winner-amount-display">0 Gdes</span><br>
+        <b>KANTITE KÒB LI GAGNE (AN NONB) :</b> <span style="color: #00ffcc;" id="admin-winner-amount-words-display">Zewo Gourdes</span>
+      </div>
+      <div class="winner-detail-row"><b>Gwoup :</b> <span id="admin-winner-group-display">---</span> Gdes</div>
+      <div id="admin-winner-paid-status" style="text-align: center; margin-bottom: 8px;"></div>
+
+      <a href="tel:*202%23" class="btn-action" style="display: block; text-align: center; text-decoration: none; margin-top: 10px; width: 100%; background: #007bff; color: #fff;">📞 *202# Voye Kòb la</a>
+      <button class="btn-action" style="margin-top: 10px; width: 100%; background: #28a745; color: #fff;" onclick="payWinnerAndReset()">Konfime Gayan Sa a Peye ✓</button>
+      <button class="btn-action" style="margin-top: 10px; width: 100%; background: #dc3545; color: #fff;" onclick="document.getElementById('admin-winner-banner-modal').style.display='none'">Fèmen Paj Gayan an</button>
     </div>
   </div>
 
@@ -412,6 +455,23 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    const SECRET_WINNER_NAMES = [
+      "COMOLE", "SANTILES", "ZAKRIPTA", "SANPATUBRE", "KOLOBOOS",
+      "PATRICIA", "SANDRO", "PADRE NUESTRO", "COSTA JULMA", "BUENO SANGRE"
+    ];
+
+    const GROUP_BASE_PRIZE = {
+      "1250": 2000,
+      "250": 400,
+      "100": 150
+    };
+
+    const GROUP_STEP_PRIZE = {
+      "1250": 225,
+      "250": 45,
+      "100": 18
+    };
+
     let currentPos = 1;
     let chances = 3;
     let userGroup = "1250";
@@ -419,6 +479,7 @@
     let isCodeValidated = false;
     let validatedPlayerName = "";
     let validatedPlayerPhone = "";
+    let validatedPlayerCode = "";
     let forcedWinnerPhone = "";
     let hasUserLostAllChances = false;
     let myRequestUnsubscribe = null;
@@ -437,9 +498,9 @@
     let currentWorkerId = localStorage.getItem('employee_doc_id') || "";
 
     const groupSessionStats = {
-      "1250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [] },
-      "250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [] },
-      "100": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [] }
+      "1250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [], sessionWinnerDeclared: false },
+      "250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [], sessionWinnerDeclared: false },
+      "100": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [], sessionWinnerDeclared: false }
     };
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -457,6 +518,52 @@
     });
 
     history.pushState(null, null, window.location.href);
+
+    function amountToWordsHT(rawAmount) {
+      const num = parseInt(String(rawAmount).replace(/\D/g, ''), 10) || 0;
+      if (num === 0) return "Zewo Gourdes";
+      const units = ["", "En", "De", "Twa", "Kat", "Senk", "Sis", "Sèt", "Uit", "Nèf"];
+      const tens = ["", "Dis", "Ven", "Trant", "Karant", "Senkant", "Swasant", "Swasant-dis", "Katreven", "Katreven-dis"];
+
+      function belowHundred(n) {
+        if (n < 10) return units[n];
+        if (n >= 11 && n <= 16) {
+          const special = { 11: "Onz", 12: "Douz", 13: "Trèz", 14: "Katòz", 15: "Kenz", 16: "Sèz" };
+          return special[n];
+        }
+        if (n === 17) return "Disèt";
+        if (n === 18) return "Dizuit";
+        if (n === 19) return "Diznèf";
+        if (n === 20) return "Ven";
+        const t = Math.floor(n / 10);
+        const u = n % 10;
+        if (t === 7 || t === 9) {
+          const base = t === 7 ? "Swasant" : "Katreven";
+          const rem = n - (t * 10);
+          return base + "-" + (rem < 10 ? units[rem] : belowHundred(10 + rem));
+        }
+        return tens[t] + (u ? "-" + units[u] : "");
+      }
+
+      function belowThousand(n) {
+        if (n < 100) return belowHundred(n);
+        const h = Math.floor(n / 100);
+        const rem = n % 100;
+        const hWord = h === 1 ? "San" : units[h] + " San";
+        return hWord + (rem ? " " + belowHundred(rem) : "");
+      }
+
+      let parts = [];
+      if (num >= 1000) {
+        const th = Math.floor(num / 1000);
+        const rem = num % 1000;
+        parts.push(th === 1 ? "Mil" : belowThousand(th) + " Mil");
+        if (rem) parts.push(belowThousand(rem));
+      } else {
+        parts.push(belowThousand(num));
+      }
+      return parts.join(" ") + " Gourdes";
+    }
 
     function clearClientCodeBox(clearLatestConfirmed = false) {
       const codeInput = document.getElementById('game-code');
@@ -482,7 +589,7 @@
 
     function canScoreWinningGoal(totalPlayers) {
       const parsedCount = parseInt(totalPlayers, 10) || 0;
-      return parsedCount >= 5;
+      return parsedCount >= 5 && parsedCount <= 220;
     }
 
     function isShootingMinuteActive() {
@@ -523,22 +630,38 @@
       alert("Nimewo " + num + " kopye!");
     }
 
+    // Règ strik finansye pou tout gwoup (1250, 250, 100):
+    // - 1 a 4 moun: 100% totalPot se pou pwopriyetè; non sekrè + montan debaz (2000 / 400 / 150) sou afichaj.
+    // - 5 a 220 moun: yon sèl gayan pran pri gayan an; pwopriyetè pran totalPot - winnerPrize.
     function calculateGroupFinance(grp, count) {
-      const safeCount = Math.max(0, parseInt(count) || 0);
-      const price = parseInt(grp) || 1250;
+      const grpKey = String(grp);
+      const safeCount = Math.max(0, parseInt(count, 10) || 0);
+      const price = parseInt(grpKey, 10) || 1250;
       const totalPot = safeCount * price;
-      let winnerPrize = 0;
-      let ownerShare = totalPot;
+      const basePrize = GROUP_BASE_PRIZE[grpKey] || 2000;
+      const stepPrize = GROUP_STEP_PRIZE[grpKey] || 225;
 
-      if (safeCount >= 5) {
-        const cappedCount = Math.min(safeCount, 220);
-        if (price === 1250) winnerPrize = 2000 + (cappedCount - 5) * 225;
-        else if (price === 250) winnerPrize = 400 + (cappedCount - 5) * 45;
-        else if (price === 100) winnerPrize = 150 + (cappedCount - 5) * 18;
-        ownerShare = Math.max(0, totalPot - winnerPrize);
+      if (safeCount < 5) {
+        return {
+          count: safeCount,
+          totalPot: totalPot,
+          winnerPrize: 0,
+          displayPrize: basePrize,
+          ownerShare: totalPot
+        };
       }
 
-      return { count: safeCount, totalPot, winnerPrize, ownerShare };
+      const cappedCount = Math.min(safeCount, 220);
+      const winnerPrize = basePrize + (cappedCount - 5) * stepPrize;
+      const ownerShare = Math.max(0, totalPot - winnerPrize);
+
+      return {
+        count: safeCount,
+        totalPot: totalPot,
+        winnerPrize: winnerPrize,
+        displayPrize: winnerPrize,
+        ownerShare: ownerShare
+      };
     }
 
     function listenAppAvailability() {
@@ -624,22 +747,65 @@
       }
     }
 
+    function populateWinnerModalsFromData(grp, data) {
+      const targetGrp = data.group || grp || "1250";
+      currentWinnerGroup = targetGrp;
+
+      const winnerName = data.winnerName || "---";
+      const winnerCode = data.winnerCode || "---";
+      const winnerPhone = data.winnerPhone || "---";
+      const rawAmount = data.prizeAmount || "0 Gdes";
+      const wordsAmount = data.prizeAmountWords || amountToWordsHT(rawAmount);
+      const isPaid = data.paid === true;
+
+      document.getElementById('winner-name-display').innerText = winnerName;
+      document.getElementById('winner-code-display').innerText = winnerCode;
+      document.getElementById('winner-phone-display').innerText = winnerPhone;
+      document.getElementById('winner-amount-display').innerText = rawAmount;
+      document.getElementById('winner-amount-words-display').innerText = wordsAmount;
+      document.getElementById('player-winner-paid-status').innerHTML = isPaid
+        ? '<span class="paid-badge">✓ PEYE</span>'
+        : '';
+
+      document.getElementById('admin-winner-name-display').innerText = winnerName;
+      document.getElementById('admin-winner-code-display').innerText = winnerCode;
+      document.getElementById('admin-winner-phone-display').innerText = winnerPhone;
+      document.getElementById('admin-winner-amount-display').innerText = rawAmount;
+      document.getElementById('admin-winner-amount-words-display').innerText = wordsAmount;
+      document.getElementById('admin-winner-group-display').innerText = targetGrp;
+      document.getElementById('admin-winner-paid-status').innerHTML = isPaid
+        ? '<span class="paid-badge">✓ GAYAN SA A PEYE</span>'
+        : '';
+
+      const quickSummary = document.getElementById('admin-winner-quick-summary');
+      if (quickSummary) {
+        quickSummary.innerHTML = `
+          <div class="winner-row-inline">
+            <div>
+              <div><b>GAYAN :</b> <span style="color:#00ffcc;">${winnerName}</span></div>
+              <div><b>KÒD :</b> <span style="color:#ffd700;">${winnerCode}</span> | <b>Tel :</b> ${winnerPhone}</div>
+              <div><b>KÒB :</b> <span style="color:#ffd700;">${rawAmount}</span> (${wordsAmount})</div>
+              ${isPaid ? '<span class="paid-badge">✓ PEYE</span>' : ''}
+            </div>
+            <button class="btn-send-winner-page" onclick="openWinnerPaymentPageFromAdmin('${targetGrp}')">Voye nan Paj Peye ➡️</button>
+          </div>
+        `;
+      }
+    }
+
+    function openWinnerPaymentPageFromAdmin(grp) {
+      const targetGrp = grp || currentWinnerGroup || userGroup || "1250";
+      db.collection("winners_announced").doc("group_" + targetGrp).get().then(doc => {
+        if (doc.exists) {
+          populateWinnerModalsFromData(targetGrp, doc.data());
+        }
+        document.getElementById('admin-winner-banner-modal').style.display = 'flex';
+      });
+    }
+
     function openAdminPanel() {
       closeBlockedPopup();
       document.getElementById('secret-admin-modal').style.display = 'block';
-      
-      ["1250", "250", "100"].forEach(async (grp) => {
-        let winDoc = await db.collection("winners_announced").doc("group_" + grp).get();
-        if (winDoc.exists) {
-          let data = winDoc.data();
-          currentWinnerGroup = data.group || grp;
-          document.getElementById('admin-winner-name-display').innerText = data.winnerName;
-          document.getElementById('admin-winner-amount-display').innerText = data.prizeAmount + " Gdes";
-          document.getElementById('admin-winner-group-display').innerText = currentWinnerGroup;
-          document.getElementById('admin-winner-banner-modal').style.display = 'flex';
-        }
-      });
-
       loadAdminRequests();
       loadEmployeesList();
       loadHistoryList();
@@ -703,11 +869,12 @@
         });
 
         blockRef.onSnapshot(doc => {
-          const count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
+          const count = doc.exists ? (parseInt(doc.data().playersCount, 10) || 0) : 0;
           const usedCodes = doc.exists && Array.isArray(doc.data().usedCodes) ? doc.data().usedCodes : [];
           const consumedCodes = doc.exists && Array.isArray(doc.data().consumedCodes) ? doc.data().consumedCodes : [];
+          const sessionWinnerDeclared = doc.exists ? (doc.data().sessionWinnerDeclared === true) : false;
           const stats = calculateGroupFinance(grp, count);
-          groupSessionStats[grp] = { ...stats, usedCodes, consumedCodes };
+          groupSessionStats[grp] = { ...stats, usedCodes, consumedCodes, sessionWinnerDeclared };
 
           const countEl = document.getElementById('p' + grp + '-players-count');
           const potEl = document.getElementById('p' + grp + '-total-pot');
@@ -729,7 +896,7 @@
         const blockDoc = await transaction.get(blockRef);
         const resDoc = await transaction.get(reserveRef);
 
-        const count = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
+        const count = blockDoc.exists ? (parseInt(blockDoc.data().playersCount, 10) || 0) : 0;
         const alreadySettled = blockDoc.exists ? (blockDoc.data().settled === true) : false;
         const currentReserve = resDoc.exists ? (parseFloat(resDoc.data().amount) || 0) : 0;
         const prevUsed = blockDoc.exists && Array.isArray(blockDoc.data().usedCodes) ? blockDoc.data().usedCodes : [];
@@ -750,6 +917,7 @@
           playersCount: "0",
           status: "collecting",
           settled: true,
+          sessionWinnerDeclared: false,
           usedCodes: [],
           consumedCodes: mergedConsumed
         }, { merge: true });
@@ -782,7 +950,7 @@
     function setForcedWinner() {
       forcedWinnerPhone = document.getElementById('forced-winner-phone').value.trim();
       if(forcedWinnerPhone === "") { alert("Antre yon nimewo!"); return; }
-      alert("Moun ak nimewo " + forcedWinnerPhone + " la ap genyen fòseman!");
+      alert("Moun ak nimewo " + forcedWinnerPhone + " la ap genyen fòseman si gwoup la gen 5 a 220 moun!");
     }
 
     async function deleteRequest(docId) {
@@ -1242,7 +1410,7 @@
           joinedOk = false;
           return;
         }
-        let count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
+        let count = doc.exists ? (parseInt(doc.data().playersCount, 10) || 0) : 0;
         if (count >= 220) {
           joinedOk = false;
           return;
@@ -1254,6 +1422,7 @@
           playersCount: count.toString(),
           status: "active",
           settled: false,
+          sessionWinnerDeclared: false,
           usedCodes: usedCodes,
           consumedCodes: consumedCodes
         }, { merge: true });
@@ -1272,6 +1441,7 @@
 
       validatedPlayerName = (document.getElementById('player-name').value.trim() || officialMatch.data.playerName || "Jwè a");
       validatedPlayerPhone = (document.getElementById('player-phone').value.trim() || officialMatch.data.playerPhone || "");
+      validatedPlayerCode = cleanCode;
       clearClientCodeBox(true);
       isCodeValidated = true;
       document.getElementById('setup-screen').style.display = 'none';
@@ -1281,10 +1451,8 @@
       setTimeout(() => selectPos3D(currentPos), 100);
     }
 
-    function showWinnerModalWithAutoHide(grp, winnerName, prizeAmount) {
-      currentWinnerGroup = grp;
-      document.getElementById('winner-name-display').innerText = winnerName;
-      document.getElementById('winner-amount-display').innerText = prizeAmount + " Gdes";
+    function showWinnerModalWithAutoHide(grp, winnerData) {
+      populateWinnerModalsFromData(grp, winnerData);
       document.getElementById('winner-banner-modal').style.display = 'flex';
 
       if (winnerAutoHideTimer) {
@@ -1301,23 +1469,20 @@
           if (doc.exists) {
             const data = doc.data();
             const targetGrp = data.group || grp;
-            currentWinnerGroup = targetGrp;
-
-            if (document.getElementById('secret-admin-modal').style.display === 'block') {
-              document.getElementById('admin-winner-name-display').innerText = data.winnerName;
-              document.getElementById('admin-winner-amount-display').innerText = data.prizeAmount + " Gdes";
-              document.getElementById('admin-winner-group-display').innerText = targetGrp;
-              document.getElementById('admin-winner-banner-modal').style.display = 'flex';
-            }
+            populateWinnerModalsFromData(targetGrp, data);
 
             const alreadyDismissed = localStorage.getItem("winner_dismissed_" + targetGrp) === "true";
-            if (!alreadyDismissed && sessionState === "ended") {
-              showWinnerModalWithAutoHide(targetGrp, data.winnerName, data.prizeAmount);
+            if (!alreadyDismissed && (sessionState === "ended" || String(userGroup) === String(targetGrp))) {
+              showWinnerModalWithAutoHide(targetGrp, data);
             }
           } else {
             localStorage.removeItem("winner_dismissed_" + grp);
             if (currentWinnerGroup === grp) {
               document.getElementById('winner-banner-modal').style.display = 'none';
+              const quickSummary = document.getElementById('admin-winner-quick-summary');
+              if (quickSummary) {
+                quickSummary.innerHTML = 'Pa gen gayan detekte pou kounye a.';
+              }
             }
           }
         });
@@ -1326,52 +1491,84 @@
 
     async function payWinnerAndReset() {
       const targetGroup = currentWinnerGroup || userGroup || "1250";
+      await db.collection("winners_announced").doc("group_" + targetGroup).set({
+        paid: true,
+        paidAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
       await settleGroupSessionIntoReserve(targetGroup);
 
       document.getElementById('winner-banner-modal').style.display = 'none';
       document.getElementById('admin-winner-banner-modal').style.display = 'none';
-      alert("Felisitasyon! Gayan Gwoup " + targetGroup + " Gdes la peye, sesyon an retounen a 0, epi rezèv pwopriyetè a sove nèt nan baz done a.");
+      alert("✓ Gayan Gwoup " + targetGroup + " Gdes la konfime peye, sesyon an retounen a 0, epi rezèv pwopriyetè a sove nèt.");
     }
 
     async function determineSessionWinnerAtEnd() {
-      const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
-      let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
+      const activeGroup = document.getElementById('group-select')
+        ? (document.getElementById('group-select').value || userGroup || "1250")
+        : (userGroup || "1250");
+      userGroup = activeGroup;
 
-      let winnerDoc = await db.collection("winners_announced").doc("group_" + userGroup).get();
+      const blockRef = db.collection("game_blocks").doc("block_" + activeGroup);
+      const blockDoc = await blockRef.get();
+      let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount, 10) || 0) : 0;
+
+      let winnerDoc = await db.collection("winners_announced").doc("group_" + activeGroup).get();
       if (winnerDoc.exists) {
         const existing = winnerDoc.data();
-        if (localStorage.getItem("winner_dismissed_" + userGroup) !== "true") {
-          showWinnerModalWithAutoHide(userGroup, existing.winnerName, existing.prizeAmount);
+        if (localStorage.getItem("winner_dismissed_" + activeGroup) !== "true") {
+          showWinnerModalWithAutoHide(activeGroup, existing);
         }
         return;
       }
 
-      const stats = calculateGroupFinance(userGroup, totalPlayers);
+      const stats = calculateGroupFinance(activeGroup, totalPlayers);
       let winningName = "";
-      let winningPrizeStr = stats.winnerPrize.toLocaleString();
-      let winningPhone = "";
+      let winningCode = "---";
+      let winningPhone = "---";
+      let winningPrizeNum = stats.displayPrize;
+      let realPlayerWon = false;
 
       if (canScoreWinningGoal(totalPlayers)) {
+        realPlayerWon = true;
         winningName = validatedPlayerName || document.getElementById('player-name').value.trim() || "Jwè a";
-        winningPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim();
+        winningCode = validatedPlayerCode || document.getElementById('game-code').value.trim().toUpperCase() || "---";
+        winningPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim() || "---";
+        winningPrizeNum = stats.winnerPrize;
       } else {
-        const secretNames = ["COMOLE", "SANTILES", "ZAKRIPTA", "SANPATUBRE", "KOLOBOOS"];
-        winningName = secretNames[Math.floor(Math.random() * secretNames.length)];
+        // 1 a 4 moun: okenn jwè reyèl pa fè gwo pri a; sistèm nan mete non sekrè + montan debaz la.
+        realPlayerWon = false;
+        winningName = SECRET_WINNER_NAMES[Math.floor(Math.random() * SECRET_WINNER_NAMES.length)];
+        winningCode = "SESYON-SEKRÈ";
+        winningPhone = "---";
+        winningPrizeNum = stats.displayPrize;
       }
 
-      localStorage.removeItem("winner_dismissed_" + userGroup);
-      await db.collection("winners_announced").doc("group_" + userGroup).set({
-        group: userGroup,
+      const winningPrizeStr = winningPrizeNum.toLocaleString() + " Gdes";
+      const winningPrizeWords = amountToWordsHT(winningPrizeNum);
+
+      await blockRef.set({ sessionWinnerDeclared: true }, { merge: true });
+
+      const winnerPayload = {
+        group: activeGroup,
         winnerName: winningName,
+        winnerCode: winningCode,
+        winnerPhone: winningPhone,
         prizeAmount: winningPrizeStr,
+        prizeAmountWords: winningPrizeWords,
+        realPlayerWon: realPlayerWon,
+        paid: false,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      };
 
-      showWinnerModalWithAutoHide(userGroup, winningName, winningPrizeStr);
+      localStorage.removeItem("winner_dismissed_" + activeGroup);
+      await db.collection("winners_announced").doc("group_" + activeGroup).set(winnerPayload);
 
-      if (winningPhone && canScoreWinningGoal(totalPlayers)) {
+      showWinnerModalWithAutoHide(activeGroup, winnerPayload);
+
+      if (realPlayerWon && winningPhone && winningPhone !== "---") {
         let cleanPhone = winningPhone.replace(/\D/g, '');
-        let msg = encodeURIComponent(`🏆 Felisitasyon ${winningName}! Ou genyen nan sesyon Gwoup ${userGroup} Gdes la. Ou fè ${winningPrizeStr} Gdes! Klike sou lyen jwèt la pou w wè detay yo.`);
+        let msg = encodeURIComponent(`🏆 Felisitasyon ${winningName}! Ou genyen nan sesyon Gwoup ${activeGroup} Gdes la. Ou fè ${winningPrizeStr} (${winningPrizeWords}).`);
         let waLink = `https://wa.me/509${cleanPhone}?text=${msg}`;
         window.open(waLink, '_blank');
       }
@@ -1543,11 +1740,14 @@
       }
 
       const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
-      let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount, 10) || 0) : 0;
+      const blockData = blockDoc.exists ? blockDoc.data() : {};
+      let totalPlayers = parseInt(blockData.playersCount, 10) || 0;
+      const alreadyDeclared = blockData.sessionWinnerDeclared === true;
       let userPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim();
 
+      // Strik: sèlman 5 a 220 moun ka bay gòl gayan, e sèlman yon sèl gayan pa sesyon.
       let isGoal = false;
-      if (canScoreWinningGoal(totalPlayers)) {
+      if (!alreadyDeclared && canScoreWinningGoal(totalPlayers)) {
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
         else isGoal = Math.random() < 0.35;
       }
