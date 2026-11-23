@@ -138,7 +138,7 @@
 
     #secret-admin-modal {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: #111; z-index: 9999; padding: 15px; overflow-y: auto; text-align: left;
+      background: #111; z-index: 10050; padding: 15px; overflow-y: auto; text-align: left;
     }
     .admin-tab-btn {
       background: #222; color: #ffd700; border: 1px solid #ffd700; padding: 8px 12px;
@@ -151,13 +151,13 @@
 
     #blocked-screen {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.96); z-index: 99999; align-items: center; justify-content: center; padding: 20px; text-align: center;
+      background: rgba(0,0,0,0.88); z-index: 9500; align-items: center; justify-content: center; padding: 20px; text-align: center;
     }
     .blocked-box { background: #1e1e1e; border: 2px solid #ff4500; border-radius: 15px; padding: 25px; max-width: 350px; }
 
     #worker-screen {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: #111; z-index: 99998; padding: 15px; overflow-y: auto; text-align: left;
+      background: #111; z-index: 9998; padding: 15px; overflow-y: auto; text-align: left;
     }
 
     #winner-banner-modal {
@@ -169,10 +169,11 @@
 </head>
 <body>
 
-  <div id="blocked-screen" onclick="handleBlockedScreenClick()">
-    <div class="blocked-box">
+  <div id="blocked-screen" onclick="closeBlockedPopup()">
+    <div class="blocked-box" onclick="event.stopPropagation()">
       <h3 style="color: #ff4500; margin-bottom: 15px;">🔒 AKSÈ FÈMEN — SESYON JWÈT LA AP DEWOULE</h3>
       <p style="font-size: 14px; color: #fff;">4 minit rasanbleman an fini pou gwoup la. Pa gen moun ki ka antre ankò. Tann sesyon jwèt la fini nèt s.v.p.!</p>
+      <button class="btn-action" style="margin-top: 16px; padding: 8px 16px; font-size: 13px; background: #007bff; color: #fff;" onclick="closeBlockedPopup()">OK</button>
     </div>
   </div>
 
@@ -243,8 +244,8 @@
           <option value="100">Gwoup 3 - Code 100 Gdes</option>
         </select>
 
-        <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou" onfocus="checkAppAvailability(this)" onclick="checkAppAvailability(this)">
-        <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la" onfocus="checkAppAvailability(this)" onclick="checkAppAvailability(this)">
+        <input type="text" id="player-name" class="input-field" placeholder="Non ou ak Siyati ou" onfocus="handleRequestFieldInteract(this)" onclick="handleRequestFieldInteract(this)">
+        <input type="text" id="player-phone" class="input-field" placeholder="Nimewo ou voye kòb la" onfocus="handleRequestFieldInteract(this)" onclick="handleRequestFieldInteract(this)">
         
         <button class="btn-action" style="font-size: 13px; padding: 8px;" onclick="submitPaymentRequest()">Mande Kòd Inik Mwen</button>
         
@@ -480,13 +481,31 @@
       return parsedCount >= 5;
     }
 
+    function isShootingMinuteActive() {
+      return sessionState === "playing";
+    }
+
+    function triggerSessionLockedPopup(inputEl) {
+      if (inputEl && typeof inputEl.blur === 'function') {
+        inputEl.blur();
+      }
+      document.getElementById('blocked-screen').style.display = 'flex';
+    }
+
+    function closeBlockedPopup() {
+      document.getElementById('blocked-screen').style.display = 'none';
+    }
+
+    function handleRequestFieldInteract(inputEl) {
+      if (!checkAppAvailability(inputEl)) return;
+      if (isShootingMinuteActive()) {
+        triggerSessionLockedPopup(inputEl);
+      }
+    }
+
     function handleGroupChange() {
       checkAppAvailability();
       clearClientCodeBox();
-    }
-
-    function handleBlockedScreenClick() {
-      alert("🔒 Aksè fèmen! Rasanbleman an fini, sesyon jwèt la ap dewoule. Tann sesyon jwèt la fini nèt.");
     }
 
     function handleClientCodeBoxClick() {
@@ -603,6 +622,7 @@
     }
 
     function openAdminPanel() {
+      closeBlockedPopup();
       document.getElementById('secret-admin-modal').style.display = 'block';
       
       ["1250", "250", "100"].forEach(async (grp) => {
@@ -1054,6 +1074,11 @@
     async function submitPaymentRequest() {
       if (!checkAppAvailability()) return;
 
+      if (isShootingMinuteActive()) {
+        triggerSessionLockedPopup();
+        return;
+      }
+
       if (sessionState !== "collecting") {
         alert("Rasanbleman 4 minit la fini, pa gen moun ki ka fè demann oswa antre ankò!");
         return;
@@ -1185,10 +1210,15 @@
     }
 
     async function validateCode() {
+      if (isShootingMinuteActive()) {
+        clearClientCodeBox();
+        triggerSessionLockedPopup();
+        return;
+      }
+
       if (sessionState !== "collecting") {
         clearClientCodeBox();
         alert("🔒 Aksè fèmen! 4 minit rasanbleman an fini, pa gen moun ki ka antre nan sesyon an ankò.");
-        document.getElementById('blocked-screen').style.display = 'flex';
         return;
       }
 
@@ -1374,10 +1404,7 @@
           document.getElementById('timer-label').innerText = "Tan K ap Rete pou Tire (1 min):";
           document.getElementById('game-status-indicator').innerText = "🟢 SESYON TIRE A LOUVRI (1 MIN)!";
           
-          if (!isCodeValidated) {
-            clearClientCodeBox();
-            document.getElementById('blocked-screen').style.display = 'flex';
-          } else {
+          if (isCodeValidated) {
             shootBtn.disabled = false;
             shootBtn.classList.add('active-shoot');
             shootBtn.innerText = "TIRE BOUL LA!";
@@ -1398,6 +1425,7 @@
         } else {
           if (sessionState !== "ended") {
             sessionState = "ended";
+            closeBlockedPopup();
             determineSessionWinnerAtEnd();
           }
           timeText = "00:00";
@@ -1530,7 +1558,6 @@
       let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount, 10) || 0) : 0;
       let userPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim();
 
-      // Strik: mwens pase 5 moun pa ka deklanche gayan reyèl (isGoal toujou false)
       let isGoal = false;
       if (canScoreWinningGoal(totalPlayers)) {
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
