@@ -422,6 +422,7 @@
     let forcedWinnerPhone = "";
     let hasUserLostAllChances = false;
     let myRequestUnsubscribe = null;
+    let latestConfirmedUnsubscribe = null;
     let winnerAutoHideTimer = null;
 
     let sessionState = "collecting"; 
@@ -457,10 +458,13 @@
 
     history.pushState(null, null, window.location.href);
 
-    function clearClientCodeBox() {
+    function clearClientCodeBox(clearLatestConfirmed = false) {
       const codeInput = document.getElementById('game-code');
       if (codeInput) codeInput.value = "";
       localStorage.removeItem('my_request_id');
+      if (clearLatestConfirmed) {
+        localStorage.removeItem('latest_confirmed_request_id');
+      }
       if (typeof myRequestUnsubscribe === 'function') {
         myRequestUnsubscribe();
         myRequestUnsubscribe = null;
@@ -468,7 +472,7 @@
     }
 
     function isCodeAlreadyPassed(codeUpper, grp) {
-      if (!codeUpper) return true;
+      if (!codeUpper) return false;
       const gStats = groupSessionStats[String(grp)];
       if (!gStats) return false;
       const inUsed = Array.isArray(gStats.usedCodes) && gStats.usedCodes.includes(codeUpper);
@@ -505,7 +509,6 @@
 
     function handleGroupChange() {
       checkAppAvailability();
-      clearClientCodeBox();
     }
 
     function handleClientCodeBoxClick() {
@@ -577,7 +580,7 @@
         }
         nameInput.readOnly = true;
         phoneInput.readOnly = true;
-        clearClientCodeBox();
+        clearClientCodeBox(true);
       }
     }
 
@@ -713,11 +716,6 @@
           if (countEl) countEl.innerText = stats.count.toLocaleString();
           if (potEl) potEl.innerText = stats.totalPot.toLocaleString();
           if (winEl) winEl.innerText = stats.winnerPrize.toLocaleString();
-
-          const currentBoxCode = document.getElementById('game-code').value.trim().toUpperCase();
-          if (currentBoxCode && isCodeAlreadyPassed(currentBoxCode, grp)) {
-            clearClientCodeBox();
-          }
         });
       });
     }
@@ -759,7 +757,7 @@
 
       await db.collection("winners_announced").doc("group_" + grp).delete();
       localStorage.removeItem("winner_dismissed_" + grp);
-      clearClientCodeBox();
+      clearClientCodeBox(true);
     }
 
     async function clearGroupSession(grp) {
@@ -790,8 +788,8 @@
     async function deleteRequest(docId) {
       if(confirm("Èske w sèten ou vle siprime demann sa a?")) {
         await db.collection("payment_requests").doc(docId).delete();
-        if (localStorage.getItem('my_request_id') === docId) {
-          clearClientCodeBox();
+        if (localStorage.getItem('my_request_id') === docId || localStorage.getItem('latest_confirmed_request_id') === docId) {
+          clearClientCodeBox(true);
         }
         alert("Demann nan siprime ak siksè!");
       }
@@ -814,7 +812,7 @@
           batch.delete(doc.ref);
         });
         await batch.commit();
-        clearClientCodeBox();
+        clearClientCodeBox(true);
         alert("Done yo sove nan Paj Istorik la ak siksè!");
       }
     }
@@ -907,6 +905,8 @@
         validatedByWorkerId: currentWorkerId || "admin",
         validatedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
+      localStorage.setItem('latest_confirmed_request_id', docId);
+      listenToLatestConfirmedRequest(docId);
       alert("Peman konfime & kòd voye bay kliyan an: " + uniqueCode);
     }
 
@@ -993,8 +993,8 @@
     async function removeValidatedPlayer(docId) {
       if (confirm("Èske w vle siprime moun sa a nan lis valide w la?")) {
         await db.collection("payment_requests").doc(docId).delete();
-        if (localStorage.getItem('my_request_id') === docId) {
-          clearClientCodeBox();
+        if (localStorage.getItem('my_request_id') === docId || localStorage.getItem('latest_confirmed_request_id') === docId) {
+          clearClientCodeBox(true);
         }
       }
     }
@@ -1008,6 +1008,7 @@
       if (confirm("Èske w vle voye tout moun ou valide yo nan Paj 2: Istorik Moun Valide?")) {
         const batch = db.batch();
         const activeReqId = localStorage.getItem('my_request_id');
+        const latestConfId = localStorage.getItem('latest_confirmed_request_id');
         snapshot.forEach(doc => {
           const histRef = db.collection("worker_validated_history").doc(doc.id);
           batch.set(histRef, {
@@ -1016,8 +1017,8 @@
             archivedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
           batch.delete(doc.ref);
-          if (doc.id === activeReqId) {
-            clearClientCodeBox();
+          if (doc.id === activeReqId || doc.id === latestConfId) {
+            clearClientCodeBox(true);
           }
         });
         await batch.commit();
@@ -1088,7 +1089,7 @@
       const group = document.getElementById('group-select').value;
       if(name === "" || phone === "") { alert("Antre non ak telefòn ou!"); return; }
 
-      clearClientCodeBox();
+      clearClientCodeBox(false);
 
       const docRef = await db.collection("payment_requests").add({
         playerName: name,
@@ -1104,73 +1105,60 @@
       listenToMyRequest(docRef.id);
     }
 
-    function listenToMyRequest(reqId) {
+    function applyConfirmedCodeToClientBox(data, isLatestConfirmed = false) {
       const codeInput = document.getElementById('game-code');
-      codeInput.value = "";
+      if (!codeInput || !data) return;
 
+      const codeUpper = (data.generatedCode || "").trim().toUpperCase();
+      if (data.consumed === true) {
+        if (isLatestConfirmed) {
+          localStorage.removeItem('latest_confirmed_request_id');
+        }
+        return;
+      }
+
+      if (data.status === "confirmed" && data.sentToClient === true && codeUpper) {
+        codeInput.value = codeUpper;
+      }
+    }
+
+    function listenToMyRequest(reqId) {
       if (typeof myRequestUnsubscribe === 'function') {
         myRequestUnsubscribe();
       }
 
       myRequestUnsubscribe = db.collection("payment_requests").doc(reqId).onSnapshot(doc => {
         if (!doc.exists) {
-          clearClientCodeBox();
+          localStorage.removeItem('my_request_id');
           return;
         }
-        const data = doc.data();
-        const grp = String(data.groupPrice || document.getElementById('group-select').value || "1250");
-        const codeUpper = (data.generatedCode || "").trim().toUpperCase();
-
-        if (data.consumed === true || isCodeAlreadyPassed(codeUpper, grp)) {
-          clearClientCodeBox();
-          return;
-        }
-
-        if (data.status === "confirmed" && data.sentToClient === true && codeUpper) {
-          codeInput.value = codeUpper;
-        } else {
-          codeInput.value = "";
-        }
+        applyConfirmedCodeToClientBox(doc.data(), false);
       });
     }
 
-    async function validateSavedClientRequestOnLoad() {
-      const codeInput = document.getElementById('game-code');
-      codeInput.value = "";
-      const savedReqId = localStorage.getItem('my_request_id');
-      if (!savedReqId) return;
-
-      const reqDoc = await db.collection("payment_requests").doc(savedReqId).get();
-      if (!reqDoc.exists) {
-        clearClientCodeBox();
-        return;
+    function listenToLatestConfirmedRequest(reqId) {
+      if (typeof latestConfirmedUnsubscribe === 'function') {
+        latestConfirmedUnsubscribe();
       }
 
-      const data = reqDoc.data();
-      const codeUpper = (data.generatedCode || "").trim().toUpperCase();
-      const grp = String(data.groupPrice || "1250");
-
-      if (data.consumed === true) {
-        clearClientCodeBox();
-        return;
-      }
-
-      if (codeUpper) {
-        const blockDoc = await db.collection("game_blocks").doc("block_" + grp).get();
-        const usedCodes = blockDoc.exists && Array.isArray(blockDoc.data().usedCodes) ? blockDoc.data().usedCodes : [];
-        const consumedCodes = blockDoc.exists && Array.isArray(blockDoc.data().consumedCodes) ? blockDoc.data().consumedCodes : [];
-        if (usedCodes.includes(codeUpper) || consumedCodes.includes(codeUpper)) {
-          clearClientCodeBox();
+      latestConfirmedUnsubscribe = db.collection("payment_requests").doc(reqId).onSnapshot(doc => {
+        if (!doc.exists) {
+          localStorage.removeItem('latest_confirmed_request_id');
           return;
         }
-      }
-
-      listenToMyRequest(savedReqId);
+        applyConfirmedCodeToClientBox(doc.data(), true);
+      });
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('game-code').value = "";
-      validateSavedClientRequestOnLoad();
+      const savedReqId = localStorage.getItem('my_request_id');
+      const latestConfId = localStorage.getItem('latest_confirmed_request_id');
+      if (savedReqId) {
+        listenToMyRequest(savedReqId);
+      }
+      if (latestConfId) {
+        listenToLatestConfirmedRequest(latestConfId);
+      }
       listenToWinnersAnnouncements();
     });
 
@@ -1211,13 +1199,13 @@
 
     async function validateCode() {
       if (isShootingMinuteActive()) {
-        clearClientCodeBox();
+        clearClientCodeBox(true);
         triggerSessionLockedPopup();
         return;
       }
 
       if (sessionState !== "collecting") {
-        clearClientCodeBox();
+        clearClientCodeBox(true);
         alert("🔒 Aksè fèmen! 4 minit rasanbleman an fini, pa gen moun ki ka antre nan sesyon an ankò.");
         return;
       }
@@ -1231,14 +1219,14 @@
 
       const cleanCode = codeInput.toUpperCase();
       if (isCodeAlreadyPassed(cleanCode, userGroup)) {
-        clearClientCodeBox();
+        clearClientCodeBox(true);
         alert("Kòd sa a deja pase / deja itilize.");
         return;
       }
 
       const officialMatch = await findOfficialCodeRecord(cleanCode, userGroup);
       if (!officialMatch) {
-        clearClientCodeBox();
+        clearClientCodeBox(true);
         alert("se pa système nan ki te ba ou kòd sa");
         return;
       }
@@ -1273,7 +1261,7 @@
       });
 
       if (!joinedOk) {
-        clearClientCodeBox();
+        clearClientCodeBox(true);
         alert("Kòd sa a deja itilize nan sesyon aktyèl la oswa gwoup la plen (220 max).");
         return;
       }
@@ -1284,7 +1272,7 @@
 
       validatedPlayerName = (document.getElementById('player-name').value.trim() || officialMatch.data.playerName || "Jwè a");
       validatedPlayerPhone = (document.getElementById('player-phone').value.trim() || officialMatch.data.playerPhone || "");
-      clearClientCodeBox();
+      clearClientCodeBox(true);
       isCodeValidated = true;
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('game-arena').classList.add('full-screen-mode');
