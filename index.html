@@ -192,8 +192,8 @@
 
   <div id="blocked-screen" onclick="closeBlockedPopup()">
     <div class="blocked-box" onclick="event.stopPropagation()">
-      <h3 style="color: #ff4500; margin-bottom: 15px;">🔒 AKSÈ FÈMEN — SESYON JWÈT LA AP DEWOULE</h3>
-      <p style="font-size: 14px; color: #fff;">4 minit rasanbleman an fini pou gwoup la. Pa gen moun ki ka antre ankò. Tann sesyon jwèt la fini nèt s.v.p.!</p>
+      <h3 style="color: #ff4500; margin-bottom: 15px;">🔒 SESYON TIRE A AP DEWOULE</h3>
+      <p style="font-size: 14px; color: #fff;">Rasanbleman 4 minit la fini, jwèt la kòmanse. Nouvo moun ki vle rasanble ap oblije tann sesyon k ap jwe a fini pou yon lòt rasanbleman louvri!</p>
       <button class="btn-action" style="margin-top: 16px; padding: 8px 16px; font-size: 13px; background: #007bff; color: #fff;" onclick="closeBlockedPopup()">OK</button>
     </div>
   </div>
@@ -317,7 +317,7 @@
         Lè Aktyèl : <b style="color:#ffd700;"><span id="admin-clock-display">04:00</span></b>
       </div>
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
-        <button class="btn-pay" style="background:#007bff;" onclick="syncMasterClock('collecting', 240)">🔄 Demare 4 Min Rasanbleman</button>
+        <button class="btn-pay" style="background:#007bff;" onclick="startNewGatheringCycle()">🔄 Louvri Nouvo Rasanbleman (4 Min)</button>
         <button class="btn-pay" style="background:#28a745;" onclick="syncMasterClock('playing', 60)">🟢 Louvri 1 Min Tire Kounye a</button>
       </div>
     </div>
@@ -511,6 +511,7 @@
     let syncedCycleId = 1;
     let serverOffsetMs = 0;
     let lastHandledPhaseEndKey = "";
+    let isAdvancingCycle = false;
 
     let isAppAvailable = true;
     let nextAvailableHour = "---";
@@ -557,7 +558,33 @@
       return Math.max(0, syncedDurationSec - elapsedSec);
     }
 
-    // Kreye oswa mete revèy mèt la sou Firestore pou tout ekran konekte yo
+    function resetLocalPlayerForNewGathering() {
+      isCodeValidated = false;
+      hasUserLostAllChances = false;
+      chances = 3;
+      myShotsUsed = 0;
+      currentPlayerSessionDocId = null;
+      ball.isShot = false;
+      ball.isGoal = false;
+      ball.progress = 0;
+      player.isShooting = false;
+
+      const c1 = document.getElementById('c1');
+      const c2 = document.getElementById('c2');
+      const c3 = document.getElementById('c3');
+      if (c1) c1.classList.remove('off');
+      if (c2) c2.classList.remove('off');
+      if (c3) c3.classList.remove('off');
+
+      const arena = document.getElementById('game-arena');
+      const setup = document.getElementById('setup-screen');
+      const arenaTimer = document.getElementById('arena-timer-display');
+      if (arena) arena.classList.remove('full-screen-mode');
+      if (setup) setup.style.display = 'block';
+      if (arenaTimer) arenaTimer.style.display = 'none';
+      resizeCanvas();
+    }
+
     async function syncMasterClock(phase, durationSec, nextCycleId = null) {
       const clockRef = db.collection("game_sessions").doc("live_clock");
       const nowMs = Date.now();
@@ -570,6 +597,11 @@
         cycleId: targetCycle,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
+    }
+
+    async function startNewGatheringCycle() {
+      await syncMasterClock("collecting", COLLECTING_DURATION_SEC, syncedCycleId + 1);
+      alert("🔄 Nouvo rasanbleman 4 minit (04:00) louvri sou tout ekran!");
     }
 
     function listenMasterClock() {
@@ -594,7 +626,6 @@
         const remotePhase = data.phase || "collecting";
         const remoteCycle = parseInt(data.cycleId, 10) || 1;
 
-        // Kalibre diferans revèy aparèy la ak startMs dokiman an si li nan tan kap vini
         if (remoteStartMs - Date.now() > 2000 && remoteStartMs - Date.now() < 60000) {
           serverOffsetMs = (remoteStartMs - Date.now()) - 200;
         }
@@ -607,13 +638,29 @@
 
         if (phaseChanged) {
           lastHandledPhaseEndKey = "";
+          isAdvancingCycle = false;
           if (sessionState === "playing") {
             closeBlockedPopup();
+          } else if (sessionState === "collecting") {
+            resetLocalPlayerForNewGathering();
           }
         }
 
         renderSyncedClockTick();
       });
+    }
+
+    async function handlePlayingPhaseCompleted() {
+      if (isAdvancingCycle) return;
+      isAdvancingCycle = true;
+      try {
+        closeBlockedPopup();
+        await determineSessionWinnerAtEnd();
+        // Fè plas pou yon nouvo rasanbleman 4 minit otomatikman pou pwochen sik la
+        await syncMasterClock("collecting", COLLECTING_DURATION_SEC, syncedCycleId + 1);
+      } finally {
+        isAdvancingCycle = false;
+      }
     }
 
     function renderSyncedClockTick() {
@@ -671,8 +718,7 @@
           const endKey = `playing_${syncedCycleId}`;
           if (lastHandledPhaseEndKey !== endKey) {
             lastHandledPhaseEndKey = endKey;
-            closeBlockedPopup();
-            determineSessionWinnerAtEnd();
+            handlePlayingPhaseCompleted();
           }
         }
       }
@@ -1470,7 +1516,7 @@
       }
 
       if (sessionState !== "collecting") {
-        alert("Rasanbleman 4 minit la fini, pa gen moun ki ka fè demann oswa antre ankò!");
+        triggerSessionLockedPopup();
         return;
       }
       const name = document.getElementById('player-name').value.trim();
@@ -1588,15 +1634,9 @@
     }
 
     async function validateCode() {
-      if (isShootingMinuteActive()) {
+      if (isShootingMinuteActive() || sessionState !== "collecting") {
         clearClientCodeBox(true);
         triggerSessionLockedPopup();
-        return;
-      }
-
-      if (sessionState !== "collecting") {
-        clearClientCodeBox(true);
-        alert("🔒 Aksè fèmen! 4 minit rasanbleman an fini, pa gen moun ki ka antre nan sesyon an ankò.");
         return;
       }
 
@@ -1823,7 +1863,6 @@
       await finalizeSessionWinnerOnce(activeGroup);
     }
 
-    // Revèy lokal sèlman afiche kalkil lè senkronize ki soti nan Firestore
     setInterval(() => {
       renderSyncedClockTick();
     }, 1000);
