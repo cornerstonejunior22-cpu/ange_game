@@ -310,6 +310,18 @@
     <button class="btn-close-admin" onclick="closeAdminPanel()">Fèmen / Tounen</button>
     <h3 style="color: #ffd700; margin-bottom: 15px;">Panèl Sekrè Pwopriyetè</h3>
 
+    <div class="admin-group-card" style="border-color: #ffd700; background: #1a170a;">
+      <div class="group-title">⏱️ Kontwòl Lè Senkronize (Tout Ekran)</div>
+      <div style="font-size:12px; color:#ccc; margin-bottom:8px;">
+        Eta : <b style="color:#00ffcc;"><span id="admin-clock-phase">RASANBLEMAN (4 MIN)</span></b> |
+        Lè Aktyèl : <b style="color:#ffd700;"><span id="admin-clock-display">04:00</span></b>
+      </div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn-pay" style="background:#007bff;" onclick="syncMasterClock('collecting', 240)">🔄 Demare 4 Min Rasanbleman</button>
+        <button class="btn-pay" style="background:#28a745;" onclick="syncMasterClock('playing', 60)">🟢 Louvri 1 Min Tire Kounye a</button>
+      </div>
+    </div>
+
     <div class="admin-group-card" style="border-color: #ffd700; background: #1c190d;">
       <div class="group-title">🏆 Rezilta Gayan Sesyon an</div>
       <div id="admin-winner-quick-summary" style="font-size: 12px; color: #ddd;">
@@ -472,6 +484,9 @@
       "100": 18
     };
 
+    const COLLECTING_DURATION_SEC = 240;
+    const PLAYING_DURATION_SEC = 60;
+
     let currentPos = 1;
     let chances = 3;
     let userGroup = "1250";
@@ -489,9 +504,13 @@
     let currentPlayerSessionDocId = null;
     let myShotsUsed = 0;
 
-    let sessionState = "collecting"; 
-    let blockSecondsLeft = 240;      
-    let gamePlaySecondsLeft = 60;    
+    // Eta revèy senkronize sou Firestore
+    let sessionState = "collecting";
+    let syncedPhaseStartMs = Date.now();
+    let syncedDurationSec = COLLECTING_DURATION_SEC;
+    let syncedCycleId = 1;
+    let serverOffsetMs = 0;
+    let lastHandledPhaseEndKey = "";
 
     let isAppAvailable = true;
     let nextAvailableHour = "---";
@@ -521,6 +540,143 @@
     });
 
     history.pushState(null, null, window.location.href);
+
+    function formatMMSS(totalSec) {
+      const safe = Math.max(0, Math.floor(totalSec));
+      const m = Math.floor(safe / 60);
+      const s = safe % 60;
+      return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+    }
+
+    function getSyncedNowMs() {
+      return Date.now() + serverOffsetMs;
+    }
+
+    function getRemainingSyncedSeconds() {
+      const elapsedSec = Math.floor((getSyncedNowMs() - syncedPhaseStartMs) / 1000);
+      return Math.max(0, syncedDurationSec - elapsedSec);
+    }
+
+    // Kreye oswa mete revèy mèt la sou Firestore pou tout ekran konekte yo
+    async function syncMasterClock(phase, durationSec, nextCycleId = null) {
+      const clockRef = db.collection("game_sessions").doc("live_clock");
+      const nowMs = Date.now();
+      const targetCycle = nextCycleId || (syncedCycleId + 1);
+
+      await clockRef.set({
+        phase: phase,
+        startedAtMs: nowMs,
+        durationSec: durationSec,
+        cycleId: targetCycle,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+    }
+
+    function listenMasterClock() {
+      const clockRef = db.collection("game_sessions").doc("live_clock");
+
+      clockRef.onSnapshot(async (doc) => {
+        if (!doc.exists) {
+          const initNow = Date.now();
+          await clockRef.set({
+            phase: "collecting",
+            startedAtMs: initNow,
+            durationSec: COLLECTING_DURATION_SEC,
+            cycleId: 1,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          return;
+        }
+
+        const data = doc.data();
+        const remoteStartMs = typeof data.startedAtMs === "number" ? data.startedAtMs : Date.now();
+        const remoteDuration = parseInt(data.durationSec, 10) || COLLECTING_DURATION_SEC;
+        const remotePhase = data.phase || "collecting";
+        const remoteCycle = parseInt(data.cycleId, 10) || 1;
+
+        // Kalibre diferans revèy aparèy la ak startMs dokiman an si li nan tan kap vini
+        if (remoteStartMs - Date.now() > 2000 && remoteStartMs - Date.now() < 60000) {
+          serverOffsetMs = (remoteStartMs - Date.now()) - 200;
+        }
+
+        const phaseChanged = (sessionState !== remotePhase) || (syncedCycleId !== remoteCycle);
+        sessionState = remotePhase;
+        syncedPhaseStartMs = remoteStartMs;
+        syncedDurationSec = remoteDuration;
+        syncedCycleId = remoteCycle;
+
+        if (phaseChanged) {
+          lastHandledPhaseEndKey = "";
+          if (sessionState === "playing") {
+            closeBlockedPopup();
+          }
+        }
+
+        renderSyncedClockTick();
+      });
+    }
+
+    function renderSyncedClockTick() {
+      const remSec = getRemainingSyncedSeconds();
+      const timeText = formatMMSS(remSec);
+      const shootBtn = document.getElementById('shoot-btn-3d');
+      const timerLabel = document.getElementById('timer-label');
+      const statusInd = document.getElementById('game-status-indicator');
+      const adminPhaseEl = document.getElementById('admin-clock-phase');
+      const adminDispEl = document.getElementById('admin-clock-display');
+
+      document.getElementById('timer').innerText = timeText;
+      document.getElementById('arena-timer-display').innerText = timeText;
+      if (adminDispEl) adminDispEl.innerText = timeText;
+
+      if (sessionState === "collecting") {
+        if (timerLabel) timerLabel.innerText = "Tan Rasanbleman (4 minit):";
+        if (statusInd) statusInd.innerText = "🔴 RASANBLEMAN AP FÈ (4 MIN)...";
+        if (adminPhaseEl) adminPhaseEl.innerText = "RASANBLEMAN (4 MIN)";
+
+        if (shootBtn) {
+          shootBtn.disabled = true;
+          shootBtn.classList.remove('active-shoot');
+          shootBtn.innerText = "TANN LÈ A RIVE...";
+        }
+
+        if (remSec <= 0) {
+          const endKey = `collecting_${syncedCycleId}`;
+          if (lastHandledPhaseEndKey !== endKey) {
+            lastHandledPhaseEndKey = endKey;
+            syncMasterClock("playing", PLAYING_DURATION_SEC, syncedCycleId);
+          }
+        }
+      } else if (sessionState === "playing") {
+        if (timerLabel) timerLabel.innerText = "Tan K ap Rete pou Tire (1 min):";
+        if (statusInd) statusInd.innerText = "🟢 SESYON TIRE A LOUVRI (1 MIN)!";
+        if (adminPhaseEl) adminPhaseEl.innerText = "TIRE (1 MIN)";
+
+        if (remSec > 0) {
+          if (shootBtn && isCodeValidated && chances > 0 && !ball.isShot) {
+            shootBtn.disabled = false;
+            shootBtn.classList.add('active-shoot');
+            shootBtn.innerText = "TIRE BOUL LA!";
+          }
+        } else {
+          if (shootBtn) {
+            shootBtn.disabled = true;
+            shootBtn.classList.remove('active-shoot');
+            shootBtn.innerText = "SESYON FINI";
+          }
+          if (!ball.isShot && chances > 0 && isCodeValidated) {
+            hasUserLostAllChances = true;
+          }
+
+          const endKey = `playing_${syncedCycleId}`;
+          if (lastHandledPhaseEndKey !== endKey) {
+            lastHandledPhaseEndKey = endKey;
+            closeBlockedPopup();
+            determineSessionWinnerAtEnd();
+          }
+        }
+      }
+    }
 
     function amountToWordsHT(rawAmount) {
       const num = parseInt(String(rawAmount).replace(/\D/g, ''), 10) || 0;
@@ -596,7 +752,7 @@
     }
 
     function isShootingMinuteActive() {
-      return sessionState === "playing";
+      return sessionState === "playing" && getRemainingSyncedSeconds() > 0;
     }
 
     function triggerSessionLockedPopup(inputEl) {
@@ -664,7 +820,6 @@
       };
     }
 
-    // --- Jwè nan sesyon & verifikasyon tout jwè fin tire ---
     async function registerPlayerInActiveSession(group, name, phone, code) {
       myShotsUsed = 0;
       const docRef = await db.collection("session_players").add({
@@ -1385,6 +1540,7 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      listenMasterClock();
       const savedReqId = localStorage.getItem('my_request_id');
       const latestConfId = localStorage.getItem('latest_confirmed_request_id');
       if (savedReqId) {
@@ -1541,7 +1697,7 @@
             populateWinnerModalsFromData(targetGrp, data);
 
             const alreadyDismissed = localStorage.getItem("winner_dismissed_" + targetGrp) === "true";
-            if (!alreadyDismissed && (sessionState === "ended" || String(userGroup) === String(targetGrp))) {
+            if (!alreadyDismissed && String(userGroup) === String(targetGrp)) {
               showWinnerModalWithAutoHide(targetGrp, data);
             }
           } else {
@@ -1667,58 +1823,9 @@
       await finalizeSessionWinnerOnce(activeGroup);
     }
 
+    // Revèy lokal sèlman afiche kalkil lè senkronize ki soti nan Firestore
     setInterval(() => {
-      let timeText = "04:00";
-      const shootBtn = document.getElementById('shoot-btn-3d');
-
-      if (sessionState === "collecting") {
-        if (blockSecondsLeft > 0) {
-          blockSecondsLeft--;
-          let m = Math.floor(blockSecondsLeft / 60);
-          let s = blockSecondsLeft % 60;
-          timeText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
-        } else {
-          sessionState = "playing";
-          document.getElementById('timer-label').innerText = "Tan K ap Rete pou Tire (1 min):";
-          document.getElementById('game-status-indicator').innerText = "🟢 SESYON TIRE A LOUVRI (1 MIN)!";
-          
-          if (isCodeValidated) {
-            shootBtn.disabled = false;
-            shootBtn.classList.add('active-shoot');
-            shootBtn.innerText = "TIRE BOUL LA!";
-          }
-        }
-      } else if (sessionState === "playing") {
-        if (gamePlaySecondsLeft > 0) {
-          gamePlaySecondsLeft--;
-          let m = Math.floor(gamePlaySecondsLeft / 60);
-          let s = gamePlaySecondsLeft % 60;
-          timeText = `${m < 10 ? '0':''}${m}:${s < 10 ? '0':''}${s}`;
-          
-          if (isCodeValidated && chances > 0 && !ball.isShot) {
-            shootBtn.disabled = false;
-            shootBtn.classList.add('active-shoot');
-            shootBtn.innerText = "TIRE BOUL LA!";
-          }
-        } else {
-          if (sessionState !== "ended") {
-            sessionState = "ended";
-            closeBlockedPopup();
-            determineSessionWinnerAtEnd();
-          }
-          timeText = "00:00";
-          document.getElementById('game-status-indicator').innerText = "🔴 SESYON FINI";
-          if (!ball.isShot && chances > 0 && isCodeValidated) {
-            hasUserLostAllChances = true;
-          }
-          shootBtn.disabled = true;
-          shootBtn.classList.remove('active-shoot');
-          shootBtn.innerText = "SESYON FINI";
-        }
-      }
-      
-      document.getElementById('timer').innerText = timeText;
-      document.getElementById('arena-timer-display').innerText = timeText;
+      renderSyncedClockTick();
     }, 1000);
 
     const canvas = document.getElementById('game-canvas');
@@ -1820,7 +1927,7 @@
 
     async function shootBall3D() {
       if (!isCodeValidated) { alert("Antre kòd ou a anvan!"); return; }
-      if (sessionState !== "playing") { alert("Tann sesyon tire a louvri!"); return; }
+      if (!isShootingMinuteActive()) { alert("Tann sesyon tire a louvri!"); return; }
       if (chances <= 0 || ball.isShot) return;
 
       if (chances === 3) document.getElementById('c3').classList.add('off');
@@ -1961,11 +2068,11 @@
           if (ball.isGoal) {
             alert("BOUYEN! 🏀 Boul la rantre nan filè a pafètman!");
           } else {
-            if (chances > 0) {
+            if (chances > 0 && isShootingMinuteActive()) {
               alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
               shootBtn.disabled = false;
               shootBtn.classList.add('active-shoot');
-            } else {
+            } else if (chances === 0) {
               alert("Oups! 3 chans ou yo fini. Tann tout jwè fin tire pou w wè gayan an.");
             }
           }
