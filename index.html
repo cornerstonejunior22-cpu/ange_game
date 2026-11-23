@@ -312,6 +312,7 @@
         <button class="btn-clear-group" onclick="clearGroupSession('1250')">Clear Sesyon 🔄</button>
         <button class="btn-clear-group" style="background:#ff8c00;" onclick="clearOwnerAcc('1250')">Clear Rezèv 💰</button>
         <div class="group-title">Gwoup 1,250 Gdes</div>
+        <div style="font-size:12px; color:#ccc;">Jwè nan sesyon: <b style="color:#ffd700;"><span id="p1250-players-count">0</span></b> | Total Antre: <b><span id="p1250-total-pot">0</span> Gdes</b></div>
         <div style="margin-top: 6px;">Total Pwopriyetè Akimile (Rezèv): <b style="color:#28a745;"><span id="p1250-owner-acc">0</span> Gdes</b></div>
         <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p1250-winner-curr">0</span> Gdes</b></div>
       </div>
@@ -320,6 +321,7 @@
         <button class="btn-clear-group" onclick="clearGroupSession('250')">Clear Sesyon 🔄</button>
         <button class="btn-clear-group" style="background:#ff8c00;" onclick="clearOwnerAcc('250')">Clear Rezèv 💰</button>
         <div class="group-title">Gwoup 250 Gdes</div>
+        <div style="font-size:12px; color:#ccc;">Jwè nan sesyon: <b style="color:#ffd700;"><span id="p250-players-count">0</span></b> | Total Antre: <b><span id="p250-total-pot">0</span> Gdes</b></div>
         <div style="margin-top: 6px;">Total Pwopriyetè Akimile (Rezèv): <b style="color:#28a745;"><span id="p250-owner-acc">0</span> Gdes</b></div>
         <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p250-winner-curr">0</span> Gdes</b></div>
       </div>
@@ -328,6 +330,7 @@
         <button class="btn-clear-group" onclick="clearGroupSession('100')">Clear Sesyon 🔄</button>
         <button class="btn-clear-group" style="background:#ff8c00;" onclick="clearOwnerAcc('100')">Clear Rezèv 💰</button>
         <div class="group-title">Gwoup 100 Gdes</div>
+        <div style="font-size:12px; color:#ccc;">Jwè nan sesyon: <b style="color:#ffd700;"><span id="p100-players-count">0</span></b> | Total Antre: <b><span id="p100-total-pot">0</span> Gdes</b></div>
         <div style="margin-top: 6px;">Total Pwopriyetè Akimile (Rezèv): <b style="color:#28a745;"><span id="p100-owner-acc">0</span> Gdes</b></div>
         <div>Avantaj Gayan Sesyon Aktyèl: <b style="color:#ffd700;"><span id="p100-winner-curr">0</span> Gdes</b></div>
       </div>
@@ -388,6 +391,7 @@
       <h2 style="color: #ffd700; margin-bottom: 10px;">🏆 ADMIN: GANYAN DETEKTE! 🏆</h2>
       <h3 style="color: #00ffcc;" id="admin-winner-name-display">---</h3>
       <p style="margin-top: 8px; font-size: 13px;">Li genyen : <b style="color: #ffd700;" id="admin-winner-amount-display">0 Gdes</b></p>
+      <p style="margin-top: 4px; font-size: 12px; color: #aaa;">Gwoup : <b id="admin-winner-group-display">---</b> Gdes</p>
       <button class="btn-action" style="margin-top: 15px; background: #28a745; color: #fff;" onclick="payWinnerAndReset()">Peye Gayan an & Reset a 0</button>
       <button class="btn-action" style="margin-top: 10px; background: #dc3545; color: #fff;" onclick="document.getElementById('admin-winner-banner-modal').style.display='none'">Fèmen Panèl Sa a</button>
     </div>
@@ -410,7 +414,10 @@
     let currentPos = 1;
     let chances = 3;
     let userGroup = "1250";
+    let currentWinnerGroup = "1250";
     let isCodeValidated = false;
+    let validatedPlayerName = "";
+    let validatedPlayerPhone = "";
     let forcedWinnerPhone = "";
     let hasUserLostAllChances = false;
 
@@ -424,6 +431,12 @@
     let logoClickCount = 0;
     let clickTimer;
     let currentWorkerId = localStorage.getItem('employee_doc_id') || "";
+
+    const groupSessionStats = {
+      "1250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0 },
+      "250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0 },
+      "100": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0 }
+    };
 
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('role') === 'worker') {
@@ -455,6 +468,24 @@
     function copyNum(num) {
       navigator.clipboard.writeText(num);
       alert("Nimewo " + num + " kopye!");
+    }
+
+    function calculateGroupFinance(grp, count) {
+      const safeCount = Math.max(0, parseInt(count) || 0);
+      const price = parseInt(grp) || 1250;
+      const totalPot = safeCount * price;
+      let winnerPrize = 0;
+      let ownerShare = totalPot;
+
+      if (safeCount >= 5) {
+        const cappedCount = Math.min(safeCount, 220);
+        if (price === 1250) winnerPrize = 2000 + (cappedCount - 5) * 225;
+        else if (price === 250) winnerPrize = 400 + (cappedCount - 5) * 45;
+        else if (price === 100) winnerPrize = 150 + (cappedCount - 5) * 18;
+        ownerShare = Math.max(0, totalPot - winnerPrize);
+      }
+
+      return { count: safeCount, totalPot, winnerPrize, ownerShare };
     }
 
     function listenAppAvailability() {
@@ -546,8 +577,10 @@
         let winDoc = await db.collection("winners_announced").doc("group_" + grp).get();
         if (winDoc.exists) {
           let data = winDoc.data();
+          currentWinnerGroup = data.group || grp;
           document.getElementById('admin-winner-name-display').innerText = data.winnerName;
           document.getElementById('admin-winner-amount-display').innerText = data.prizeAmount + " Gdes";
+          document.getElementById('admin-winner-group-display').innerText = currentWinnerGroup;
           document.getElementById('admin-winner-banner-modal').style.display = 'flex';
         }
       });
@@ -598,56 +631,82 @@
 
     function listenAllGroups() {
       ["1250", "250", "100"].forEach(grp => {
-        db.collection("game_blocks").doc("block_" + grp).onSnapshot(doc => {
-          let count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
-          let price = parseInt(grp);
-          let total = count * price;
-          let winnerPrize = 0;
-          let sessionOwnerShare = total;
+        const reserveRef = db.collection("owner_reserves").doc("group_" + grp);
+        const blockRef = db.collection("game_blocks").doc("block_" + grp);
 
-          if (count >= 5 && count <= 220) {
-            if (price === 1250) winnerPrize = 2000 + (count - 5) * 225;
-            else if (price === 250) winnerPrize = 400 + (count - 5) * 45;
-            else if (price === 100) winnerPrize = 150 + (count - 5) * 18;
-            sessionOwnerShare = total - winnerPrize;
-          }
+        reserveRef.onSnapshot(resDoc => {
+          const savedReserve = resDoc.exists ? (parseFloat(resDoc.data().amount) || 0) : 0;
+          localStorage.setItem('owner_acc_' + grp, savedReserve.toString());
+          const accEl = document.getElementById('p' + grp + '-owner-acc');
+          if (accEl) accEl.innerText = savedReserve.toLocaleString();
+        });
 
-          document.getElementById('p' + grp + '-winner-curr').innerText = winnerPrize.toLocaleString();
+        blockRef.onSnapshot(doc => {
+          const count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
+          const stats = calculateGroupFinance(grp, count);
+          groupSessionStats[grp] = stats;
 
-          let currentAcc = parseFloat(localStorage.getItem('owner_acc_' + grp) || "0");
-          document.getElementById('p' + grp + '-owner-acc').innerText = (currentAcc + sessionOwnerShare).toLocaleString();
+          const countEl = document.getElementById('p' + grp + '-players-count');
+          const potEl = document.getElementById('p' + grp + '-total-pot');
+          const winEl = document.getElementById('p' + grp + '-winner-curr');
+
+          if (countEl) countEl.innerText = stats.count.toLocaleString();
+          if (potEl) potEl.innerText = stats.totalPot.toLocaleString();
+          if (winEl) winEl.innerText = stats.winnerPrize.toLocaleString();
         });
       });
     }
     listenAllGroups();
 
+    async function settleGroupSessionIntoReserve(grp) {
+      const blockRef = db.collection("game_blocks").doc("block_" + grp);
+      const reserveRef = db.collection("owner_reserves").doc("group_" + grp);
+
+      await db.runTransaction(async (transaction) => {
+        const blockDoc = await transaction.get(blockRef);
+        const resDoc = await transaction.get(reserveRef);
+
+        const count = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
+        const alreadySettled = blockDoc.exists ? (blockDoc.data().settled === true) : false;
+        const currentReserve = resDoc.exists ? (parseFloat(resDoc.data().amount) || 0) : 0;
+
+        const stats = calculateGroupFinance(grp, count);
+        const addToReserve = alreadySettled ? 0 : stats.ownerShare;
+        const nextReserve = currentReserve + addToReserve;
+
+        transaction.set(reserveRef, {
+          amount: nextReserve,
+          group: grp,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        transaction.set(blockRef, {
+          playersCount: "0",
+          status: "collecting",
+          settled: true,
+          usedCodes: []
+        }, { merge: true });
+      });
+
+      await db.collection("winners_announced").doc("group_" + grp).delete();
+    }
+
     async function clearGroupSession(grp) {
-      if(confirm("Èske w sèten ou vle Clear Sesyon Gwoup " + grp + " Gdes la a zewo?")) {
-        let countElem = document.getElementById('p' + grp + '-winner-curr');
-        let sessionTotal = parseFloat(countElem.innerText.replace(/,/g, '')) || 0;
-        
-        let blockDoc = await db.collection("game_blocks").doc("block_" + grp).get();
-        let count = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
-        let totalMoney = count * parseInt(grp);
-        let ownerShareThisSession = totalMoney - sessionTotal;
-        if(count < 5) ownerShareThisSession = totalMoney;
-
-        let currentAcc = parseFloat(localStorage.getItem('owner_acc_' + grp) || "0");
-        localStorage.setItem('owner_acc_' + grp, (currentAcc + ownerShareThisSession).toString());
-
-        await db.collection("game_blocks").doc("block_" + grp).set({ playersCount: "0", status: "collecting" }, { merge: true });
-        await db.collection("winners_announced").doc("group_" + grp).delete();
-
-        alert("Sesyon Gwoup " + grp + " Gdes la netwaye a 0!");
-        location.reload();
+      if (confirm("Èske w sèten ou vle Clear Sesyon Gwoup " + grp + " Gdes la a zewo epi voye pati pwopriyetè a nan rezèv la?")) {
+        await settleGroupSessionIntoReserve(grp);
+        alert("Sesyon Gwoup " + grp + " Gdes la netwaye a 0 epi rezèv pwopriyetè a mete ajou san fay!");
       }
     }
 
-    function clearOwnerAcc(grp) {
-      if(confirm("Èske w sèten ou vle Clear (Reset) Total Rezèv Pwopriyetè a pou Gwoup " + grp + " Gdes la a 0?")) {
+    async function clearOwnerAcc(grp) {
+      if (confirm("Èske w sèten ou vle Clear (Reset) Total Rezèv Pwopriyetè a pou Gwoup " + grp + " Gdes la a 0?")) {
+        await db.collection("owner_reserves").doc("group_" + grp).set({
+          amount: 0,
+          group: grp,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
         localStorage.setItem('owner_acc_' + grp, "0");
         alert("Rezèv pwopriyetè a pou Gwoup " + grp + " Gdes la retounen a 0 siksè!");
-        location.reload();
       }
     }
 
@@ -932,8 +991,8 @@
     async function submitPaymentRequest() {
       if (!checkAppAvailability()) return;
 
-      if (sessionState === "playing" || sessionState === "ended") {
-        alert("Rasanbleman 4 minit la fini, ou pa ka fè demann kounye a!");
+      if (sessionState !== "collecting") {
+        alert("Rasanbleman 4 minit la fini, pa gen moun ki ka fè demann oswa antre ankò!");
         return;
       }
       const name = document.getElementById('player-name').value.trim();
@@ -956,7 +1015,6 @@
       listenToMyRequest(docRef.id);
     }
 
-    // Kòd la sèlman rantre nan espas "kòd inik klian" lè pwopriyetè a oswa anplwaye a konfime epi voye l (sentToClient === true)
     function listenToMyRequest(reqId) {
       const codeInput = document.getElementById('game-code');
       codeInput.value = "";
@@ -982,9 +1040,9 @@
       listenToWinnersAnnouncements();
     });
 
-    async function verifyOfficialSystemCode(code, group) {
+    async function findOfficialCodeRecord(code, group) {
       const cleanCode = code.trim().toUpperCase();
-      if (!cleanCode) return false;
+      if (!cleanCode) return null;
 
       const reqSnap = await db.collection("payment_requests")
         .where("generatedCode", "==", cleanCode)
@@ -992,15 +1050,14 @@
         .where("sentToClient", "==", true)
         .get();
 
-      let validMatch = false;
+      let matched = null;
       reqSnap.forEach(doc => {
         const d = doc.data();
         if (!d.groupPrice || String(d.groupPrice) === String(group)) {
-          validMatch = true;
+          matched = d;
         }
       });
-
-      if (validMatch) return true;
+      if (matched) return matched;
 
       const histSnap = await db.collection("payment_history")
         .where("generatedCode", "==", cleanCode)
@@ -1011,14 +1068,20 @@
       histSnap.forEach(doc => {
         const d = doc.data();
         if (!d.groupPrice || String(d.groupPrice) === String(group)) {
-          validMatch = true;
+          matched = d;
         }
       });
 
-      return validMatch;
+      return matched;
     }
 
     async function validateCode() {
+      if (sessionState !== "collecting") {
+        alert("🔒 Aksè fèmen! 4 minit rasanbleman an fini, pa gen moun ki ka antre nan sesyon an ankò.");
+        document.getElementById('blocked-screen').style.display = 'flex';
+        return;
+      }
+
       const codeInput = document.getElementById('game-code').value.trim();
       userGroup = document.getElementById('group-select').value;
       if (codeInput === "") {
@@ -1026,18 +1089,46 @@
         return;
       }
 
-      const isLegitCode = await verifyOfficialSystemCode(codeInput, userGroup);
-      if (!isLegitCode) {
+      const officialRecord = await findOfficialCodeRecord(codeInput, userGroup);
+      if (!officialRecord) {
         alert("se pa système nan ki te ba ou kòd sa");
         return;
       }
 
+      const cleanCode = codeInput.toUpperCase();
       const blockRef = db.collection("game_blocks").doc("block_" + userGroup);
-      const doc = await blockRef.get();
-      let count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
-      count++;
-      await blockRef.set({ playersCount: count.toString(), status: "active" }, { merge: true });
+      let joinedOk = false;
 
+      await db.runTransaction(async (transaction) => {
+        const doc = await transaction.get(blockRef);
+        const usedCodes = doc.exists && Array.isArray(doc.data().usedCodes) ? doc.data().usedCodes : [];
+        if (usedCodes.includes(cleanCode)) {
+          joinedOk = false;
+          return;
+        }
+        let count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
+        if (count >= 220) {
+          joinedOk = false;
+          return;
+        }
+        count++;
+        usedCodes.push(cleanCode);
+        transaction.set(blockRef, {
+          playersCount: count.toString(),
+          status: "active",
+          settled: false,
+          usedCodes: usedCodes
+        }, { merge: true });
+        joinedOk = true;
+      });
+
+      if (!joinedOk) {
+        alert("Kòd sa a deja itilize nan sesyon aktyèl la oswa gwoup la plen (220 max).");
+        return;
+      }
+
+      validatedPlayerName = (document.getElementById('player-name').value.trim() || officialRecord.playerName || "Jwè a");
+      validatedPlayerPhone = (document.getElementById('player-phone').value.trim() || officialRecord.playerPhone || "");
       isCodeValidated = true;
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('game-arena').classList.add('full-screen-mode');
@@ -1051,6 +1142,7 @@
         db.collection("winners_announced").doc("group_" + grp).onSnapshot(doc => {
           if (doc.exists) {
             const data = doc.data();
+            currentWinnerGroup = data.group || grp;
             document.getElementById('winner-name-display').innerText = data.winnerName;
             document.getElementById('winner-amount-display').innerText = data.prizeAmount + " Gdes";
             document.getElementById('winner-banner-modal').style.display = 'flex';
@@ -1058,6 +1150,7 @@
             if (document.getElementById('secret-admin-modal').style.display === 'block') {
               document.getElementById('admin-winner-name-display').innerText = data.winnerName;
               document.getElementById('admin-winner-amount-display').innerText = data.prizeAmount + " Gdes";
+              document.getElementById('admin-winner-group-display').innerText = currentWinnerGroup;
               document.getElementById('admin-winner-banner-modal').style.display = 'flex';
             }
           }
@@ -1066,24 +1159,12 @@
     }
 
     async function payWinnerAndReset() {
-      let currentAcc = parseFloat(localStorage.getItem('owner_acc_' + userGroup) || "0");
-      let countElem = document.getElementById('p' + userGroup + '-winner-curr');
-      let sessionTotal = parseFloat(countElem.innerText.replace(/,/g, '')) || 0;
-      
-      let blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
-      let count = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
-      let totalMoney = count * parseInt(userGroup);
-      let ownerShareThisSession = totalMoney - sessionTotal;
-      if(count < 5) ownerShareThisSession = totalMoney;
+      const targetGroup = currentWinnerGroup || userGroup || "1250";
+      await settleGroupSessionIntoReserve(targetGroup);
 
-      localStorage.setItem('owner_acc_' + userGroup, (currentAcc + ownerShareThisSession).toString());
-
-      await db.collection("game_blocks").doc("block_" + userGroup).set({ playersCount: "0", status: "collecting" }, { merge: true });
-      await db.collection("winners_announced").doc("group_" + userGroup).delete();
       document.getElementById('winner-banner-modal').style.display = 'none';
       document.getElementById('admin-winner-banner-modal').style.display = 'none';
-      alert("Felisitasyon! Gayan an peye. Sesyon an retounen a 0, avantaj pwopriyetè a akimile nèt.");
-      location.reload();
+      alert("Felisitasyon! Gayan Gwoup " + targetGroup + " Gdes la peye, sesyon an retounen a 0, epi rezèv pwopriyetè a sove nèt nan baz done a.");
     }
 
     async function determineSessionWinnerAtEnd() {
@@ -1093,29 +1174,21 @@
       let winnerDoc = await db.collection("winners_announced").doc("group_" + userGroup).get();
       if (winnerDoc.exists) return;
 
+      const stats = calculateGroupFinance(userGroup, totalPlayers);
       let winningName = "";
-      let winningPrizeStr = "";
+      let winningPrizeStr = stats.winnerPrize.toLocaleString();
       let winningPhone = "";
 
-      let price = parseInt(userGroup);
-      let basePrize = (price === 1250) ? 2000 : (price === 250) ? 400 : 150;
-      let prizeAmt = basePrize;
-
       if (totalPlayers >= 5) {
-        if (price === 1250) prizeAmt = 2000 + (totalPlayers - 5) * 225;
-        else if (price === 250) prizeAmt = 400 + (totalPlayers - 5) * 45;
-        else if (price === 100) prizeAmt = 150 + (totalPlayers - 5) * 18;
-
-        winningName = document.getElementById('player-name').value.trim() || "Jwè a";
-        winningPhone = document.getElementById('player-phone').value.trim();
-        winningPrizeStr = prizeAmt.toLocaleString();
+        winningName = validatedPlayerName || document.getElementById('player-name').value.trim() || "Jwè a";
+        winningPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim();
       } else {
         const secretNames = ["COMOLE", "SANTILES", "ZAKRIPTA", "SANPATUBRE", "KOLOBOOS"];
         winningName = secretNames[Math.floor(Math.random() * secretNames.length)];
-        winningPrizeStr = basePrize.toLocaleString();
       }
 
       await db.collection("winners_announced").doc("group_" + userGroup).set({
+        group: userGroup,
         winnerName: winningName,
         prizeAmount: winningPrizeStr,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -1297,13 +1370,11 @@
 
       const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
       let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 1) : 1;
-      let userPhone = document.getElementById('player-phone').value.trim();
+      let userPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim();
 
+      // Strik: mwens pase 5 moun pa ka deklanche gayan reyèl (isGoal toujou false)
       let isGoal = false;
-
-      if (totalPlayers >= 1 && totalPlayers <= 4) {
-        isGoal = false;
-      } else {
+      if (totalPlayers >= 5) {
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
         else isGoal = Math.random() < 0.35;
       }
