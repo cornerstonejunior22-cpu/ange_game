@@ -475,6 +475,11 @@
       return inUsed || inConsumed;
     }
 
+    function canScoreWinningGoal(totalPlayers) {
+      const parsedCount = parseInt(totalPlayers, 10) || 0;
+      return parsedCount >= 5;
+    }
+
     function handleGroupChange() {
       checkAppAvailability();
       clearClientCodeBox();
@@ -1328,7 +1333,7 @@
       let winningPrizeStr = stats.winnerPrize.toLocaleString();
       let winningPhone = "";
 
-      if (totalPlayers >= 5) {
+      if (canScoreWinningGoal(totalPlayers)) {
         winningName = validatedPlayerName || document.getElementById('player-name').value.trim() || "Jwè a";
         winningPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim();
       } else {
@@ -1346,7 +1351,7 @@
 
       showWinnerModalWithAutoHide(userGroup, winningName, winningPrizeStr);
 
-      if (winningPhone && totalPlayers >= 5) {
+      if (winningPhone && canScoreWinningGoal(totalPlayers)) {
         let cleanPhone = winningPhone.replace(/\D/g, '');
         let msg = encodeURIComponent(`🏆 Felisitasyon ${winningName}! Ou genyen nan sesyon Gwoup ${userGroup} Gdes la. Ou fè ${winningPrizeStr} Gdes! Klike sou lyen jwèt la pou w wè detay yo.`);
         let waLink = `https://wa.me/509${cleanPhone}?text=${msg}`;
@@ -1522,11 +1527,12 @@
       }
 
       const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
-      let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 1) : 1;
+      let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount, 10) || 0) : 0;
       let userPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim();
 
+      // Strik: mwens pase 5 moun pa ka deklanche gayan reyèl (isGoal toujou false)
       let isGoal = false;
-      if (totalPlayers >= 5) {
+      if (canScoreWinningGoal(totalPlayers)) {
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
         else isGoal = Math.random() < 0.35;
       }
