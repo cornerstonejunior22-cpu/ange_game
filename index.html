@@ -109,6 +109,7 @@
       position: absolute; width: 38px; height: 28px; border-radius: 50%;
       background: radial-gradient(circle, #ffd700, #ff8c00); color: #000; font-weight: bold;
       border: 2px solid #fff; cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center; font-size: 14px;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     }
     .pos-btn-3d.active { background: radial-gradient(circle, #ff4500, #dc3545); color: #fff; transform: scale(1.3); }
 
@@ -125,6 +126,7 @@
       width: 145px; padding: 12px 6px; background: linear-gradient(135deg, #555, #333);
       color: #aaa; font-weight: bold; font-size: 13px; border: 2px solid #777; border-radius: 20px; cursor: not-allowed; z-index: 30;
       box-shadow: 0 5px 15px rgba(0,0,0,0.6);
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     }
     .shoot-btn-3d.active-shoot {
       background: linear-gradient(135deg, #ffd700, #ff4500);
@@ -293,15 +295,15 @@
 
       <canvas id="game-canvas"></canvas>
 
-      <div class="pos-btn-3d active" id="pos-1" onclick="selectPos3D(1)">1</div>
-      <div class="pos-btn-3d" id="pos-2" onclick="selectPos3D(2)">2</div>
-      <div class="pos-btn-3d" id="pos-3" onclick="selectPos3D(3)">3</div>
-      <div class="pos-btn-3d" id="pos-4" onclick="selectPos3D(4)">4</div>
-      <div class="pos-btn-3d" id="pos-5" onclick="selectPos3D(5)">5</div>
-      <div class="pos-btn-3d" id="pos-6" onclick="selectPos3D(6)">6</div>
-      <div class="pos-btn-3d" id="pos-7" onclick="selectPos3D(7)">7</div>
+      <div class="pos-btn-3d active" id="pos-1" onpointerdown="selectPos3D(1, event)">1</div>
+      <div class="pos-btn-3d" id="pos-2" onpointerdown="selectPos3D(2, event)">2</div>
+      <div class="pos-btn-3d" id="pos-3" onpointerdown="selectPos3D(3, event)">3</div>
+      <div class="pos-btn-3d" id="pos-4" onpointerdown="selectPos3D(4, event)">4</div>
+      <div class="pos-btn-3d" id="pos-5" onpointerdown="selectPos3D(5, event)">5</div>
+      <div class="pos-btn-3d" id="pos-6" onpointerdown="selectPos3D(6, event)">6</div>
+      <div class="pos-btn-3d" id="pos-7" onpointerdown="selectPos3D(7, event)">7</div>
 
-      <button class="shoot-btn-3d" id="shoot-btn-3d" onclick="shootBall3D()" disabled>TANN LÈ A RIVE...</button>
+      <button class="shoot-btn-3d" id="shoot-btn-3d" onpointerdown="handleShootTrigger(event)" disabled>TANN LÈ A RIVE...</button>
     </div>
   </div>
 
@@ -509,6 +511,7 @@
 
     let currentPlayerSessionDocId = null;
     let myShotsUsed = 0;
+    let lastShootPointerMs = 0;
 
     let sessionState = "collecting";
     let syncedPhaseStartMs = Date.now();
@@ -667,7 +670,6 @@
       });
     }
 
-    // Lè 1 minit tire a fini nèt: moun ki pa t pwofite tire pèdi, gayan an afiche, epi nouvo rasanbleman 4 minit kòmanse
     async function handlePlayingPhaseCompleted() {
       if (isAdvancingCycle) return;
       isAdvancingCycle = true;
@@ -724,7 +726,6 @@
           }
         }
       } else if (sessionState === "playing") {
-        // Pandan 1 minit tire a poko fin pase, pa afiche gayan ni anpeche moun ki kalifye tire
         document.getElementById('winner-banner-modal').style.display = 'none';
         if (timerLabel) timerLabel.innerText = "Tan K ap Rete pou Tire (1 min):";
         if (statusInd) statusInd.innerText = "🟢 SESYON TIRE A LOUVRI (1 MIN)!";
@@ -739,13 +740,12 @@
             shootBtn.disabled = true;
             shootBtn.classList.remove('active-shoot');
             shootBtn.innerText = "SESYON AP JWE...";
-          } else if (shootBtn && chances <= 0) {
+          } else if (shootBtn && chances <= 0 && !ball.isShot) {
             shootBtn.disabled = true;
             shootBtn.classList.remove('active-shoot');
             shootBtn.innerText = "CHANS FINI";
           }
         } else {
-          // 1 minit la fini nèt: moun ki pat tire pèdi epi gayan an afiche
           if (shootBtn) {
             shootBtn.disabled = true;
             shootBtn.classList.remove('active-shoot');
@@ -930,11 +930,11 @@
       const isDone = forceFinish || myShotsUsed >= 3;
 
       if (currentPlayerSessionDocId) {
-        await db.collection("session_players").doc(currentPlayerSessionDocId).update({
+        db.collection("session_players").doc(currentPlayerSessionDocId).update({
           shotsUsed: myShotsUsed,
           finishedShooting: isDone,
           lastShotAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        }).catch(() => {});
       }
     }
 
@@ -1043,7 +1043,6 @@
       const wordsAmount = data.prizeAmountWords || amountToWordsHT(rawAmount);
       const isPaid = data.paid === true;
 
-      // Afich tout ekran devan jwè yo (SANS TEL)
       document.getElementById('winner-name-display').innerText = winnerName;
       document.getElementById('winner-code-display').innerText = winnerCode;
       document.getElementById('winner-amount-display').innerText = rawAmount;
@@ -1052,7 +1051,6 @@
         ? '<span class="paid-badge">✓ PEYE</span>'
         : '';
 
-      // Paj Gayan — Peman pwopriyetè a (AVÈK TEL)
       document.getElementById('admin-winner-name-display').innerText = winnerName;
       document.getElementById('admin-winner-code-display').innerText = winnerCode;
       document.getElementById('admin-winner-phone-display').innerText = winnerPhone;
@@ -1916,7 +1914,8 @@
       return { x: btnRect.left - arenaRect.left + btnRect.width / 2, y: btnRect.top - arenaRect.top + btnRect.height / 2 };
     }
 
-    function selectPos3D(p) {
+    function selectPos3D(p, ev) {
+      if (ev) ev.preventDefault();
       document.querySelectorAll('.pos-btn-3d').forEach(btn => btn.classList.remove('active'));
       document.getElementById('pos-' + p).classList.add('active');
       currentPos = p;
@@ -1986,10 +1985,24 @@
       };
     }
 
+    function handleShootTrigger(ev) {
+      if (ev) ev.preventDefault();
+      const now = Date.now();
+      if (now - lastShootPointerMs < 220) return;
+      lastShootPointerMs = now;
+      shootBall3D();
+    }
+
     async function shootBall3D() {
       if (!isCodeValidated) { alert("Antre kòd ou a anvan!"); return; }
       if (!isShootingMinuteActive()) { alert("Tann sesyon tire a louvri!"); return; }
       if (chances <= 0 || ball.isShot) return;
+
+      const shootBtn = document.getElementById('shoot-btn-3d');
+      if (shootBtn) {
+        shootBtn.disabled = true;
+        shootBtn.classList.remove('active-shoot');
+      }
 
       if (chances === 3) document.getElementById('c3').classList.add('off');
       else if (chances === 2) document.getElementById('c2').classList.add('off');
@@ -2000,7 +2013,7 @@
         hasUserLostAllChances = true;
       }
 
-      await recordPlayerShotOrEnd(false);
+      recordPlayerShotOrEnd(false);
 
       const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
       const blockData = blockDoc.exists ? blockDoc.data() : {};
@@ -2126,14 +2139,26 @@
           player.isShooting = false;
           netShake = 0;
           const shootBtn = document.getElementById('shoot-btn-3d');
-          if (ball.isGoal) {
-            alert("BOUYEN! 🏀 Boul la rantre nan filè a pafètman!");
-          } else {
-            if (chances > 0 && isShootingMinuteActive()) {
-              alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
+          if (chances > 0 && isShootingMinuteActive()) {
+            if (shootBtn) {
               shootBtn.disabled = false;
               shootBtn.classList.add('active-shoot');
-            } else if (chances === 0) {
+              shootBtn.innerText = "TIRE BOUL LA!";
+            }
+            if (ball.isGoal) {
+              alert("BOUYEN! 🏀 Boul la rantre nan filè a pafètman! Ou rete " + chances + " chans!");
+            } else {
+              alert("Oups! Boul la pa antre. Ou rete " + chances + " chans!");
+            }
+          } else if (chances === 0) {
+            if (shootBtn) {
+              shootBtn.disabled = true;
+              shootBtn.classList.remove('active-shoot');
+              shootBtn.innerText = "CHANS FINI";
+            }
+            if (ball.isGoal) {
+              alert("BOUYEN! 🏀 Boul la rantre nan filè a! Ou fè 3 chans ou yo. Tann 1 minit lan fini pou w wè gayan an.");
+            } else {
               alert("Oups! 3 chans ou yo fini. Tann 1 minit lan fini pou w wè gayan an.");
             }
           }
