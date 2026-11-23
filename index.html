@@ -404,7 +404,7 @@
     </div>
   </div>
 
-  <!-- Bwat Pop-up pou jwè yo (afiche NON GAYAN, KÒD LI, Tel, KANTITE KÒB LI GAGNE) -->
+  <!-- Bwat Pop-up pou jwè yo -->
   <div id="winner-banner-modal">
     <div class="winner-box">
       <h2 style="color: #ffd700; margin-bottom: 12px; text-align: center;">🏆 GANYAN SESYON AN 🏆</h2>
@@ -421,7 +421,7 @@
     </div>
   </div>
 
-  <!-- Paj / Bwat Gayan pou Pwopriyetè (an chif ak an nonb, bouton *202#, ak konfimasyon peye ✓) -->
+  <!-- Paj / Bwat Gayan pou Pwopriyetè -->
   <div id="admin-winner-banner-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.94); z-index: 10060; align-items: center; justify-content: center; padding: 20px; overflow-y: auto;">
     <div class="winner-box">
       <h2 style="color: #ffd700; margin-bottom: 10px; text-align: center;">🏆 PAJ GAYAN — PEMAN 🏆</h2>
@@ -485,6 +485,9 @@
     let myRequestUnsubscribe = null;
     let latestConfirmedUnsubscribe = null;
     let winnerAutoHideTimer = null;
+
+    let currentPlayerSessionDocId = null;
+    let myShotsUsed = 0;
 
     let sessionState = "collecting"; 
     let blockSecondsLeft = 240;      
@@ -630,9 +633,6 @@
       alert("Nimewo " + num + " kopye!");
     }
 
-    // Règ strik finansye pou tout gwoup (1250, 250, 100):
-    // - 1 a 4 moun: 100% totalPot se pou pwopriyetè; non sekrè + montan debaz (2000 / 400 / 150) sou afichaj.
-    // - 5 a 220 moun: yon sèl gayan pran pri gayan an; pwopriyetè pran totalPot - winnerPrize.
     function calculateGroupFinance(grp, count) {
       const grpKey = String(grp);
       const safeCount = Math.max(0, parseInt(count, 10) || 0);
@@ -662,6 +662,68 @@
         displayPrize: winnerPrize,
         ownerShare: ownerShare
       };
+    }
+
+    // --- Jwè nan sesyon & verifikasyon tout jwè fin tire ---
+    async function registerPlayerInActiveSession(group, name, phone, code) {
+      myShotsUsed = 0;
+      const docRef = await db.collection("session_players").add({
+        group: String(group),
+        playerName: name,
+        playerPhone: phone,
+        code: code,
+        shotsUsed: 0,
+        finishedShooting: false,
+        joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      currentPlayerSessionDocId = docRef.id;
+    }
+
+    async function recordPlayerShotOrEnd(forceFinish = false) {
+      if (!isCodeValidated) return;
+      if (!forceFinish) {
+        myShotsUsed++;
+      }
+      const isDone = forceFinish || myShotsUsed >= 3;
+
+      if (currentPlayerSessionDocId) {
+        await db.collection("session_players").doc(currentPlayerSessionDocId).update({
+          shotsUsed: myShotsUsed,
+          finishedShooting: isDone,
+          lastShotAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      await checkIfAllPlayersFinishedShooting(userGroup);
+    }
+
+    async function checkIfAllPlayersFinishedShooting(grp) {
+      const targetGroup = String(grp || userGroup || "1250");
+      const allSnap = await db.collection("session_players")
+        .where("group", "==", targetGroup)
+        .get();
+
+      if (allSnap.empty) return;
+
+      const unfinishedSnap = await db.collection("session_players")
+        .where("group", "==", targetGroup)
+        .where("finishedShooting", "==", false)
+        .get();
+
+      if (unfinishedSnap.empty) {
+        await finalizeSessionWinnerOnce(targetGroup);
+      }
+    }
+
+    async function clearSessionPlayersForGroup(grp) {
+      const snap = await db.collection("session_players")
+        .where("group", "==", String(grp))
+        .get();
+      if (!snap.empty) {
+        const batch = db.batch();
+        snap.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
     }
 
     function listenAppAvailability() {
@@ -922,6 +984,10 @@
           consumedCodes: mergedConsumed
         }, { merge: true });
       });
+
+      await clearSessionPlayersForGroup(grp);
+      currentPlayerSessionDocId = null;
+      myShotsUsed = 0;
 
       await db.collection("winners_announced").doc("group_" + grp).delete();
       localStorage.removeItem("winner_dismissed_" + grp);
@@ -1444,6 +1510,9 @@
       validatedPlayerCode = cleanCode;
       clearClientCodeBox(true);
       isCodeValidated = true;
+
+      await registerPlayerInActiveSession(userGroup, validatedPlayerName, validatedPlayerPhone, validatedPlayerCode);
+
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('game-arena').classList.add('full-screen-mode');
       document.getElementById('arena-timer-display').style.display = 'block';
@@ -1503,40 +1572,53 @@
       alert("✓ Gayan Gwoup " + targetGroup + " Gdes la konfime peye, sesyon an retounen a 0, epi rezèv pwopriyetè a sove nèt.");
     }
 
-    async function determineSessionWinnerAtEnd() {
-      const activeGroup = document.getElementById('group-select')
-        ? (document.getElementById('group-select').value || userGroup || "1250")
-        : (userGroup || "1250");
-      userGroup = activeGroup;
+    async function finalizeSessionWinnerOnce(grp) {
+      const targetGroup = String(grp || userGroup || "1250");
+      const blockRef = db.collection("game_blocks").doc("block_" + targetGroup);
+      const winnerRef = db.collection("winners_announced").doc("group_" + targetGroup);
 
-      const blockRef = db.collection("game_blocks").doc("block_" + activeGroup);
-      const blockDoc = await blockRef.get();
-      let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount, 10) || 0) : 0;
-
-      let winnerDoc = await db.collection("winners_announced").doc("group_" + activeGroup).get();
-      if (winnerDoc.exists) {
-        const existing = winnerDoc.data();
-        if (localStorage.getItem("winner_dismissed_" + activeGroup) !== "true") {
-          showWinnerModalWithAutoHide(activeGroup, existing);
+      const alreadyAnnounced = await winnerRef.get();
+      if (alreadyAnnounced.exists) {
+        const existing = alreadyAnnounced.data();
+        if (localStorage.getItem("winner_dismissed_" + targetGroup) !== "true") {
+          showWinnerModalWithAutoHide(targetGroup, existing);
         }
         return;
       }
 
-      const stats = calculateGroupFinance(activeGroup, totalPlayers);
+      const playersSnap = await db.collection("session_players")
+        .where("group", "==", targetGroup)
+        .get();
+
+      const blockDoc = await blockRef.get();
+      const blockCount = blockDoc.exists ? (parseInt(blockDoc.data().playersCount, 10) || 0) : 0;
+      const totalPlayers = Math.max(playersSnap.size, blockCount);
+      const stats = calculateGroupFinance(targetGroup, totalPlayers);
+
       let winningName = "";
       let winningCode = "---";
       let winningPhone = "---";
       let winningPrizeNum = stats.displayPrize;
       let realPlayerWon = false;
 
-      if (canScoreWinningGoal(totalPlayers)) {
+      if (canScoreWinningGoal(totalPlayers) && !playersSnap.empty) {
+        const allPlayers = [];
+        playersSnap.forEach(d => allPlayers.push(d.data()));
+
+        let chosenPlayer = null;
+        if (forcedWinnerPhone) {
+          chosenPlayer = allPlayers.find(p => String(p.playerPhone || "").trim() === String(forcedWinnerPhone).trim());
+        }
+        if (!chosenPlayer) {
+          chosenPlayer = allPlayers[Math.floor(Math.random() * allPlayers.length)];
+        }
+
         realPlayerWon = true;
-        winningName = validatedPlayerName || document.getElementById('player-name').value.trim() || "Jwè a";
-        winningCode = validatedPlayerCode || document.getElementById('game-code').value.trim().toUpperCase() || "---";
-        winningPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim() || "---";
+        winningName = chosenPlayer.playerName || "Jwè a";
+        winningCode = chosenPlayer.code || "---";
+        winningPhone = chosenPlayer.playerPhone || "---";
         winningPrizeNum = stats.winnerPrize;
       } else {
-        // 1 a 4 moun: okenn jwè reyèl pa fè gwo pri a; sistèm nan mete non sekrè + montan debaz la.
         realPlayerWon = false;
         winningName = SECRET_WINNER_NAMES[Math.floor(Math.random() * SECRET_WINNER_NAMES.length)];
         winningCode = "SESYON-SEKRÈ";
@@ -1550,7 +1632,7 @@
       await blockRef.set({ sessionWinnerDeclared: true }, { merge: true });
 
       const winnerPayload = {
-        group: activeGroup,
+        group: targetGroup,
         winnerName: winningName,
         winnerCode: winningCode,
         winnerPhone: winningPhone,
@@ -1561,17 +1643,28 @@
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       };
 
-      localStorage.removeItem("winner_dismissed_" + activeGroup);
-      await db.collection("winners_announced").doc("group_" + activeGroup).set(winnerPayload);
-
-      showWinnerModalWithAutoHide(activeGroup, winnerPayload);
+      localStorage.removeItem("winner_dismissed_" + targetGroup);
+      await winnerRef.set(winnerPayload);
+      showWinnerModalWithAutoHide(targetGroup, winnerPayload);
 
       if (realPlayerWon && winningPhone && winningPhone !== "---") {
         let cleanPhone = winningPhone.replace(/\D/g, '');
-        let msg = encodeURIComponent(`🏆 Felisitasyon ${winningName}! Ou genyen nan sesyon Gwoup ${activeGroup} Gdes la. Ou fè ${winningPrizeStr} (${winningPrizeWords}).`);
+        let msg = encodeURIComponent(`🏆 Felisitasyon ${winningName}! Ou genyen nan sesyon Gwoup ${targetGroup} Gdes la. Ou fè ${winningPrizeStr} (${winningPrizeWords}).`);
         let waLink = `https://wa.me/509${cleanPhone}?text=${msg}`;
         window.open(waLink, '_blank');
       }
+    }
+
+    async function determineSessionWinnerAtEnd() {
+      const activeGroup = document.getElementById('group-select')
+        ? (document.getElementById('group-select').value || userGroup || "1250")
+        : (userGroup || "1250");
+      userGroup = activeGroup;
+
+      if (isCodeValidated && currentPlayerSessionDocId) {
+        await recordPlayerShotOrEnd(true);
+      }
+      await finalizeSessionWinnerOnce(activeGroup);
     }
 
     setInterval(() => {
@@ -1739,13 +1832,14 @@
         hasUserLostAllChances = true;
       }
 
+      await recordPlayerShotOrEnd(false);
+
       const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
       const blockData = blockDoc.exists ? blockDoc.data() : {};
       let totalPlayers = parseInt(blockData.playersCount, 10) || 0;
       const alreadyDeclared = blockData.sessionWinnerDeclared === true;
       let userPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim();
 
-      // Strik: sèlman 5 a 220 moun ka bay gòl gayan, e sèlman yon sèl gayan pa sesyon.
       let isGoal = false;
       if (!alreadyDeclared && canScoreWinningGoal(totalPlayers)) {
         if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
@@ -1872,7 +1966,7 @@
               shootBtn.disabled = false;
               shootBtn.classList.add('active-shoot');
             } else {
-              alert("Oups! 3 chans ou yo fini. Tann fen sesyon an pou w wè rezilta a.");
+              alert("Oups! 3 chans ou yo fini. Tann tout jwè fin tire pou w wè gayan an.");
             }
           }
         }
