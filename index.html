@@ -421,6 +421,7 @@
     let forcedWinnerPhone = "";
     let hasUserLostAllChances = false;
     let myRequestUnsubscribe = null;
+    let winnerAutoHideTimer = null;
 
     let sessionState = "collecting"; 
     let blockSecondsLeft = 240;      
@@ -434,9 +435,9 @@
     let currentWorkerId = localStorage.getItem('employee_doc_id') || "";
 
     const groupSessionStats = {
-      "1250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [] },
-      "250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [] },
-      "100": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [] }
+      "1250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [] },
+      "250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [] },
+      "100": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [] }
     };
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -463,6 +464,15 @@
         myRequestUnsubscribe();
         myRequestUnsubscribe = null;
       }
+    }
+
+    function isCodeAlreadyPassed(codeUpper, grp) {
+      if (!codeUpper) return true;
+      const gStats = groupSessionStats[String(grp)];
+      if (!gStats) return false;
+      const inUsed = Array.isArray(gStats.usedCodes) && gStats.usedCodes.includes(codeUpper);
+      const inConsumed = Array.isArray(gStats.consumedCodes) && gStats.consumedCodes.includes(codeUpper);
+      return inUsed || inConsumed;
     }
 
     function handleGroupChange() {
@@ -610,6 +620,12 @@
     function closeAdminPanel() { document.getElementById('secret-admin-modal').style.display = 'none'; }
 
     function closeWinnerModalForPlayer() {
+      if (winnerAutoHideTimer) {
+        clearTimeout(winnerAutoHideTimer);
+        winnerAutoHideTimer = null;
+      }
+      const grp = currentWinnerGroup || userGroup || "1250";
+      localStorage.setItem("winner_dismissed_" + grp, "true");
       document.getElementById('winner-banner-modal').style.display = 'none';
     }
 
@@ -661,8 +677,9 @@
         blockRef.onSnapshot(doc => {
           const count = doc.exists ? (parseInt(doc.data().playersCount) || 0) : 0;
           const usedCodes = doc.exists && Array.isArray(doc.data().usedCodes) ? doc.data().usedCodes : [];
+          const consumedCodes = doc.exists && Array.isArray(doc.data().consumedCodes) ? doc.data().consumedCodes : [];
           const stats = calculateGroupFinance(grp, count);
-          groupSessionStats[grp] = { ...stats, usedCodes };
+          groupSessionStats[grp] = { ...stats, usedCodes, consumedCodes };
 
           const countEl = document.getElementById('p' + grp + '-players-count');
           const potEl = document.getElementById('p' + grp + '-total-pot');
@@ -673,7 +690,7 @@
           if (winEl) winEl.innerText = stats.winnerPrize.toLocaleString();
 
           const currentBoxCode = document.getElementById('game-code').value.trim().toUpperCase();
-          if (currentBoxCode && usedCodes.includes(currentBoxCode)) {
+          if (currentBoxCode && isCodeAlreadyPassed(currentBoxCode, grp)) {
             clearClientCodeBox();
           }
         });
@@ -692,6 +709,9 @@
         const count = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
         const alreadySettled = blockDoc.exists ? (blockDoc.data().settled === true) : false;
         const currentReserve = resDoc.exists ? (parseFloat(resDoc.data().amount) || 0) : 0;
+        const prevUsed = blockDoc.exists && Array.isArray(blockDoc.data().usedCodes) ? blockDoc.data().usedCodes : [];
+        const prevConsumed = blockDoc.exists && Array.isArray(blockDoc.data().consumedCodes) ? blockDoc.data().consumedCodes : [];
+        const mergedConsumed = Array.from(new Set([...prevConsumed, ...prevUsed]));
 
         const stats = calculateGroupFinance(grp, count);
         const addToReserve = alreadySettled ? 0 : stats.ownerShare;
@@ -707,11 +727,13 @@
           playersCount: "0",
           status: "collecting",
           settled: true,
-          usedCodes: []
+          usedCodes: [],
+          consumedCodes: mergedConsumed
         }, { merge: true });
       });
 
       await db.collection("winners_announced").doc("group_" + grp).delete();
+      localStorage.removeItem("winner_dismissed_" + grp);
       clearClientCodeBox();
     }
 
@@ -855,6 +877,7 @@
       await db.collection("payment_requests").doc(docId).update({
         status: "confirmed",
         sentToClient: true,
+        consumed: false,
         generatedCode: uniqueCode,
         validatedByWorkerId: currentWorkerId || "admin",
         validatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -1042,6 +1065,7 @@
         playerPhone: phone,
         groupPrice: group,
         sentToClient: false,
+        consumed: false,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
         status: "pending"
       });
@@ -1059,23 +1083,23 @@
       }
 
       myRequestUnsubscribe = db.collection("payment_requests").doc(reqId).onSnapshot(doc => {
-        if (doc.exists) {
-          const data = doc.data();
-          const grp = String(data.groupPrice || document.getElementById('group-select').value || "1250");
-          const codeUpper = (data.generatedCode || "").trim().toUpperCase();
-          const alreadyUsed = groupSessionStats[grp] && Array.isArray(groupSessionStats[grp].usedCodes) && groupSessionStats[grp].usedCodes.includes(codeUpper);
+        if (!doc.exists) {
+          clearClientCodeBox();
+          return;
+        }
+        const data = doc.data();
+        const grp = String(data.groupPrice || document.getElementById('group-select').value || "1250");
+        const codeUpper = (data.generatedCode || "").trim().toUpperCase();
 
-          if (data.status === "confirmed" && data.sentToClient === true && codeUpper && !alreadyUsed) {
-            codeInput.value = codeUpper;
-          } else {
-            codeInput.value = "";
-            if (alreadyUsed) {
-              localStorage.removeItem('my_request_id');
-            }
-          }
+        if (data.consumed === true || isCodeAlreadyPassed(codeUpper, grp)) {
+          clearClientCodeBox();
+          return;
+        }
+
+        if (data.status === "confirmed" && data.sentToClient === true && codeUpper) {
+          codeInput.value = codeUpper;
         } else {
           codeInput.value = "";
-          localStorage.removeItem('my_request_id');
         }
       });
     }
@@ -1096,22 +1120,26 @@
       const codeUpper = (data.generatedCode || "").trim().toUpperCase();
       const grp = String(data.groupPrice || "1250");
 
-      if (data.status !== "confirmed" || data.sentToClient !== true || !codeUpper) {
-        listenToMyRequest(savedReqId);
+      if (data.consumed === true) {
+        clearClientCodeBox();
         return;
       }
 
-      const blockDoc = await db.collection("game_blocks").doc("block_" + grp).get();
-      const usedCodes = blockDoc.exists && Array.isArray(blockDoc.data().usedCodes) ? blockDoc.data().usedCodes : [];
-      if (usedCodes.includes(codeUpper)) {
-        clearClientCodeBox();
-        return;
+      if (codeUpper) {
+        const blockDoc = await db.collection("game_blocks").doc("block_" + grp).get();
+        const usedCodes = blockDoc.exists && Array.isArray(blockDoc.data().usedCodes) ? blockDoc.data().usedCodes : [];
+        const consumedCodes = blockDoc.exists && Array.isArray(blockDoc.data().consumedCodes) ? blockDoc.data().consumedCodes : [];
+        if (usedCodes.includes(codeUpper) || consumedCodes.includes(codeUpper)) {
+          clearClientCodeBox();
+          return;
+        }
       }
 
       listenToMyRequest(savedReqId);
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('game-code').value = "";
       validateSavedClientRequestOnLoad();
       listenToWinnersAnnouncements();
     });
@@ -1129,8 +1157,8 @@
       let matched = null;
       reqSnap.forEach(doc => {
         const d = doc.data();
-        if (!d.groupPrice || String(d.groupPrice) === String(group)) {
-          matched = d;
+        if (d.consumed !== true && (!d.groupPrice || String(d.groupPrice) === String(group))) {
+          matched = { id: doc.id, fromCollection: "payment_requests", data: d };
         }
       });
       if (matched) return matched;
@@ -1143,8 +1171,8 @@
 
       histSnap.forEach(doc => {
         const d = doc.data();
-        if (!d.groupPrice || String(d.groupPrice) === String(group)) {
-          matched = d;
+        if (d.consumed !== true && (!d.groupPrice || String(d.groupPrice) === String(group))) {
+          matched = { id: doc.id, fromCollection: "payment_history", data: d };
         }
       });
 
@@ -1166,21 +1194,28 @@
         return;
       }
 
-      const officialRecord = await findOfficialCodeRecord(codeInput, userGroup);
-      if (!officialRecord) {
+      const cleanCode = codeInput.toUpperCase();
+      if (isCodeAlreadyPassed(cleanCode, userGroup)) {
+        clearClientCodeBox();
+        alert("Kòd sa a deja pase / deja itilize.");
+        return;
+      }
+
+      const officialMatch = await findOfficialCodeRecord(cleanCode, userGroup);
+      if (!officialMatch) {
         clearClientCodeBox();
         alert("se pa système nan ki te ba ou kòd sa");
         return;
       }
 
-      const cleanCode = codeInput.toUpperCase();
       const blockRef = db.collection("game_blocks").doc("block_" + userGroup);
       let joinedOk = false;
 
       await db.runTransaction(async (transaction) => {
         const doc = await transaction.get(blockRef);
         const usedCodes = doc.exists && Array.isArray(doc.data().usedCodes) ? doc.data().usedCodes : [];
-        if (usedCodes.includes(cleanCode)) {
+        const consumedCodes = doc.exists && Array.isArray(doc.data().consumedCodes) ? doc.data().consumedCodes : [];
+        if (usedCodes.includes(cleanCode) || consumedCodes.includes(cleanCode)) {
           joinedOk = false;
           return;
         }
@@ -1191,11 +1226,13 @@
         }
         count++;
         usedCodes.push(cleanCode);
+        consumedCodes.push(cleanCode);
         transaction.set(blockRef, {
           playersCount: count.toString(),
           status: "active",
           settled: false,
-          usedCodes: usedCodes
+          usedCodes: usedCodes,
+          consumedCodes: consumedCodes
         }, { merge: true });
         joinedOk = true;
       });
@@ -1206,8 +1243,12 @@
         return;
       }
 
-      validatedPlayerName = (document.getElementById('player-name').value.trim() || officialRecord.playerName || "Jwè a");
-      validatedPlayerPhone = (document.getElementById('player-phone').value.trim() || officialRecord.playerPhone || "");
+      try {
+        await db.collection(officialMatch.fromCollection).doc(officialMatch.id).update({ consumed: true });
+      } catch (e) {}
+
+      validatedPlayerName = (document.getElementById('player-name').value.trim() || officialMatch.data.playerName || "Jwè a");
+      validatedPlayerPhone = (document.getElementById('player-phone').value.trim() || officialMatch.data.playerPhone || "");
       clearClientCodeBox();
       isCodeValidated = true;
       document.getElementById('setup-screen').style.display = 'none';
@@ -1217,21 +1258,43 @@
       setTimeout(() => selectPos3D(currentPos), 100);
     }
 
+    function showWinnerModalWithAutoHide(grp, winnerName, prizeAmount) {
+      currentWinnerGroup = grp;
+      document.getElementById('winner-name-display').innerText = winnerName;
+      document.getElementById('winner-amount-display').innerText = prizeAmount + " Gdes";
+      document.getElementById('winner-banner-modal').style.display = 'flex';
+
+      if (winnerAutoHideTimer) {
+        clearTimeout(winnerAutoHideTimer);
+      }
+      winnerAutoHideTimer = setTimeout(() => {
+        closeWinnerModalForPlayer();
+      }, 25000);
+    }
+
     function listenToWinnersAnnouncements() {
       ["1250", "250", "100"].forEach(grp => {
         db.collection("winners_announced").doc("group_" + grp).onSnapshot(doc => {
           if (doc.exists) {
             const data = doc.data();
-            currentWinnerGroup = data.group || grp;
-            document.getElementById('winner-name-display').innerText = data.winnerName;
-            document.getElementById('winner-amount-display').innerText = data.prizeAmount + " Gdes";
-            document.getElementById('winner-banner-modal').style.display = 'flex';
+            const targetGrp = data.group || grp;
+            currentWinnerGroup = targetGrp;
 
             if (document.getElementById('secret-admin-modal').style.display === 'block') {
               document.getElementById('admin-winner-name-display').innerText = data.winnerName;
               document.getElementById('admin-winner-amount-display').innerText = data.prizeAmount + " Gdes";
-              document.getElementById('admin-winner-group-display').innerText = currentWinnerGroup;
+              document.getElementById('admin-winner-group-display').innerText = targetGrp;
               document.getElementById('admin-winner-banner-modal').style.display = 'flex';
+            }
+
+            const alreadyDismissed = localStorage.getItem("winner_dismissed_" + targetGrp) === "true";
+            if (!alreadyDismissed && sessionState === "ended") {
+              showWinnerModalWithAutoHide(targetGrp, data.winnerName, data.prizeAmount);
+            }
+          } else {
+            localStorage.removeItem("winner_dismissed_" + grp);
+            if (currentWinnerGroup === grp) {
+              document.getElementById('winner-banner-modal').style.display = 'none';
             }
           }
         });
@@ -1252,7 +1315,13 @@
       let totalPlayers = blockDoc.exists ? (parseInt(blockDoc.data().playersCount) || 0) : 0;
 
       let winnerDoc = await db.collection("winners_announced").doc("group_" + userGroup).get();
-      if (winnerDoc.exists) return;
+      if (winnerDoc.exists) {
+        const existing = winnerDoc.data();
+        if (localStorage.getItem("winner_dismissed_" + userGroup) !== "true") {
+          showWinnerModalWithAutoHide(userGroup, existing.winnerName, existing.prizeAmount);
+        }
+        return;
+      }
 
       const stats = calculateGroupFinance(userGroup, totalPlayers);
       let winningName = "";
@@ -1267,12 +1336,15 @@
         winningName = secretNames[Math.floor(Math.random() * secretNames.length)];
       }
 
+      localStorage.removeItem("winner_dismissed_" + userGroup);
       await db.collection("winners_announced").doc("group_" + userGroup).set({
         group: userGroup,
         winnerName: winningName,
         prizeAmount: winningPrizeStr,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       });
+
+      showWinnerModalWithAutoHide(userGroup, winningName, winningPrizeStr);
 
       if (winningPhone && totalPlayers >= 5) {
         let cleanPhone = winningPhone.replace(/\D/g, '');
