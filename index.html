@@ -865,7 +865,8 @@
       return inUsed || inConsumed;
     }
 
-    function isStrictValidPlayerCountForWinner(totalPlayers) {
+    // RÈG ESTRIK: 1, 2, 3, 4 MOUN DWE PÈDI TOUJOU. SÈLMAN 5 A 220 MOUN KA GENYEN.
+    function isStrictEligiblePlayerCount(totalPlayers) {
       const parsedCount = parseInt(totalPlayers, 10) || 0;
       return parsedCount >= 5 && parsedCount <= 220;
     }
@@ -1015,6 +1016,7 @@
       const isBlockForThisCycle = (blockCycle === activeCycle) && (bData.settled !== true);
       const usedCodesCount = isBlockForThisCycle && Array.isArray(bData.usedCodes) ? bData.usedCodes.length : 0;
 
+      // Nou pran valè egzak pou sik aktyèl la sèlman (pa gen dekalaj ansyen sik)
       const exactCount = Math.max(activePlayers.length, usedCodesCount);
       return {
         exactCount,
@@ -1334,7 +1336,7 @@
     function setForcedWinner() {
       forcedWinnerPhone = document.getElementById('forced-winner-phone').value.trim();
       if(forcedWinnerPhone === "") { alert("Antre yon nimewo!"); return; }
-      alert("Moun ak nimewo " + forcedWinnerPhone + " la ap genyen fòseman si gwoup la gen 5 a 220 moun!");
+      alert("Moun ak nimewo " + forcedWinnerPhone + " la ap genyen fòseman SÈLMAN si gwoup la gen 5 a 220 moun!");
     }
 
     async function deleteRequest(docId) {
@@ -1915,7 +1917,8 @@
       let winningPrizeNum = stats.displayPrize;
       let realPlayerWon = false;
 
-      if (isStrictValidPlayerCountForWinner(exactCount) && activePlayers.length >= 5) {
+      // SÈLMAN LÈ GEN 5 A 220 MOUN NAN SESYON AN YON VRÈ JWÈ KA GENYEN
+      if (isStrictEligiblePlayerCount(exactCount) && activePlayers.length >= 5) {
         let chosenPlayer = null;
 
         if (blockData.sessionWinnerCode) {
@@ -1934,6 +1937,7 @@
         winningPhone = chosenPlayer.playerPhone || "";
         winningPrizeNum = stats.winnerPrize;
       } else {
+        // 1, 2, 3, OUBYEN 4 MOUN: PA GEN VRÈ GAYAN (TOUT MOUN PÈDI)
         realPlayerWon = false;
         winningName = SECRET_WINNER_NAMES[Math.floor(Math.random() * SECRET_WINNER_NAMES.length)];
         winningCode = generateOwnerSecretCode();
@@ -2131,9 +2135,10 @@
       const userCode = validatedPlayerCode || "";
       const blockRef = db.collection("game_blocks").doc("block_" + userGroup);
 
+      // PA JANM GEN GÒL SI GEN MWENS KE 5 MOUN (1, 2, 3, 4 = TOUJOU PÈDI)
       let isGoal = false;
 
-      if (isStrictValidPlayerCountForWinner(exactCount) && blockData.sessionWinnerDeclared !== true) {
+      if (isStrictEligiblePlayerCount(exactCount) && blockData.sessionWinnerDeclared !== true) {
         const isForcedUser = forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone;
         const shouldTryWin = isForcedUser || (forcedWinnerPhone === "" && Math.random() < (1 / exactCount));
 
@@ -2143,7 +2148,7 @@
             const bD = bSnap.exists ? bSnap.data() : {};
             const sameCycle = (parseInt(bD.cycleId, 10) || 0) === shotCycleId && bD.settled !== true;
             const liveCount = sameCycle ? (parseInt(bD.playersCount, 10) || 0) : 0;
-            if (sameCycle && isStrictValidPlayerCountForWinner(liveCount) && bD.sessionWinnerDeclared !== true) {
+            if (sameCycle && isStrictEligiblePlayerCount(liveCount) && bD.sessionWinnerDeclared !== true) {
               tx.set(blockRef, {
                 sessionWinnerDeclared: true,
                 sessionWinnerPhone: userPhone,
