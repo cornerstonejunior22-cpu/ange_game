@@ -321,6 +321,7 @@
     <div class="admin-group-card" style="border-color: #ffd700; background: #1a170a;">
       <div class="group-title">⏱️ Kontwòl Lè Senkronize (Tout Ekran)</div>
       <div style="font-size:12px; color:#ccc; margin-bottom:8px;">
+        Sesyon Nimewo : <b style="color:#ffd700;">#<span id="admin-cycle-num">1</span></b> |
         Eta : <b style="color:#00ffcc;"><span id="admin-clock-phase">RASANBLEMAN (4 MIN)</span></b> |
         Lè Aktyèl : <b style="color:#ffd700;"><span id="admin-clock-display">04:00</span></b>
       </div>
@@ -486,16 +487,10 @@
       return `${prefix}-${numPart}`;
     }
 
-    const GROUP_BASE_PRIZE = {
+    const GROUP_MIN_PRIZE = {
       "1250": 2000,
       "250": 400,
       "100": 150
-    };
-
-    const GROUP_STEP_PRIZE = {
-      "1250": 225,
-      "250": 45,
-      "100": 18
     };
 
     const COLLECTING_DURATION_SEC = 240;
@@ -509,6 +504,7 @@
     let validatedPlayerName = "";
     let validatedPlayerPhone = "";
     let validatedPlayerCode = "";
+    let validatedPlayerCycleId = null;
     let forcedWinnerPhone = "";
     let hasUserLostAllChances = false;
     let myRequestUnsubscribe = null;
@@ -523,7 +519,7 @@
     let syncedPhaseStartMs = Date.now();
     let syncedDurationSec = COLLECTING_DURATION_SEC;
     let syncedCycleId = 1;
-    let serverOffsetMs = 0;
+    let serverClockOffsetMs = 0;
     let lastHandledPhaseEndKey = "";
     let isAdvancingCycle = false;
 
@@ -535,9 +531,9 @@
     let currentWorkerId = localStorage.getItem('employee_doc_id') || "";
 
     const groupSessionStats = {
-      "1250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [], sessionWinnerDeclared: false },
-      "250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [], sessionWinnerDeclared: false },
-      "100": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, usedCodes: [], consumedCodes: [], sessionWinnerDeclared: false }
+      "1250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, cycleId: 1, usedCodes: [], consumedCodes: [], sessionWinnerDeclared: false, sessionWinnerPhone: "", sessionWinnerCode: "" },
+      "250": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, cycleId: 1, usedCodes: [], consumedCodes: [], sessionWinnerDeclared: false, sessionWinnerPhone: "", sessionWinnerCode: "" },
+      "100": { count: 0, totalPot: 0, winnerPrize: 0, ownerShare: 0, cycleId: 1, usedCodes: [], consumedCodes: [], sessionWinnerDeclared: false, sessionWinnerPhone: "", sessionWinnerCode: "" }
     };
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -563,12 +559,12 @@
       return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
-    function getSyncedNowMs() {
-      return Date.now() + serverOffsetMs;
+    function getMasterNowMs() {
+      return Date.now() + serverClockOffsetMs;
     }
 
     function getRemainingSyncedSeconds() {
-      const elapsedSec = Math.floor((getSyncedNowMs() - syncedPhaseStartMs) / 1000);
+      const elapsedSec = Math.floor((getMasterNowMs() - syncedPhaseStartMs) / 1000);
       return Math.max(0, syncedDurationSec - elapsedSec);
     }
 
@@ -578,6 +574,7 @@
       chances = 0;
       myShotsUsed = 0;
       currentPlayerSessionDocId = null;
+      validatedPlayerCycleId = null;
       ball.isShot = false;
       ball.isGoal = false;
       ball.progress = 0;
@@ -612,12 +609,20 @@
 
     async function syncMasterClock(phase, durationSec, nextCycleId = null) {
       const clockRef = db.collection("game_sessions").doc("live_clock");
-      const nowMs = Date.now();
-      const targetCycle = nextCycleId || (syncedCycleId + 1);
+      const localNowMs = Date.now();
+      const targetCycle = nextCycleId || syncedCycleId;
+
+      sessionState = phase;
+      syncedPhaseStartMs = localNowMs + serverClockOffsetMs;
+      syncedDurationSec = durationSec;
+      syncedCycleId = targetCycle;
+      lastHandledPhaseEndKey = "";
+      renderSyncedClockTick();
 
       await clockRef.set({
         phase: phase,
-        startedAtMs: nowMs,
+        startedAtMs: localNowMs + serverClockOffsetMs,
+        startedAt: firebase.firestore.FieldValue.serverTimestamp(),
         durationSec: durationSec,
         cycleId: targetCycle,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -625,19 +630,31 @@
     }
 
     async function startNewGatheringCycle() {
-      await syncMasterClock("collecting", COLLECTING_DURATION_SEC, syncedCycleId + 1);
-      alert("🔄 Nouvo rasanbleman 4 minit (04:00) louvri sou tout ekran!");
+      const nextCycle = syncedCycleId + 1;
+      for (const grp of ["1250", "250", "100"]) {
+        await settleGroupSessionIntoReserve(grp, nextCycle);
+      }
+      await syncMasterClock("collecting", COLLECTING_DURATION_SEC, nextCycle);
+      alert("🔄 Nouvo rasanbleman 4 minit (Sik #" + nextCycle + ") louvri sou tout ekran!");
     }
 
     function listenMasterClock() {
       const clockRef = db.collection("game_sessions").doc("live_clock");
 
-      clockRef.onSnapshot(async (doc) => {
+      clockRef.onSnapshot({ includeMetadataChanges: true }, async (doc) => {
         if (!doc.exists) {
+          if (doc.metadata.fromCache) return;
           const initNow = Date.now();
+          sessionState = "collecting";
+          syncedPhaseStartMs = initNow;
+          syncedDurationSec = COLLECTING_DURATION_SEC;
+          syncedCycleId = 1;
+          renderSyncedClockTick();
+
           await clockRef.set({
             phase: "collecting",
             startedAtMs: initNow,
+            startedAt: firebase.firestore.FieldValue.serverTimestamp(),
             durationSec: COLLECTING_DURATION_SEC,
             cycleId: 1,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -646,20 +663,25 @@
         }
 
         const data = doc.data();
-        const remoteStartMs = typeof data.startedAtMs === "number" ? data.startedAtMs : Date.now();
         const remoteDuration = parseInt(data.durationSec, 10) || COLLECTING_DURATION_SEC;
         const remotePhase = data.phase || "collecting";
         const remoteCycle = parseInt(data.cycleId, 10) || 1;
 
-        if (remoteStartMs - Date.now() > 1500 && remoteStartMs - Date.now() < 300000) {
-          serverOffsetMs = (remoteStartMs - Date.now()) - 150;
+        let authoritativeStartMs = typeof data.startedAtMs === "number" ? data.startedAtMs : Date.now();
+        if (!doc.metadata.hasPendingWrites && data.startedAt && typeof data.startedAt.toMillis === "function") {
+          const serverStartMs = data.startedAt.toMillis();
+          serverClockOffsetMs = serverStartMs - authoritativeStartMs;
+          authoritativeStartMs = serverStartMs;
         }
 
         const phaseChanged = (sessionState !== remotePhase) || (syncedCycleId !== remoteCycle);
         sessionState = remotePhase;
-        syncedPhaseStartMs = remoteStartMs;
+        syncedPhaseStartMs = authoritativeStartMs;
         syncedDurationSec = remoteDuration;
         syncedCycleId = remoteCycle;
+
+        const cycleNumEl = document.getElementById('admin-cycle-num');
+        if (cycleNumEl) cycleNumEl.innerText = String(syncedCycleId);
 
         if (phaseChanged) {
           lastHandledPhaseEndKey = "";
@@ -679,6 +701,7 @@
     async function handlePlayingPhaseCompleted() {
       if (isAdvancingCycle) return;
       isAdvancingCycle = true;
+      const finishedCycleId = syncedCycleId;
       try {
         closeBlockedPopup();
         if (isCodeValidated && chances > 0) {
@@ -692,9 +715,11 @@
           if (c3) c3.classList.add('off');
         }
         exitArenaBackToSetup();
-        await determineSessionWinnerAtEnd();
-        await new Promise(resolve => setTimeout(resolve, 4000));
-        await syncMasterClock("collecting", COLLECTING_DURATION_SEC, syncedCycleId + 1);
+        await determineSessionWinnerAtEnd(finishedCycleId);
+        await new Promise(resolve => setTimeout(resolve, 10500));
+        if (syncedCycleId === finishedCycleId) {
+          await syncMasterClock("collecting", COLLECTING_DURATION_SEC, finishedCycleId + 1);
+        }
       } finally {
         isAdvancingCycle = false;
       }
@@ -834,12 +859,13 @@
       if (!codeUpper) return false;
       const gStats = groupSessionStats[String(grp)];
       if (!gStats) return false;
-      const inUsed = Array.isArray(gStats.usedCodes) && gStats.usedCodes.includes(codeUpper);
+      const sameCycle = (parseInt(gStats.cycleId, 10) || syncedCycleId) === syncedCycleId;
+      const inUsed = sameCycle && Array.isArray(gStats.usedCodes) && gStats.usedCodes.includes(codeUpper);
       const inConsumed = Array.isArray(gStats.consumedCodes) && gStats.consumedCodes.includes(codeUpper);
       return inUsed || inConsumed;
     }
 
-    function canScoreWinningGoal(totalPlayers) {
+    function isStrictValidPlayerCountForWinner(totalPlayers) {
       const parsedCount = parseInt(totalPlayers, 10) || 0;
       return parsedCount >= 5 && parsedCount <= 220;
     }
@@ -888,21 +914,19 @@
       const safeCount = Math.max(0, parseInt(count, 10) || 0);
       const price = parseInt(grpKey, 10) || 1250;
       const totalPot = safeCount * price;
-      const basePrize = GROUP_BASE_PRIZE[grpKey] || 2000;
-      const stepPrize = GROUP_STEP_PRIZE[grpKey] || 225;
+      const minPrize = GROUP_MIN_PRIZE[grpKey] || 2000;
 
       if (safeCount < 5) {
         return {
           count: safeCount,
           totalPot: totalPot,
           winnerPrize: 0,
-          displayPrize: basePrize,
+          displayPrize: minPrize,
           ownerShare: totalPot
         };
       }
 
-      const cappedCount = Math.min(safeCount, 220);
-      const winnerPrize = basePrize + (cappedCount - 5) * stepPrize;
+      const winnerPrize = minPrize;
       const ownerShare = Math.max(0, totalPot - winnerPrize);
 
       return {
@@ -914,10 +938,11 @@
       };
     }
 
-    async function registerPlayerInActiveSession(group, name, phone, code) {
+    async function registerPlayerInActiveSession(group, name, phone, code, cycleId) {
       myShotsUsed = 0;
       const docRef = await db.collection("session_players").add({
         group: String(group),
+        cycleId: parseInt(cycleId, 10) || syncedCycleId,
         playerName: name,
         playerPhone: phone,
         code: code,
@@ -926,6 +951,7 @@
         joinedAt: firebase.firestore.FieldValue.serverTimestamp()
       });
       currentPlayerSessionDocId = docRef.id;
+      validatedPlayerCycleId = parseInt(cycleId, 10) || syncedCycleId;
     }
 
     async function recordPlayerShotOrEnd(forceFinish = false) {
@@ -944,15 +970,57 @@
       }
     }
 
-    async function clearSessionPlayersForGroup(grp) {
+    async function clearSessionPlayersForGroup(grp, targetCycleId = null) {
       const snap = await db.collection("session_players")
         .where("group", "==", String(grp))
         .get();
       if (!snap.empty) {
         const batch = db.batch();
-        snap.forEach(d => batch.delete(d.ref));
+        snap.forEach(d => {
+          const pData = d.data();
+          const pCycle = parseInt(pData.cycleId, 10);
+          if (!targetCycleId || !pCycle || pCycle === parseInt(targetCycleId, 10)) {
+            batch.delete(d.ref);
+          }
+        });
         await batch.commit();
       }
+    }
+
+    async function getStrictActiveSessionPlayers(grp, targetCycleId = syncedCycleId) {
+      const targetGroup = String(grp);
+      const activeCycle = parseInt(targetCycleId, 10) || syncedCycleId;
+
+      const [playersSnap, blockDoc] = await Promise.all([
+        db.collection("session_players")
+          .where("group", "==", targetGroup)
+          .where("cycleId", "==", activeCycle)
+          .get(),
+        db.collection("game_blocks").doc("block_" + targetGroup).get()
+      ]);
+
+      const activePlayers = [];
+      const seenCodes = new Set();
+      playersSnap.forEach(d => {
+        const p = d.data();
+        const c = String(p.code || "").trim().toUpperCase();
+        if (c && !seenCodes.has(c)) {
+          seenCodes.add(c);
+          activePlayers.push(p);
+        }
+      });
+
+      const bData = blockDoc.exists ? blockDoc.data() : {};
+      const blockCycle = parseInt(bData.cycleId, 10) || 0;
+      const isBlockForThisCycle = (blockCycle === activeCycle) && (bData.settled !== true);
+      const usedCodesCount = isBlockForThisCycle && Array.isArray(bData.usedCodes) ? bData.usedCodes.length : 0;
+
+      const exactCount = Math.max(activePlayers.length, usedCodesCount);
+      return {
+        exactCount,
+        activePlayers,
+        blockData: isBlockForThisCycle ? bData : { cycleId: activeCycle, sessionWinnerDeclared: false, sessionWinnerPhone: "", sessionWinnerCode: "" }
+      };
     }
 
     function listenAppAvailability() {
@@ -1110,7 +1178,7 @@
         winnerAutoHideTimer = null;
       }
       const grp = currentWinnerGroup || userGroup || "1250";
-      localStorage.setItem("winner_dismissed_" + grp, "true");
+      localStorage.setItem("winner_dismissed_" + grp + "_cycle_" + syncedCycleId, "true");
       document.getElementById('winner-banner-modal').style.display = 'none';
       resetLocalPlayerForNewGathering();
     }
@@ -1161,12 +1229,26 @@
         });
 
         blockRef.onSnapshot(doc => {
-          const count = doc.exists ? (parseInt(doc.data().playersCount, 10) || 0) : 0;
-          const usedCodes = doc.exists && Array.isArray(doc.data().usedCodes) ? doc.data().usedCodes : [];
-          const consumedCodes = doc.exists && Array.isArray(doc.data().consumedCodes) ? doc.data().consumedCodes : [];
-          const sessionWinnerDeclared = doc.exists ? (doc.data().sessionWinnerDeclared === true) : false;
+          const d = doc.exists ? doc.data() : {};
+          const docCycle = parseInt(d.cycleId, 10) || syncedCycleId;
+          const isCurrentCycle = (docCycle === syncedCycleId) && (d.settled !== true);
+
+          const count = isCurrentCycle ? (parseInt(d.playersCount, 10) || 0) : 0;
+          const usedCodes = isCurrentCycle && Array.isArray(d.usedCodes) ? d.usedCodes : [];
+          const consumedCodes = Array.isArray(d.consumedCodes) ? d.consumedCodes : [];
+          const sessionWinnerDeclared = isCurrentCycle ? (d.sessionWinnerDeclared === true) : false;
+          const sessionWinnerPhone = isCurrentCycle ? (d.sessionWinnerPhone || "") : "";
+          const sessionWinnerCode = isCurrentCycle ? (d.sessionWinnerCode || "") : "";
           const stats = calculateGroupFinance(grp, count);
-          groupSessionStats[grp] = { ...stats, usedCodes, consumedCodes, sessionWinnerDeclared };
+          groupSessionStats[grp] = {
+            ...stats,
+            cycleId: docCycle,
+            usedCodes,
+            consumedCodes,
+            sessionWinnerDeclared,
+            sessionWinnerPhone,
+            sessionWinnerCode
+          };
 
           const countEl = document.getElementById('p' + grp + '-players-count');
           const potEl = document.getElementById('p' + grp + '-total-pot');
@@ -1180,19 +1262,22 @@
     }
     listenAllGroups();
 
-    async function settleGroupSessionIntoReserve(grp) {
+    async function settleGroupSessionIntoReserve(grp, nextCycleId = null) {
       const blockRef = db.collection("game_blocks").doc("block_" + grp);
       const reserveRef = db.collection("owner_reserves").doc("group_" + grp);
+      let settledCycleId = syncedCycleId;
 
       await db.runTransaction(async (transaction) => {
         const blockDoc = await transaction.get(blockRef);
         const resDoc = await transaction.get(reserveRef);
 
-        const count = blockDoc.exists ? (parseInt(blockDoc.data().playersCount, 10) || 0) : 0;
-        const alreadySettled = blockDoc.exists ? (blockDoc.data().settled === true) : false;
+        const d = blockDoc.exists ? blockDoc.data() : {};
+        settledCycleId = parseInt(d.cycleId, 10) || syncedCycleId;
+        const count = d.settled === true ? 0 : (parseInt(d.playersCount, 10) || 0);
+        const alreadySettled = d.settled === true;
         const currentReserve = resDoc.exists ? (parseFloat(resDoc.data().amount) || 0) : 0;
-        const prevUsed = blockDoc.exists && Array.isArray(blockDoc.data().usedCodes) ? blockDoc.data().usedCodes : [];
-        const prevConsumed = blockDoc.exists && Array.isArray(blockDoc.data().consumedCodes) ? blockDoc.data().consumedCodes : [];
+        const prevUsed = Array.isArray(d.usedCodes) ? d.usedCodes : [];
+        const prevConsumed = Array.isArray(d.consumedCodes) ? d.consumedCodes : [];
         const mergedConsumed = Array.from(new Set([...prevConsumed, ...prevUsed]));
 
         const stats = calculateGroupFinance(grp, count);
@@ -1206,27 +1291,30 @@
         }, { merge: true });
 
         transaction.set(blockRef, {
+          cycleId: nextCycleId || (settledCycleId + 1),
           playersCount: "0",
           status: "collecting",
           settled: true,
           sessionWinnerDeclared: false,
+          sessionWinnerPhone: "",
+          sessionWinnerCode: "",
           usedCodes: [],
           consumedCodes: mergedConsumed
         }, { merge: true });
       });
 
-      await clearSessionPlayersForGroup(grp);
+      await clearSessionPlayersForGroup(grp, settledCycleId);
       currentPlayerSessionDocId = null;
+      validatedPlayerCycleId = null;
       myShotsUsed = 0;
 
-      await db.collection("winners_announced").doc("group_" + grp).delete();
-      localStorage.removeItem("winner_dismissed_" + grp);
+      localStorage.removeItem("winner_dismissed_" + grp + "_cycle_" + settledCycleId);
       clearClientCodeBox(true);
     }
 
     async function clearGroupSession(grp) {
       if (confirm("Èske w sèten ou vle Clear Sesyon Gwoup " + grp + " Gdes la a zewo epi voye pati pwopriyetè a nan rezèv la?")) {
-        await settleGroupSessionIntoReserve(grp);
+        await settleGroupSessionIntoReserve(grp, syncedCycleId + 1);
         alert("Sesyon Gwoup " + grp + " Gdes la netwaye a 0 epi rezèv pwopriyetè a mete ajou san fay!");
       }
     }
@@ -1560,6 +1648,7 @@
         playerName: name,
         playerPhone: phone,
         groupPrice: group,
+        cycleId: syncedCycleId,
         sentToClient: false,
         consumed: false,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1692,29 +1781,39 @@
       }
 
       const blockRef = db.collection("game_blocks").doc("block_" + userGroup);
+      const joinCycleId = syncedCycleId;
       let joinedOk = false;
 
       await db.runTransaction(async (transaction) => {
         const doc = await transaction.get(blockRef);
-        const usedCodes = doc.exists && Array.isArray(doc.data().usedCodes) ? doc.data().usedCodes : [];
-        const consumedCodes = doc.exists && Array.isArray(doc.data().consumedCodes) ? doc.data().consumedCodes : [];
+        const d = doc.exists ? doc.data() : {};
+        const isSameCycle = (parseInt(d.cycleId, 10) || 0) === joinCycleId && d.settled !== true;
+        const usedCodes = isSameCycle && Array.isArray(d.usedCodes) ? [...d.usedCodes] : [];
+        const consumedCodes = Array.isArray(d.consumedCodes) ? [...d.consumedCodes] : [];
+
         if (usedCodes.includes(cleanCode) || consumedCodes.includes(cleanCode)) {
           joinedOk = false;
           return;
         }
-        let count = doc.exists ? (parseInt(doc.data().playersCount, 10) || 0) : 0;
+
+        let count = isSameCycle ? (parseInt(d.playersCount, 10) || 0) : 0;
         if (count >= 220) {
           joinedOk = false;
           return;
         }
+
         count++;
         usedCodes.push(cleanCode);
         consumedCodes.push(cleanCode);
+
         transaction.set(blockRef, {
+          cycleId: joinCycleId,
           playersCount: count.toString(),
           status: "active",
           settled: false,
-          sessionWinnerDeclared: false,
+          sessionWinnerDeclared: isSameCycle ? (d.sessionWinnerDeclared === true) : false,
+          sessionWinnerPhone: isSameCycle ? (d.sessionWinnerPhone || "") : "",
+          sessionWinnerCode: isSameCycle ? (d.sessionWinnerCode || "") : "",
           usedCodes: usedCodes,
           consumedCodes: consumedCodes
         }, { merge: true });
@@ -1738,7 +1837,7 @@
       clearClientCodeBox(true);
       isCodeValidated = true;
 
-      await registerPlayerInActiveSession(userGroup, validatedPlayerName, validatedPlayerPhone, validatedPlayerCode);
+      await registerPlayerInActiveSession(userGroup, validatedPlayerName, validatedPlayerPhone, validatedPlayerCode, joinCycleId);
 
       document.getElementById('setup-screen').style.display = 'none';
       document.getElementById('game-arena').classList.add('full-screen-mode');
@@ -1767,14 +1866,14 @@
           if (doc.exists) {
             const data = doc.data();
             const targetGrp = data.group || grp;
+            const winCycle = parseInt(data.cycleId, 10) || syncedCycleId;
             populateWinnerModalsFromData(targetGrp, data);
 
-            const alreadyDismissed = localStorage.getItem("winner_dismissed_" + targetGrp) === "true";
-            if (!alreadyDismissed && sessionState === "playing" && getRemainingSyncedSeconds() <= 0) {
+            const alreadyDismissed = localStorage.getItem("winner_dismissed_" + targetGrp + "_cycle_" + winCycle) === "true";
+            if (!alreadyDismissed && winCycle === syncedCycleId && sessionState === "playing" && getRemainingSyncedSeconds() <= 0) {
               showWinnerModalWithAutoHide(targetGrp, data);
             }
           } else {
-            localStorage.removeItem("winner_dismissed_" + grp);
             if (currentWinnerGroup === grp) {
               document.getElementById('winner-banner-modal').style.display = 'none';
               const quickSummary = document.getElementById('admin-winner-quick-summary');
@@ -1794,26 +1893,21 @@
         paidAt: firebase.firestore.FieldValue.serverTimestamp()
       }, { merge: true });
 
-      await settleGroupSessionIntoReserve(targetGroup);
+      await settleGroupSessionIntoReserve(targetGroup, syncedCycleId + 1);
 
       document.getElementById('winner-banner-modal').style.display = 'none';
       document.getElementById('admin-winner-banner-modal').style.display = 'none';
       alert("✓ Gayan Gwoup " + targetGroup + " Gdes la konfime peye, sesyon an retounen a 0, epi rezèv pwopriyetè a sove nèt.");
     }
 
-    async function finalizeSessionWinnerOnce(grp) {
+    async function finalizeSessionWinnerOnce(grp, targetCycleId = syncedCycleId) {
       const targetGroup = String(grp || userGroup || "1250");
+      const activeCycle = parseInt(targetCycleId, 10) || syncedCycleId;
       const blockRef = db.collection("game_blocks").doc("block_" + targetGroup);
       const winnerRef = db.collection("winners_announced").doc("group_" + targetGroup);
 
-      const playersSnap = await db.collection("session_players")
-        .where("group", "==", targetGroup)
-        .get();
-
-      const blockDoc = await blockRef.get();
-      const blockCount = blockDoc.exists ? (parseInt(blockDoc.data().playersCount, 10) || 0) : 0;
-      const totalPlayers = Math.max(playersSnap.size, blockCount);
-      const stats = calculateGroupFinance(targetGroup, totalPlayers);
+      const { exactCount, activePlayers, blockData } = await getStrictActiveSessionPlayers(targetGroup, activeCycle);
+      const stats = calculateGroupFinance(targetGroup, exactCount);
 
       let winningName = "";
       let winningCode = "";
@@ -1821,16 +1915,17 @@
       let winningPrizeNum = stats.displayPrize;
       let realPlayerWon = false;
 
-      if (canScoreWinningGoal(totalPlayers) && !playersSnap.empty) {
-        const allPlayers = [];
-        playersSnap.forEach(d => allPlayers.push(d.data()));
-
+      if (isStrictValidPlayerCountForWinner(exactCount) && activePlayers.length >= 5) {
         let chosenPlayer = null;
-        if (forcedWinnerPhone) {
-          chosenPlayer = allPlayers.find(p => String(p.playerPhone || "").trim() === String(forcedWinnerPhone).trim());
+
+        if (blockData.sessionWinnerCode) {
+          chosenPlayer = activePlayers.find(p => String(p.code || "").toUpperCase() === String(blockData.sessionWinnerCode).toUpperCase());
+        }
+        if (!chosenPlayer && forcedWinnerPhone) {
+          chosenPlayer = activePlayers.find(p => String(p.playerPhone || "").trim() === String(forcedWinnerPhone).trim());
         }
         if (!chosenPlayer) {
-          chosenPlayer = allPlayers[Math.floor(Math.random() * allPlayers.length)];
+          chosenPlayer = activePlayers[Math.floor(Math.random() * activePlayers.length)];
         }
 
         realPlayerWon = true;
@@ -1849,10 +1944,17 @@
       const winningPrizeStr = winningPrizeNum.toLocaleString() + " Gdes";
       const winningPrizeWords = amountToWordsHT(winningPrizeNum);
 
-      await blockRef.set({ sessionWinnerDeclared: true }, { merge: true });
+      await blockRef.set({
+        cycleId: activeCycle,
+        sessionWinnerDeclared: true,
+        sessionWinnerCode: winningCode,
+        sessionWinnerPhone: winningPhone
+      }, { merge: true });
 
       const winnerPayload = {
         group: targetGroup,
+        cycleId: activeCycle,
+        playersInSession: exactCount,
         winnerName: winningName,
         winnerCode: winningCode,
         winnerPhone: winningPhone,
@@ -1863,9 +1965,11 @@
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
       };
 
-      localStorage.removeItem("winner_dismissed_" + targetGroup);
+      localStorage.removeItem("winner_dismissed_" + targetGroup + "_cycle_" + activeCycle);
       await winnerRef.set(winnerPayload);
       showWinnerModalWithAutoHide(targetGroup, winnerPayload);
+
+      await settleGroupSessionIntoReserve(targetGroup, activeCycle + 1);
 
       if (realPlayerWon && winningPhone) {
         let cleanPhone = winningPhone.replace(/\D/g, '');
@@ -1877,7 +1981,7 @@
       }
     }
 
-    async function determineSessionWinnerAtEnd() {
+    async function determineSessionWinnerAtEnd(finishedCycleId = syncedCycleId) {
       const activeGroup = document.getElementById('group-select')
         ? (document.getElementById('group-select').value || userGroup || "1250")
         : (userGroup || "1250");
@@ -1886,12 +1990,12 @@
       if (isCodeValidated && currentPlayerSessionDocId) {
         await recordPlayerShotOrEnd(true);
       }
-      await finalizeSessionWinnerOnce(activeGroup);
+      await finalizeSessionWinnerOnce(activeGroup, finishedCycleId);
     }
 
     setInterval(() => {
       renderSyncedClockTick();
-    }, 500);
+    }, 250);
 
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d');
@@ -2021,16 +2125,34 @@
 
       recordPlayerShotOrEnd(false);
 
-      const blockDoc = await db.collection("game_blocks").doc("block_" + userGroup).get();
-      const blockData = blockDoc.exists ? blockDoc.data() : {};
-      let totalPlayers = parseInt(blockData.playersCount, 10) || 0;
-      const alreadyDeclared = blockData.sessionWinnerDeclared === true;
-      let userPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim();
+      const shotCycleId = validatedPlayerCycleId || syncedCycleId;
+      const { exactCount, blockData } = await getStrictActiveSessionPlayers(userGroup, shotCycleId);
+      const userPhone = validatedPlayerPhone || document.getElementById('player-phone').value.trim();
+      const userCode = validatedPlayerCode || "";
+      const blockRef = db.collection("game_blocks").doc("block_" + userGroup);
 
       let isGoal = false;
-      if (!alreadyDeclared && canScoreWinningGoal(totalPlayers)) {
-        if (forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone) isGoal = true;
-        else isGoal = Math.random() < 0.35;
+
+      if (isStrictValidPlayerCountForWinner(exactCount) && blockData.sessionWinnerDeclared !== true) {
+        const isForcedUser = forcedWinnerPhone !== "" && userPhone === forcedWinnerPhone;
+        const shouldTryWin = isForcedUser || (forcedWinnerPhone === "" && Math.random() < (1 / exactCount));
+
+        if (shouldTryWin) {
+          await db.runTransaction(async (tx) => {
+            const bSnap = await tx.get(blockRef);
+            const bD = bSnap.exists ? bSnap.data() : {};
+            const sameCycle = (parseInt(bD.cycleId, 10) || 0) === shotCycleId && bD.settled !== true;
+            const liveCount = sameCycle ? (parseInt(bD.playersCount, 10) || 0) : 0;
+            if (sameCycle && isStrictValidPlayerCountForWinner(liveCount) && bD.sessionWinnerDeclared !== true) {
+              tx.set(blockRef, {
+                sessionWinnerDeclared: true,
+                sessionWinnerPhone: userPhone,
+                sessionWinnerCode: userCode
+              }, { merge: true });
+              isGoal = true;
+            }
+          }).catch(() => { isGoal = false; });
+        }
       }
 
       const hoop = getHoopPosition();
